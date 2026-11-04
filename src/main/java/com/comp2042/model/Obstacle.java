@@ -1,8 +1,8 @@
-package com.comp2042;
+package com.comp2042.model;
 
 import javafx.scene.paint.Color;
 
-import java.awt.*;
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -13,8 +13,8 @@ public class Obstacle {
     private int y;
 
     public Obstacle(int x, int y) {
-       this.x = x;
-       this.y = y;
+        this.x = x;
+        this.y = y;
     }
 
     public void newObstacles(Snake snek, Coin coin, int amount) {
@@ -23,7 +23,7 @@ public class Obstacle {
         }
         Random rnd = new Random();
         Point p;
-        for (int i=0; i<amount; i++) {
+        for (int i = 0; i < amount; i++) {
             do {
                 p = new Point(rnd.nextInt(x) + 1, rnd.nextInt(y));
             } while (coin.getPos().equals(p) || snek.getBody().contains(p) || snek.getHead().equals(p));

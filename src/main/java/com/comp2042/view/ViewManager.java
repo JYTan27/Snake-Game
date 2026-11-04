@@ -1,4 +1,4 @@
-package com.comp2042;
+package com.comp2042.view;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -15,7 +15,7 @@ public class ViewManager {
 
     private Stage gameStage;
 
-    private Image snakeLogo = new Image("resources/views/res/SnakeLogoWhite.png");
+    private Image snakeLogo = new Image(getClass().getResourceAsStream("/com/comp2042/images/ui/SnakeLogoWhite.png"));
 
     public ViewManager() {
     }
@@ -23,7 +23,7 @@ public class ViewManager {
     public void initalizeMainMenu() {
         try {
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(Main.class.getResource("/resources/views/MainMenu.fxml"));
+            loader.setLocation(getClass().getResource("/com/comp2042/view/MainMenu.fxml"));
             root = loader.load();
         } catch (IOException exception) {
             exception.printStackTrace();

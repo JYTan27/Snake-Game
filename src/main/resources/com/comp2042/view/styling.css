@@ -1,8 +1,8 @@
 @font-face {
-    src: url("res/SFPixelateShaded-Bold.ttf");
+    src: url("../fonts/SFPixelateShaded-Bold.ttf");
 }
 @font-face {
-    src: url("res/SFPixelate.ttf");
+    src: url("../fonts/SFPixelate.ttf");
 }
 
 .root {
@@ -13,13 +13,13 @@
     -fx-font-family: "SF Pixelate";
     -fx-font-size: 18;
     -fx-text-fill: #ffffff;
-    -fx-background-image: url("res/btn.png");
+    -fx-background-image: url("../images/ui/btn.png");
     -fx-background-repeat: no-repeat;
     -fx-background-size: 115 40;
 }
 
 .button:pressed {
-    -fx-background-image: url("res/btn_pressed.png");
+    -fx-background-image: url("../images/ui/btn_pressed.png");
     -fx-background-repeat: no-repeat;
     -fx-background-size: 115 40;
 }
@@ -28,7 +28,7 @@
     -fx-font-family: "SF Pixelate";
     -fx-font-size: 18;
     -fx-text-fill: #ffffff;
-    -fx-background-image: url("res/btn.png");
+    -fx-background-image: url("../images/ui/btn.png");
     -fx-background-repeat: no-repeat;
     -fx-background-size: 115 40;
 }
@@ -37,7 +37,7 @@
     -fx-font-family: "SF Pixelate";
     -fx-font-size: 18;
     -fx-text-fill: #000000;
-    -fx-background-image: url("res/btn_StartAndQuit_pressed.png");
+    -fx-background-image: url("../images/ui/btn_StartAndQuit_pressed.png");
     -fx-background-repeat: no-repeat;
     -fx-background-size: 115 40;
 }

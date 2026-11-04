@@ -1,5 +1,11 @@
-package com.comp2042;
+package com.comp2042.view;
 
+import com.comp2042.controller.GameController;
+import com.comp2042.controller.MainMenuController;
+import com.comp2042.model.Coin;
+import com.comp2042.model.Game;
+import com.comp2042.model.Obstacle;
+import com.comp2042.model.Snake;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
@@ -12,7 +18,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
-import java.awt.*;
+import java.awt.Point;
 
 public class GameView {
 
@@ -46,7 +52,7 @@ public class GameView {
 
         gameOverLabel = new Label("GAME OVER");
         gameOverLabel.setId("gameOverLabel");
-        String css = "resources/views/styling.css";
+        String css = getClass().getResource("/com/comp2042/view/styling.css").toExternalForm();
         gameOverLabel.getStylesheets().add(css);
         gameOverLabel.setVisible(false);
 
@@ -208,5 +214,4 @@ public class GameView {
     public void updateScoreLabel() {
         scoreLabel.setText("Score: " + game.getScorePoints());
     }
-
 }

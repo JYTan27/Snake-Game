@@ -1,4 +1,4 @@
-package com.comp2042;
+package com.comp2042.model;
 
 import javafx.scene.paint.Color;
 
@@ -29,7 +29,6 @@ public class Game {
         width = x;
         height = y;
         maxScore = x * y - 2;
-        this.powerUp = powerUp;
         if (height > 50) {
             multiplier = 10;
         } else {

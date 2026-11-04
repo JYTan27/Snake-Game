@@ -1,5 +1,14 @@
-package com.comp2042;
+package com.comp2042.controller;
 
+import com.comp2042.model.BlueCoin;
+import com.comp2042.model.Coin;
+import com.comp2042.model.Game;
+import com.comp2042.model.GoldCoin;
+import com.comp2042.model.Obstacle;
+import com.comp2042.model.RainbowCoin;
+import com.comp2042.model.SilverCoin;
+import com.comp2042.model.Snake;
+import com.comp2042.view.GameView;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -10,7 +19,6 @@ import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.io.File;
 import java.util.Random;
 
 public class GameController {
@@ -19,7 +27,7 @@ public class GameController {
     private GameView gameView;
     private Game game;
     private Stage stage;
-    private String coinSoundPath = "resources/views/res/coinSound.wav";
+    private String coinSoundPath = getClass().getResource("/com/comp2042/audio/coinSound.wav").toExternalForm();
     private Obstacle obstacle;
 
     public static KeyCode key = KeyCode.LEFT;
