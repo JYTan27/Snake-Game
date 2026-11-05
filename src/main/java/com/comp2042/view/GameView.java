@@ -1,11 +1,14 @@
 package com.comp2042.view;
 
+import java.awt.Point;
+
 import com.comp2042.controller.GameController;
 import com.comp2042.controller.MainMenuController;
 import com.comp2042.model.Coin;
 import com.comp2042.model.Game;
 import com.comp2042.model.Obstacle;
 import com.comp2042.model.Snake;
+
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
@@ -17,8 +20,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-
-import java.awt.Point;
 
 public class GameView {
 
@@ -115,6 +116,7 @@ public class GameView {
         }
     }
 
+    // UNOPTIMSED CODE: This method is not efficient and should be refactored
     private void drawGrid(Coin coin, Snake snek, GraphicsContext gc) {
         gc.setFill(game.getColor());
         gc.fillRect(0, 0, gridCanvas.getWidth(), gridCanvas.getHeight());

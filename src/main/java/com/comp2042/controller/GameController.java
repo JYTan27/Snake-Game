@@ -1,5 +1,7 @@
 package com.comp2042.controller;
 
+import java.util.Random;
+
 import com.comp2042.model.BlueCoin;
 import com.comp2042.model.Coin;
 import com.comp2042.model.Game;
@@ -9,18 +11,15 @@ import com.comp2042.model.RainbowCoin;
 import com.comp2042.model.SilverCoin;
 import com.comp2042.model.Snake;
 import com.comp2042.view.GameView;
+
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.media.AudioClip;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-
-import java.util.Random;
 
 public class GameController {
     private Snake snek;
@@ -145,7 +144,7 @@ public class GameController {
                 if (!this.key.equals(KeyCode.LEFT))
                     return true;
             if (key.equals(KeyCode.DOWN))
-                if (!this.key.equals(KeyCode.DOWN))
+                if (!this.key.equals(KeyCode.DOWN)) // Up instead of Down
                     return true;
             if (key.equals(KeyCode.UP))
                 return !this.key.equals(KeyCode.DOWN);
