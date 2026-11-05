@@ -3,18 +3,14 @@ package com.comp2042.model;
 import javafx.scene.image.Image;
 
 public class BlueCoin extends Coin {
-    private Image image = new Image(getClass().getResourceAsStream("/com/comp2042/images/coins/bluecoin.png"));
+    private static final Image BLUE_COIN_IMAGE = new Image(BlueCoin.class.getResourceAsStream("/com/comp2042/images/coins/bluecoin.png"));
 
-    public BlueCoin(int x, int y, Snake snek, Obstacle obstacle) {
-        super(x, y, snek, obstacle);
+    public BlueCoin(int gridWidth, int gridHeight, Snake snek, Obstacle obstacle) {
+        super(gridWidth, gridHeight, snek, obstacle, BLUE_COIN_IMAGE);
     }
 
-    public int getPoints() {
-        int points = 5;
-        return points;
-    }
-
-    public Image getImage() {
-        return image;
+    @Override
+    public void applyEffect(Game game, Snake snake, Obstacle obstacle) {
+        snake.ignoreBorders(true);
     }
 }

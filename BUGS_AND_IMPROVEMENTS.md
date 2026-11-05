@@ -42,7 +42,19 @@
 39. **Typo in public method name in `ViewManager`** – `initalizeMainMenu()` misspells "initialize", introducing API inconsistency.
 40. **Flawed key validation logic in `GameController.valKey(KeyCode key)`** – when checking `KeyCode.DOWN`, it compares against `!this.key.equals(KeyCode.DOWN)` instead of `KeyCode.UP`, failing to properly prevent 180-degree self-reversals into the snake's neck.
 
-# Improvements (to be filled later)
+# Improvements Made
 
-*(empty for now)*
+1. **Refactored `Coin` hierarchy and asset loading (Addresses Bugs #26, #28, #30):**
+   - Converted all coin sprite `Image` instances to `private static final` singletons loaded once at class initialization, eliminating repeated disk I/O and texture re-allocations on every coin spawn.
+   - Removed shadowed `image` fields and duplicate `getImage()` implementations in `GoldCoin`, `SilverCoin`, `BlueCoin`, and `RainbowCoin`, cleanly inheriting them from `Coin`.
+   - Eliminated redundant intermediate local variables before returning (e.g. `int points = 5; return points;`).
+2. **Polymorphic power-up architecture (Addresses Bug #29 - Open-Closed Principle):**
+   - Added polymorphic `applyEffect(Game game, Snake snake, Obstacle obstacle)` and `getSpeedBonus()` methods to `Coin`.
+   - Replaced the brittle `if (coin.getClass().equals(...))` type-checking and downcasting chain in `GameController.powerCoin()` with a clean, polymorphic one-line call: `coin.applyEffect(game, snek, obstacle)`.
+3. **Fixed unreachable `RainbowCoin` spawn bug (Addresses Bug #3):**
+   - Corrected `GameController.newCoin()` condition so `RainbowCoin` correctly spawns on `ran == 2` instead of the unreachable duplicate `ran == 1`.
+4. **Optimized random coordinate generation (Addresses Bug #27):**
+   - Shared a single static `Random` generator for position generation rather than allocating `new Random()` on every collision retry in the `do...while` loop.
+5. **Fixed broken Maven Wrapper configuration:**
+   - Corrected invalid Maven 3 release URL in `.mvn/wrapper/maven-wrapper.properties` to official Maven 3.9.6 binary.
 

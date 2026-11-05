@@ -3,18 +3,15 @@ package com.comp2042.model;
 import javafx.scene.image.Image;
 
 public class GoldCoin extends Coin {
-    private Image image = new Image(getClass().getResourceAsStream("/com/comp2042/images/coins/goldcoin.png"));
+    private static final Image GOLD_COIN_IMAGE = new Image(GoldCoin.class.getResourceAsStream("/com/comp2042/images/coins/goldcoin.png"));
+    private static final int GOLD_COIN_POINTS = 15;
 
-    public GoldCoin(int x, int y, Snake snek, Obstacle obstacle) {
-        super(x, y, snek, obstacle);
+    public GoldCoin(int gridWidth, int gridHeight, Snake snek, Obstacle obstacle) {
+        super(gridWidth, gridHeight, snek, obstacle, GOLD_COIN_IMAGE);
     }
 
-    public Image getImage() {
-        return image;
-    }
-
+    @Override
     public int getPoints() {
-        int points = 15;
-        return points;
+        return GOLD_COIN_POINTS;
     }
 }

@@ -176,18 +176,9 @@ public class GameController {
     }
 
     private void powerCoin() {
-        animation.setRate(game.getSpeed());
+        animation.setRate(game.getSpeed() + coin.getSpeedBonus());
         snek.ignoreBorders(false);
-        if (coin.getClass().equals(RainbowCoin.class)) {
-            RainbowCoin tempCoin = (RainbowCoin) coin;
-            animation.setRate(game.getSpeed() + tempCoin.getSpeedBonus());
-        } else if (coin.getClass().equals(SilverCoin.class)) {
-            Random rnd = new Random();
-            obstacle.newObstacles(snek, coin, rnd.nextInt(game.getWidth() * game.getHeight() / 20) + 3);
-            game.decMaxScore(obstacle.getObstacles().size());
-        } else if (coin.getClass().equals(BlueCoin.class)) {
-            snek.ignoreBorders(true);
-        }
+        coin.applyEffect(game, snek, obstacle);
         game.addPoints(coin.getPoints());
     }
 
@@ -197,7 +188,7 @@ public class GameController {
             int ran = rnd.nextInt(12);
             if (ran == 1) {
                 coin = new GoldCoin(game.getWidth(), game.getHeight(), snek, obstacle);
-            } else if (ran == 1) {
+            } else if (ran == 2) {
                 coin = new RainbowCoin(game.getWidth(), game.getHeight(), snek, obstacle);
             } else if (ran == 3) {
                 coin = new BlueCoin(game.getWidth(), game.getHeight(), snek, obstacle);
