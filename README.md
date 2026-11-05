@@ -69,7 +69,13 @@
   * Replaced brittle relative file paths with standard `getClass().getResourceAsStream(...)` and `getResource(...).toExternalForm()` to ensure resources load reliably in both IDE and standalone JAR packaging.
 * **Core Gameplay Loop & Features:**
   * **Snake Movement & Controls:** Responsive 4-directional navigation with anti-reverse logic (cannot 180° turn into self).
-  * **Food & Coin System:** Spawning coins with different attributes (points, speed boost, obstacle generation, border pass-through).
+  * **Polymorphic Food & Coin System:** Spawning coins with distinct attributes and behaviors using object-oriented polymorphism (`Coin`, `GoldCoin`, `SilverCoin`, `BlueCoin`, `RainbowCoin`):
+    * Standard Red Coin: Basic point increment (+5).
+    * Gold Coin: Higher point reward (+15).
+    * Blue Coin: Temporary wall pass-through / border-ignore ability.
+    * Silver Coin: Spawns additional barrier obstacles on the board and adjusts target score.
+    * Rainbow Coin: Grants speed boost (+5.0 speed) to the game loop.
+  * **Asset Caching:** Coin sprites are loaded once as `static final` assets rather than re-reading files from disk on every coin spawn.
   * **Dynamic Obstacle Generation:** Barriers randomly populate without colliding with snake spawn or coins.
   * **Collision Detection:** Accurate wall collision, self-bite collision, and obstacle collision handling.
   * **Score & Win Conditions:** Dynamically updated HUD score label and victory state checks based on board capacity.
@@ -80,17 +86,9 @@
 
 ## 4. Implemented but Not Working Properly
 
-* **Duplicate Random Evaluation in `GameController.newCoin()`:**
-  * *Issue:* Lines 190 and 192 in `GameController` evaluate `if (ran == 1)` twice:
-    ```java
-    if (ran == 1) {
-        coin = new GoldCoin(...);
-    } else if (ran == 1) { // Unreachable!
-        coin = new RainbowCoin(...);
-    }
-    ```
-    This causes the `RainbowCoin` branch to be dead code when `ran == 1`.
-  * *Status / Steps Taken:* Identified during code audit; planned to assign distinct random integer ranges to ensure all coin varieties spawn with their intended rarity.
+* **Flawed Anti-Reverse Validation in `GameController.valKey(KeyCode key)`:**
+  * *Issue:* When evaluating a downward turn (`KeyCode.DOWN`), the validation method checks `if (!this.key.equals(KeyCode.DOWN))` instead of `KeyCode.UP`. This allows the snake to inadvertently turn 180° backward into its own neck when pressing Down while moving Up.
+  * *Status / Steps Taken:* Documented in bug catalog; scheduled for correction to ensure symmetrical 4-directional anti-reversal logic.
 * **Tight Coupling via Public Static Fields:**
   * *Issue:* `GameView.turnDir()` directly reads public static variables from `GameController` (`GameController.key`, `GameController.lastKey`), creating an inverted dependency from View into Controller.
   * *Status / Steps Taken:* Documented; planned to pass direction parameters via method arguments or an observer event to decouple the View from the Controller's static state.
@@ -129,16 +127,16 @@
 | **`Main.java`** | `com.comp2042` | `com.comp2042` | Added explicit `ViewManager` import and programmatic font loading to ensure custom pixel fonts register across systems. |
 | **`ViewManager.java`** | `com.comp2042` | `com.comp2042.view` | Moved to `view` package. Replaced fragile file path strings with `getClass().getResource(...)` for `MainMenu.fxml` and window icon. |
 | **`MainMenuController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Added cross-package imports for models and view components. |
-| **`GameController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Added explicit imports for models, view, and updated sound file path to classpath resource URL. |
+| **`GameController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Added explicit imports for models/view. Refactored `powerCoin()` to use polymorphic dispatch (`coin.applyEffect(...)`), and corrected `newCoin()` to spawn `RainbowCoin` on `ran == 2`. |
 | **`GameView.java`** | `com.comp2042` | `com.comp2042.view` | Moved to `view` package. Updated CSS stylesheet resolution using `getResource(...).toExternalForm()` and imported required models/controllers. |
 | **`Game.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package to encapsulate game rules and scoring state. |
 | **`Snake.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Updated sprite paths to point to `/com/comp2042/images/snake/` via `getResourceAsStream`. |
 | **`Obstacle.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Preserved obstacle coordinates and barrier generation logic. |
-| **`Coin.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Updated base coin image path to `/com/comp2042/images/coins/redcoin.png`. |
-| **`BlueCoin.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Updated sprite path to `/com/comp2042/images/coins/bluecoin.png`. |
-| **`GoldCoin.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Updated sprite path to `/com/comp2042/images/coins/goldcoin.png`. |
-| **`SilverCoin.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Updated sprite path to `/com/comp2042/images/coins/silvercoin.png`. |
-| **`RainbowCoin.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Updated sprite path to `/com/comp2042/images/coins/rainbowcoin.png`. |
+| **`Coin.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Cached static `RED_COIN_IMAGE`, added polymorphic `applyEffect(...)` and `getSpeedBonus()`, and optimized collision generation using a shared static `Random`. |
+| **`BlueCoin.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Cached static `BLUE_COIN_IMAGE`, encapsulated border-ignore behavior inside `applyEffect(...)`, and removed redundant `getImage()`. |
+| **`GoldCoin.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Cached static `GOLD_COIN_IMAGE`, overridden `getPoints()` with constant reward (15), and removed redundant `getImage()`. |
+| **`SilverCoin.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Cached static `SILVER_COIN_IMAGE`, encapsulated dynamic barrier spawning and score adjustment in `applyEffect(...)`, and removed redundant `getImage()`. |
+| **`RainbowCoin.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Cached static `RAINBOW_COIN_IMAGE`, provided speed bonus value, and removed redundant `getImage()`. |
 
 ---
 
@@ -155,4 +153,8 @@
 3. **FXML Controller Binding Mismatch:**
    * *Problem:* When moving `MainMenuController` into `com.comp2042.controller`, `MainMenu.fxml` failed to launch because `fx:controller` still pointed to `com.comp2042.MainMenuController`.
    * *Resolution:* Updated `MainMenu.fxml` with the fully qualified package name `fx:controller="com.comp2042.controller.MainMenuController"`.
+
+4. **Broken Maven Wrapper Distribution URL:**
+   * *Problem:* The repository's `.mvn/wrapper/maven-wrapper.properties` contained a non-existent Maven version URL (`.../apache-maven/3/apache-maven-3-bin.zip`), causing wrapper scripts and build tools to fail with HTTP 404 / `FileNotFoundException`.
+   * *Resolution:* Corrected the `distributionUrl` to point to the official `apache-maven-3.9.6-bin.zip` release archive.
 
