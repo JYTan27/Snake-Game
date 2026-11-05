@@ -94,7 +94,8 @@ public class GameController {
     }));
 
     public void handle(KeyEvent event) {
-        if (event.getCode().isArrowKey()) animation.play();
+        if (event.getCode().isArrowKey())
+            animation.play();
 
         if (valKey(event.getCode()) && !keyPressed) {
             lastKey = key;
@@ -134,12 +135,20 @@ public class GameController {
     }
 
     private boolean valKey(KeyCode key) {
-        if (!key.isArrowKey()) return false;
+        if (!key.isArrowKey())
+            return false;
         else {
-            if (key.equals(KeyCode.LEFT)) if (!this.key.equals(KeyCode.RIGHT)) return true;
-            if (key.equals(KeyCode.RIGHT)) if (!this.key.equals(KeyCode.LEFT)) return true;
-            if (key.equals(KeyCode.DOWN)) if (!this.key.equals(KeyCode.DOWN)) return true;
-            if (key.equals(KeyCode.UP)) return !this.key.equals(KeyCode.DOWN);
+            if (key.equals(KeyCode.LEFT))
+                if (!this.key.equals(KeyCode.RIGHT))
+                    return true;
+            if (key.equals(KeyCode.RIGHT))
+                if (!this.key.equals(KeyCode.LEFT))
+                    return true;
+            if (key.equals(KeyCode.DOWN))
+                if (!this.key.equals(KeyCode.DOWN))
+                    return true;
+            if (key.equals(KeyCode.UP))
+                return !this.key.equals(KeyCode.DOWN);
             return false;
         }
     }
@@ -173,9 +182,9 @@ public class GameController {
         if (coin.getClass().equals(RainbowCoin.class)) {
             RainbowCoin tempCoin = (RainbowCoin) coin;
             animation.setRate(game.getSpeed() + tempCoin.getSpeedBonus());
-        } else if (coin.getClass().equals(SilverCoin.class)){
+        } else if (coin.getClass().equals(SilverCoin.class)) {
             Random rnd = new Random();
-            obstacle.newObstacles(snek, coin, rnd.nextInt(game.getWidth() * game.getHeight()/ 20) +3);
+            obstacle.newObstacles(snek, coin, rnd.nextInt(game.getWidth() * game.getHeight() / 20) + 3);
             game.decMaxScore(obstacle.getObstacles().size());
         } else if (coin.getClass().equals(BlueCoin.class)) {
             snek.ignoreBorders(true);
