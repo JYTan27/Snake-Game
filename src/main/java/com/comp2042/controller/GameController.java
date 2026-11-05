@@ -14,6 +14,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.media.AudioClip;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
@@ -28,6 +29,7 @@ public class GameController {
     private Game game;
     private Stage stage;
     private String coinSoundPath = getClass().getResource("/com/comp2042/audio/coinSound.wav").toExternalForm();
+    private AudioClip coinSoundEffect = new AudioClip(coinSoundPath);
     private Obstacle obstacle;
 
     public static KeyCode key = KeyCode.LEFT;
@@ -71,6 +73,7 @@ public class GameController {
             if (!snek.getDead() && snek.ateCoin(coin)) {
                 powerCoin();
                 game.incScore();
+                coinSoundEffect.play();
                 if (game.gameWon()) {
                     gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
                     return;
