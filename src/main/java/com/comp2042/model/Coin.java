@@ -1,9 +1,9 @@
 package com.comp2042.model;
 
-import javafx.scene.image.Image;
-
 import java.awt.Point;
 import java.util.Random;
+
+import javafx.scene.image.Image;
 
 public class Coin {
     protected static final Random RANDOM = new Random();
@@ -23,12 +23,10 @@ public class Coin {
 
     private void generatePosition(int gridWidth, int gridHeight, Snake snek, Obstacle obstacle) {
         do {
-            int tx = RANDOM.nextInt(gridWidth);
-            int ty = RANDOM.nextInt(gridHeight);
-            pos = new Point(tx, ty);
-        } while (snek.getHead().equals(pos)
-                || snek.getBody().contains(pos)
-                || (obstacle != null && obstacle.getObstacles().contains(pos)));
+            int candidateX = RANDOM.nextInt(gridWidth);
+            int candidateY = RANDOM.nextInt(gridHeight);
+            pos = new Point(candidateX, candidateY);
+        } while (snek.getHead().equals(pos) || snek.getBody().contains(pos) || (obstacle != null && obstacle.getObstacles().contains(pos)));
     }
 
     public Point getPos() {

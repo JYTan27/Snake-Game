@@ -22,7 +22,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class GameController {
-    private Snake snek;
+    private Snake snake;
     private Coin coin;
     private GameView gameView;
     private Game game;
@@ -42,8 +42,8 @@ public class GameController {
         System.out.println("Bonus score: " + bonus);
     }
 
-    public GameController(Snake snek, Coin coin, Game game, GameView gameView, Obstacle obstacle, Stage stage) {
-        this.snek = snek;
+    public GameController(Snake snake, Coin coin, Game game, GameView gameView, Obstacle obstacle, Stage stage) {
+        this.snake = snake;
         this.coin = coin;
         this.gameView = gameView;
         this.game = game;
@@ -55,26 +55,26 @@ public class GameController {
     }
 
     private final Timeline animation = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
-        if (snek.getDead()) {
+        if (snake.getDead()) {
             return;
         } else {
 
             if (key.equals(KeyCode.LEFT)) {
-                snek.move('L');
+                snake.move('L');
             } else if (key.equals(KeyCode.RIGHT)) {
-                snek.move('R');
+                snake.move('R');
             } else if (key.equals(KeyCode.UP)) {
-                snek.move('U');
+                snake.move('U');
             } else if (key.equals(KeyCode.DOWN)) {
-                snek.move('D');
+                snake.move('D');
             }
 
-            if (!snek.getDead() && snek.ateCoin(coin)) {
+            if (!snake.getDead() && snake.ateCoin(coin)) {
                 powerCoin();
                 game.incScore();
                 coinSoundEffect.play();
                 if (game.gameWon()) {
-                    gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
+                    gameView.drawGrid(coin, snake, obstacle, gameView.gc, false, 0);
                     return;
                 }
                 newCoin();
@@ -82,12 +82,12 @@ public class GameController {
 
             keyPressed = false;
 
-            if (!snek.getDead() || snek.hitSelf()) {
-                gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
+            if (!snake.getDead() || snake.hitSelf()) {
+                gameView.drawGrid(coin, snake, obstacle, gameView.gc, false, 0);
             }
 
             gameView.gameWon();
-            gameView.gameOver(snek);
+            gameView.gameOver(snake);
             gameView.updateScoreLabel();
         }
     }));
@@ -100,7 +100,7 @@ public class GameController {
             lastKey = key;
             key = event.getCode();
             keyPressed = true;
-            gameView.turnDir(snek);
+            gameView.turnDir(snake);
         }
 
         if (event.getCode().equals(KeyCode.P)) {
@@ -113,14 +113,14 @@ public class GameController {
         }
 
         if (event.getCode().equals(KeyCode.PLUS)) {
-            gameView.scaleToFullscreen(true, stage, obstacle, snek, coin);
+            gameView.scaleToFullscreen(true, stage, obstacle, snake, coin);
             gameView.gameOverLabel.setStyle("-fx-font-size: 50;");
             gameView.gameWonLabel.setStyle("-fx-font-size: 50;");
             gameView.scoreLabel.setStyle("-fx-font-size: 35;");
         }
 
         if (event.getCode().equals(KeyCode.MINUS)) {
-            gameView.scaleToFullscreen(false, stage, obstacle, snek, coin);
+            gameView.scaleToFullscreen(false, stage, obstacle, snake, coin);
             gameView.gameOverLabel.setStyle("-fx-font-size: 15;");
             gameView.gameWonLabel.setStyle("-fx-font-size: 15;");
             gameView.scoreLabel.setStyle("-fx-font-size: 15;");
@@ -157,8 +157,8 @@ public class GameController {
         animation.jumpTo(Duration.ZERO);
         animation.stop();
 
-        snek = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
-        coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle);
+        snake = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
+        coin = new Coin(game.getWidth(), game.getHeight(), snake, obstacle);
 
         int unusedObstacleCount = new Random().nextInt(game.getWidth() * game.getHeight() / 20) + 3;
 
@@ -169,16 +169,16 @@ public class GameController {
         obstacle.reset();
 
         gameView.gameWon();
-        gameView.gameOver(snek);
+        gameView.gameOver(snake);
         gameView.updateScoreLabel();
 
-        gameView.drawGrid(coin, snek, obstacle, gameView.gc, false, 0);
+        gameView.drawGrid(coin, snake, obstacle, gameView.gc, false, 0);
     }
 
     private void powerCoin() {
         animation.setRate(game.getSpeed() + coin.getSpeedBonus());
-        snek.ignoreBorders(false);
-        coin.applyEffect(game, snek, obstacle);
+        snake.ignoreBorders(false);
+        coin.applyEffect(game, snake, obstacle);
         game.addPoints(coin.getPoints());
     }
 
@@ -187,18 +187,18 @@ public class GameController {
             Random rnd = new Random();
             int ran = rnd.nextInt(12);
             if (ran == 1) {
-                coin = new GoldCoin(game.getWidth(), game.getHeight(), snek, obstacle);
+                coin = new GoldCoin(game.getWidth(), game.getHeight(), snake, obstacle);
             } else if (ran == 2) {
-                coin = new RainbowCoin(game.getWidth(), game.getHeight(), snek, obstacle);
+                coin = new RainbowCoin(game.getWidth(), game.getHeight(), snake, obstacle);
             } else if (ran == 3) {
-                coin = new BlueCoin(game.getWidth(), game.getHeight(), snek, obstacle);
+                coin = new BlueCoin(game.getWidth(), game.getHeight(), snake, obstacle);
             } else if (ran == 4 && obstacle.getObstacles().size() == 0) {
-                coin = new SilverCoin(game.getWidth(), game.getHeight(), snek, obstacle);
+                coin = new SilverCoin(game.getWidth(), game.getHeight(), snake, obstacle);
             } else {
-                coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle);
+                coin = new Coin(game.getWidth(), game.getHeight(), snake, obstacle);
             }
         } else {
-            coin = new Coin(game.getWidth(), game.getHeight(), snek, obstacle);
+            coin = new Coin(game.getWidth(), game.getHeight(), snake, obstacle);
         }
     }
 }

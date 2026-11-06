@@ -18,7 +18,7 @@
 16. **Coupling to legacy AWT (`java.awt.Point`)** – uses `java.awt.Point` inside a JavaFX project, mixing legacy desktop UI dependencies with JavaFX.
 17. **Fragile "move first, rollback on collision" pattern in `Snake.move(char dir)`** – the head coordinate is mutated into an illegal tile before validating collisions, requiring manual inverse translations (`translate(0, 1)`, etc.) to rollback. Validating the target tile *before* moving eliminates rollback complexity and risk of coordinate misalignment.
 18. **Misleading boolean method name `borderControl()`** – named like a system or controller rather than a boolean predicate; should follow Java naming conventions such as `isOutOfBounds()` or `hasHitWall()`.
-19. **Ambiguous variable naming for grid bounds (`gx`, `gy` and constructor params `int x, int y`)** – `gx`/`gy` sound like coordinates (Grid X/Y) rather than board dimensions (`gridWidth`/`gridHeight`), creating confusion in the constructor where callers might assume `(x, y)` sets the snake's initial position rather than board size.
+19. **Ambiguous variable naming for grid bounds (`gx`, `gy` and constructor params `int x, int y`)** – `gx`/`gy` sound like coordinates (Grid X/Y) rather than board dimensions (`gameWidth`/`gameHeight`), creating confusion in the constructor where callers might assume `(x, y)` sets the snake's initial position rather than board size.
 
 20. **Unnecessary `ImageView` wrapper instances for canvas rendering** – `Snake` creates and maintains four `ImageView` objects solely to rotate sprites before calling `.snapshot()`. Since `Canvas` natively renders raw `Image` objects with hardware-accelerated canvas rotation (`GraphicsContext.rotate()`), wrapping images inside `ImageView` nodes is completely unnecessary overhead and can be removed entirely.
 21. **Off-by-one coordinate bug in `Obstacle.newObstacles(...)`** – `p = new Point(rnd.nextInt(x) + 1, rnd.nextInt(y))` shifts X-coordinates into the range `[1, x]`. This can spawn obstacles at column `x` (out-of-bounds outside the right edge) and prevents obstacles from ever spawning at column `0` (the leftmost edge).
@@ -41,6 +41,7 @@
 38. **Unsafe FXML loading and immediate NPE risk in `ViewManager`** – catches `IOException` during FXML loading and only logs a stack trace, proceeding immediately to `new Scene(root)` where `root` is `null`, producing an unhandled `NullPointerException`.
 39. **Typo in public method name in `ViewManager`** – `initalizeMainMenu()` misspells "initialize", introducing API inconsistency.
 40. **Flawed key validation logic in `GameController.valKey(KeyCode key)`** – when checking `KeyCode.DOWN`, it compares against `!this.key.equals(KeyCode.DOWN)` instead of `KeyCode.UP`, failing to properly prevent 180-degree self-reversals into the snake's neck.
+41. **Unbounded `do...while` coordinate generation / infinite loop vulnerability** – both `Coin` and `Obstacle` generate coordinates via unconstrained random guess-and-retry `do...while` loops. As the snake and obstacles occupy more grid cells near endgame, the probability of selecting an empty cell drops drastically, causing execution spikes. If the grid becomes full, the loop cannot exit and permanently freezes the application. A deterministic available-cell sampling approach eliminates retries and guarantees safe termination.
 
 # Improvements Made
 
@@ -50,11 +51,46 @@
    - Eliminated redundant intermediate local variables before returning (e.g. `int points = 5; return points;`).
 2. **Polymorphic power-up architecture (Addresses Bug #29 - Open-Closed Principle):**
    - Added polymorphic `applyEffect(Game game, Snake snake, Obstacle obstacle)` and `getSpeedBonus()` methods to `Coin`.
-   - Replaced the brittle `if (coin.getClass().equals(...))` type-checking and downcasting chain in `GameController.powerCoin()` with a clean, polymorphic one-line call: `coin.applyEffect(game, snek, obstacle)`.
+   - Replaced the brittle `if (coin.getClass().equals(...))` type-checking and downcasting chain in `GameController.powerCoin()` with a clean, polymorphic one-line call: `coin.applyEffect(game, snake, obstacle)`.
 3. **Fixed unreachable `RainbowCoin` spawn bug (Addresses Bug #3):**
    - Corrected `GameController.newCoin()` condition so `RainbowCoin` correctly spawns on `ran == 2` instead of the unreachable duplicate `ran == 1`.
 4. **Optimized random coordinate generation (Addresses Bug #27):**
    - Shared a single static `Random` generator for position generation rather than allocating `new Random()` on every collision retry in the `do...while` loop.
 5. **Fixed broken Maven Wrapper configuration:**
    - Corrected invalid Maven 3 release URL in `.mvn/wrapper/maven-wrapper.properties` to official Maven 3.9.6 binary.
+6. **Removed JavaFX UI components from `Snake` model — MVC fix (Addresses Bugs #11, #20):**
+   - Deleted all four `ImageView` fields (`imageHead`, `imageBody`, `imageTurn`, `imageTail`) and their corresponding `getImageView*()` methods from `Snake`.
+   - Replaced with four `private static final Image` singletons (`IMG_HEAD`, `IMG_BODY`, `IMG_TURN`, `IMG_TAIL`) loaded once at class initialization via `Snake.class.getResourceAsStream(...)`.
+   - Exposed them via `getImageHead()`, `getImageBody()`, `getImageTurn()`, `getImageTail()` — returning raw `Image` objects so the model carries zero JavaFX scene-graph nodes.
+   - `GameView` now renders all sprite rotation using `GraphicsContext.save()` / `gc.translate()` / `gc.rotate()` / `gc.drawImage()` / `gc.restore()`, fully replacing the `SnapshotParameters`-based snapshot pipeline.
+7. **Merged redundant border flags into single `borderWrap` boolean (Addresses Bug #12):**
+   - Deleted `ignoreBorders` and kept only the unified `borderWrap` field (renamed from `noBorder`) in `Snake`.
+   - All `move()` direction cases previously contained `(!ignoreBorders && !noBorder)` or `(ignoreBorders || noBorder)` guards; these are now a single `borderWrap` read.
+   - `ignoreBorders(boolean wrap)` now writes to `borderWrap` directly, so external callers (e.g. `BlueCoin.applyEffect`) work without change.
+8. **Extracted shared `move()` helpers — eliminated 4-way code duplication (Addresses Bug #13):**
+   - Added private `attemptMove(int dirAngle, int dx, int dy)` that holds all collision-check and wrap logic once.
+   - Each `switch` case in `move(char dir)` is now a single one-liner delegating to `attemptMove`.
+   - Added private `wrapCoordinate(Point)` to compute modular wrap arithmetic in one place.
+9. **Replaced `ArrayList` body with `ArrayDeque` — O(1) tail removal (Addresses Bug #14):**
+   - `body` changed from `ArrayList<Point>` to `Deque<Point>` (backed by `ArrayDeque`).
+   - `ateCoin()` now calls `body.pollFirst()` instead of `body.remove(0)`, eliminating the O(N) array shift on every non-eating tick.
+   - `move()` appends via `body.addLast(new Point(head))`.
+   - `getBody()` still returns `new ArrayList<>(body)` for backward compatibility with callers.
+10. **Cached `head.equals(coin.getPos())` result in `ateCoin()` (Addresses Bug #15):**
+    - The boolean result is stored in a local variable `ate` and reused for both the `if (!ate)` guard and the `return ate` statement, so the equality check runs exactly once per tick instead of twice.
+11. **Validate-before-move: eliminated fragile rollback translations (Addresses Bug #17):**
+    - `attemptMove()` computes the `target` point before touching `head`, then checks `isOutOfBounds(target)` and `obstacle.getObstacles().contains(target)`.
+    - Only on a clean (safe) target does `head.setLocation(target)` execute.
+    - The old pattern of `head.translate(dx, dy)` followed by `head.translate(-dx, -dy)` on collision is completely removed.
+12. **Renamed `borderControl()` → `isOutOfBounds(Point)` (Addresses Bug #18):**
+    - The private predicate method now takes a `Point` parameter (the candidate target) rather than reading `head` implicitly, making it pure and usable before the move is committed.
+    - Naming now follows Java boolean-predicate conventions (`is…`).
+13. **Renamed ambiguous constructor parameters `x, y` → `gameWidth, gameHeight` (Addresses Bug #19):**
+    - The `Snake(int x, int y, ...)` signature is now `Snake(int gameWidth, int gameHeight, ...)`, removing the ambiguity where callers could mistake these for an initial snake position rather than board dimensions.
+14. **Removed duplicate `drawGrid` overload from `GameView` (Addresses Bug #1):**
+    - The dead private `drawGrid(Coin, Snake, GraphicsContext)` method (without obstacles) is deleted; a single public `drawGrid(...)` now handles all rendering scenarios, including a `null` obstacle guard during initialisation.
+15. **Fixed double-scaling bug in sprite rendering (Addresses Bug #9):**
+    - The old `game.getMultiplier() * fullScale * fullScale` expression in `drawBody` and `drawHead` is replaced by a single pre-computed `double cellSize = game.getMultiplier() * fullScale`, applied consistently to both position and size calculations.
+16. **Eliminated repeated `SnapshotParameters` allocation (Addresses Bug #7):**
+    - `SnapshotParameters` objects were created inside every branch of `drawBody` and inside `drawHead` on every render tick. The entire snapshot pipeline is gone; `GraphicsContext` rotation requires no parameter objects, reducing per-frame allocation to zero for this path.
 

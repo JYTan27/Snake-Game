@@ -67,6 +67,16 @@
     * `src/main/resources/com/comp2042/fonts/` (`SFPixelate.ttf`, `SFPixelateShaded-Bold.ttf`, `kenvector_future.ttf`)
 * **Classpath Asset Loading:**
   * Replaced brittle relative file paths with standard `getClass().getResourceAsStream(...)` and `getResource(...).toExternalForm()` to ensure resources load reliably in both IDE and standalone JAR packaging.
+* **Snake Model Decoupling & Optimisation:**
+  * Removed all JavaFX `ImageView` and `SnapshotParameters` instances from `Snake` (model no longer imports any scene-graph nodes), replacing them with `private static final Image` singletons — enabling headless unit testing.
+  * `move()` refactored with shared `attemptMove()` / `wrapCoordinate()` helpers, removing copy-pasted collision/rollback blocks across all four direction cases.
+  * Border-wrap behaviour unified into a single `borderWrap` flag, eliminating the redundant `ignoreBorders` / `noBorder` dual-flag anti-pattern.
+  * `body` collection changed from `ArrayList` to `ArrayDeque`, making tail removal O(1) on every non-eating tick.
+  * "Move first, rollback on collision" pattern replaced by validate-before-move, eliminating fragile inverse-translation code.
+* **GameView Rendering Pipeline Rewrite:**
+  * All `ImageView.snapshot()` calls replaced by `GraphicsContext.save()` / `gc.rotate()` / `gc.drawImage()` / `gc.restore()` — hardware-accelerated canvas rotation with zero per-frame allocations.
+  * Duplicate private `drawGrid` overload removed; a single `drawGrid` implementation handles all call sites.
+  * Double-scaling bug (`getMultiplier() * fullScale * fullScale`) corrected to a single `cellSize = getMultiplier() * fullScale` factor applied uniformly to both position and size.
 * **Core Gameplay Loop & Features:**
   * **Snake Movement & Controls:** Responsive 4-directional navigation with anti-reverse logic (cannot 180° turn into self).
   * **Polymorphic Food & Coin System:** Spawning coins with distinct attributes and behaviors using object-oriented polymorphism (`Coin`, `GoldCoin`, `SilverCoin`, `BlueCoin`, `RainbowCoin`):
@@ -75,7 +85,7 @@
     * Blue Coin: Temporary wall pass-through / border-ignore ability.
     * Silver Coin: Spawns additional barrier obstacles on the board and adjusts target score.
     * Rainbow Coin: Grants speed boost (+5.0 speed) to the game loop.
-  * **Asset Caching:** Coin sprites are loaded once as `static final` assets rather than re-reading files from disk on every coin spawn.
+  * **Asset Caching:** Snake and coin sprites are loaded once as `static final` assets — no disk reads or texture re-allocations per tick or per coin spawn.
   * **Dynamic Obstacle Generation:** Barriers randomly populate without colliding with snake spawn or coins.
   * **Collision Detection:** Accurate wall collision, self-bite collision, and obstacle collision handling.
   * **Score & Win Conditions:** Dynamically updated HUD score label and victory state checks based on board capacity.
@@ -106,7 +116,7 @@
 * **Settings & Volume Control Slider:**
   * *Reason:* Focused on core gameplay mechanics and architectural decoupling before adding secondary audio settings.
 * **Headless Automated Unit Testing Suite:**
-  * *Reason:* Legacy models still import JavaFX `Image`/`ImageView` components; pure POJO decoupling must be completed before unit tests can run without `Toolkit not initialized` exceptions.
+  * *Reason:* `Snake` has been decoupled from JavaFX scene-graph nodes (no `ImageView` imports remain). Pure POJO unit tests for snake logic can now run without `Toolkit not initialized` exceptions. Full test suite implementation deferred to a future iteration.
 
 ---
 
@@ -128,9 +138,9 @@
 | **`ViewManager.java`** | `com.comp2042` | `com.comp2042.view` | Moved to `view` package. Replaced fragile file path strings with `getClass().getResource(...)` for `MainMenu.fxml` and window icon. |
 | **`MainMenuController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Added cross-package imports for models and view components. |
 | **`GameController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Added explicit imports for models/view. Refactored `powerCoin()` to use polymorphic dispatch (`coin.applyEffect(...)`), and corrected `newCoin()` to spawn `RainbowCoin` on `ran == 2`. |
-| **`GameView.java`** | `com.comp2042` | `com.comp2042.view` | Moved to `view` package. Updated CSS stylesheet resolution using `getResource(...).toExternalForm()` and imported required models/controllers. |
+| **`GameView.java`** | `com.comp2042` | `com.comp2042.view` | Moved to `view` package. Updated CSS stylesheet resolution using `getResource(...).toExternalForm()` and imported required models/controllers. Rendering pipeline rewritten: `ImageView.snapshot()` replaced by `GraphicsContext.save()/rotate()/drawImage()/restore()` (Bugs #11, #20); duplicate private `drawGrid` overload removed (Bug #1); double-scaling `fullScale * fullScale` corrected to single `cellSize` factor (Bug #9); all per-frame `SnapshotParameters` allocations eliminated (Bug #7). |
 | **`Game.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package to encapsulate game rules and scoring state. |
-| **`Snake.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Updated sprite paths to point to `/com/comp2042/images/snake/` via `getResourceAsStream`. |
+| **`Snake.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Major refactor: (1) all `ImageView` / `SnapshotParameters` removed — model now exposes `static final Image` singletons only (Bugs #11, #20); (2) `move()` refactored with `attemptMove()` / `wrapCoordinate()` helpers removing 4-way copy-paste (Bug #13); (3) redundant `ignoreBorders` / `noBorder` flags merged into single `borderWrap` boolean (Bug #12); (4) `body` changed from `ArrayList` to `ArrayDeque` for O(1) tail removal (Bug #14); (5) `ateCoin()` caches equality result to avoid double evaluation (Bug #15); (6) validate-before-move replaces move-then-rollback pattern (Bug #17); (7) `borderControl()` renamed to `isOutOfBounds(Point)` (Bug #18); (8) constructor params renamed `x, y` → `gameWidth, gameHeight` (Bug #19). |
 | **`Obstacle.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Preserved obstacle coordinates and barrier generation logic. |
 | **`Coin.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Cached static `RED_COIN_IMAGE`, added polymorphic `applyEffect(...)` and `getSpeedBonus()`, and optimized collision generation using a shared static `Random`. |
 | **`BlueCoin.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Cached static `BLUE_COIN_IMAGE`, encapsulated border-ignore behavior inside `applyEffect(...)`, and removed redundant `getImage()`. |
