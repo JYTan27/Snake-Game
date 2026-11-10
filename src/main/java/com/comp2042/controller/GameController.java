@@ -30,24 +30,24 @@ public class GameController {
     private String coinSoundPath = getClass().getResource("/com/comp2042/audio/coinSound.wav").toExternalForm();
     private AudioClip coinSoundEffect = new AudioClip(coinSoundPath);
     private Obstacle obstacle;
+    private final Runnable onReturnToMenu;
 
-    public static KeyCode key = KeyCode.LEFT;
-    public static KeyCode lastKey = KeyCode.LEFT;
+    private KeyCode key = KeyCode.LEFT;
+    private KeyCode lastKey = KeyCode.LEFT;
     private boolean keyPressed = false;
 
-    private int legacyScoreMultiplier = 2;
+    private final Random random = new Random();
 
-    private void calculateBonusScore() {
-        int bonus = game.getScorePoints() * legacyScoreMultiplier;
-        System.out.println("Bonus score: " + bonus);
-    }
+    public KeyCode getCurrentKey() { return key; }
+    public KeyCode getLastKey() { return lastKey; }
 
-    public GameController(Snake snake, Coin coin, Game game, GameView gameView, Obstacle obstacle, Stage stage) {
+    public GameController(Snake snake, Coin coin, Game game, GameView gameView, Obstacle obstacle, Stage stage, Runnable onReturnToMenu) {
         this.snake = snake;
         this.coin = coin;
         this.gameView = gameView;
         this.game = game;
         this.stage = stage;
+        this.onReturnToMenu = onReturnToMenu;
 
         this.obstacle = obstacle;
         animation.setCycleCount(Animation.INDEFINITE);
@@ -100,7 +100,7 @@ public class GameController {
             lastKey = key;
             key = event.getCode();
             keyPressed = true;
-            gameView.turnDir(snake);
+            gameView.turnDir(snake, lastKey, key);
         }
 
         if (event.getCode().equals(KeyCode.P)) {
@@ -109,7 +109,7 @@ public class GameController {
 
         if (event.getCode().equals(KeyCode.TAB)) {
             reset();
-            gameView.scoreLabel.setText("Score: " + game.getScorePoints());
+            gameView.scoreLabel.setText("Score: " + game.getDisplayScore());
         }
 
         if (event.getCode().equals(KeyCode.PLUS)) {
@@ -127,9 +127,8 @@ public class GameController {
         }
 
         if (event.getCode().equals(KeyCode.ESCAPE)) {
-            MainMenuController mainMenuController = new MainMenuController();
-            mainMenuController.getViewManager().getPrimaryStage().show();
-            mainMenuController.getViewManager().getGameStage().close();
+            animation.stop();
+            onReturnToMenu.run();
         }
     }
 
@@ -144,7 +143,7 @@ public class GameController {
                 if (!this.key.equals(KeyCode.LEFT))
                     return true;
             if (key.equals(KeyCode.DOWN))
-                if (!this.key.equals(KeyCode.DOWN)) // Up instead of Down
+                if (!this.key.equals(KeyCode.UP))
                     return true;
             if (key.equals(KeyCode.UP))
                 return !this.key.equals(KeyCode.DOWN);
@@ -160,13 +159,13 @@ public class GameController {
         snake = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
         coin = new Coin(game.getWidth(), game.getHeight(), snake, obstacle);
 
-        int unusedObstacleCount = new Random().nextInt(game.getWidth() * game.getHeight() / 20) + 3;
-
         animation.setRate(game.getSpeed());
         key = KeyCode.LEFT;
         keyPressed = false;
         game.resetScore();
         obstacle.reset();
+
+        gameView.resetTurnArray();
 
         gameView.gameWon();
         gameView.gameOver(snake);
@@ -184,8 +183,7 @@ public class GameController {
 
     private void newCoin() {
         if (game.isPowerUp()) {
-            Random rnd = new Random();
-            int ran = rnd.nextInt(12);
+            int ran = random.nextInt(12);
             if (ran == 1) {
                 coin = new GoldCoin(game.getWidth(), game.getHeight(), snake, obstacle);
             } else if (ran == 2) {

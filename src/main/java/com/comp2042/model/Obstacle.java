@@ -2,32 +2,48 @@ package com.comp2042.model;
 
 import javafx.scene.paint.Color;
 
-import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 public class Obstacle {
-    private Color color = Color.BLACK;
-    private ArrayList<Point> obstacles = new ArrayList<>();
-    private int x;
-    private int y;
+    private static final Random RANDOM = new Random();
 
-    public Obstacle(int x, int y) {
-        this.x = x;
-        this.y = y;
+    private Color color = Color.BLACK;
+    private ArrayList<GridPoint> obstacles = new ArrayList<>();
+    private int boardWidth;
+    private int boardHeight;
+
+    public Obstacle(int boardWidth, int boardHeight) {
+        this.boardWidth = boardWidth;
+        this.boardHeight = boardHeight;
     }
 
     public void newObstacles(Snake snek, Coin coin, int amount) {
-        if (obstacles.size() > 50) {
+        if (obstacles.size() > boardWidth * boardHeight / 4) {
             return;
         }
-        Random rnd = new Random();
-        Point p;
-        for (int i = 0; i < amount; i++) {
-            do {
-                p = new Point(rnd.nextInt(x) + 1, rnd.nextInt(y));
-            } while (coin.getPos().equals(p) || snek.getBody().contains(p) || snek.getHead().equals(p));
-            obstacles.add(p);
+
+        List<GridPoint> occupied = new ArrayList<>();
+        occupied.add(snek.getHead());
+        occupied.addAll(snek.getBody());
+        occupied.add(coin.getPos());
+        occupied.addAll(obstacles);
+
+        List<GridPoint> freeCells = new ArrayList<>();
+        for (int cx = 0; cx < boardWidth; cx++) {
+            for (int cy = 0; cy < boardHeight; cy++) {
+                GridPoint candidate = new GridPoint(cx, cy);
+                if (!occupied.contains(candidate)) {
+                    freeCells.add(candidate);
+                }
+            }
+        }
+
+        for (int i = 0; i < amount && !freeCells.isEmpty(); i++) {
+            int idx = RANDOM.nextInt(freeCells.size());
+            obstacles.add(freeCells.remove(idx));
         }
     }
 
@@ -35,8 +51,8 @@ public class Obstacle {
         return color;
     }
 
-    public ArrayList<Point> getObstacles() {
-        return obstacles;
+    public List<GridPoint> getObstacles() {
+        return Collections.unmodifiableList(obstacles);
     }
 
     public void reset() {

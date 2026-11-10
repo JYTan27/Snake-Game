@@ -1,6 +1,7 @@
 package com.comp2042.model;
 
-import java.awt.Point;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import javafx.scene.image.Image;
@@ -9,7 +10,7 @@ public class Coin {
     protected static final Random RANDOM = new Random();
     private static final Image RED_COIN_IMAGE = new Image(Coin.class.getResourceAsStream("/com/comp2042/images/coins/redcoin.png"));
 
-    private Point pos;
+    private GridPoint pos;
     private final Image image;
 
     public Coin(int gridWidth, int gridHeight, Snake snek, Obstacle obstacle) {
@@ -22,15 +23,34 @@ public class Coin {
     }
 
     private void generatePosition(int gridWidth, int gridHeight, Snake snek, Obstacle obstacle) {
-        do {
-            int candidateX = RANDOM.nextInt(gridWidth);
-            int candidateY = RANDOM.nextInt(gridHeight);
-            pos = new Point(candidateX, candidateY);
-        } while (snek.getHead().equals(pos) || snek.getBody().contains(pos) || (obstacle != null && obstacle.getObstacles().contains(pos)));
+        List<GridPoint> occupied = new ArrayList<>();
+        occupied.add(snek.getHead());
+        occupied.addAll(snek.getBody());
+        if (obstacle != null) {
+            occupied.addAll(obstacle.getObstacles());
+        }
+
+        List<GridPoint> freeCells = new ArrayList<>();
+        for (int cx = 0; cx < gridWidth; cx++) {
+            for (int cy = 0; cy < gridHeight; cy++) {
+                GridPoint candidate = new GridPoint(cx, cy);
+                if (!occupied.contains(candidate)) {
+                    freeCells.add(candidate);
+                }
+            }
+        }
+
+        if (freeCells.isEmpty()) {
+            // No free cell available; place at (0,0) as fallback
+            pos = new GridPoint(0, 0);
+            return;
+        }
+
+        pos = freeCells.get(RANDOM.nextInt(freeCells.size()));
     }
 
-    public Point getPos() {
-        return new Point(pos);
+    public GridPoint getPos() {
+        return new GridPoint(pos);
     }
 
     public int getPoints() {

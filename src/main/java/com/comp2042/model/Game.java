@@ -1,51 +1,63 @@
 package com.comp2042.model;
 
-import javafx.scene.paint.Color;
-
 public class Game {
-    private Color color = Color.web("feffe4");
+    private static final double SMALL_BOARD_MULTIPLIER = 20.0;
+    private static final double LARGE_BOARD_MULTIPLIER = 10.0;
+    private static final int LARGE_BOARD_THRESHOLD = 50;
+
     private int width;
     private int height;
-    private int score;
+    private int coinsEaten;
     private int maxScore;
     private double multiplier;
-    private int scorePoints;
+    private int displayScore;
     private double speed;
     private boolean powerUp;
     private boolean noBorder;
 
-    public Game(int x, int y, boolean powerUp, char difficulty) {
-        if (difficulty == 'E') {
-            speed = 8.5;
-            noBorder = true;
-        } else if (difficulty == 'N') {
-            speed = 8.5;
-            noBorder = false;
-        } else if (difficulty == 'H') {
-            speed = 13;
-            noBorder = false;
+    public enum Difficulty {
+        EASY(8.5, true),
+        NORMAL(8.5, false),
+        HARD(13.0, false);
+
+        private final double speed;
+        private final boolean noBorder;
+
+        Difficulty(double speed, boolean noBorder) {
+            this.speed = speed;
+            this.noBorder = noBorder;
         }
+
+        public double getSpeed() { return speed; }
+        public boolean isNoBorder() { return noBorder; }
+    }
+
+    public Game(int x, int y, boolean powerUp, Difficulty difficulty) {
+        this.speed = difficulty.getSpeed();
+        this.noBorder = difficulty.isNoBorder();
         this.powerUp = powerUp;
         width = x;
         height = y;
         maxScore = x * y - 2;
-        if (height > 50) {
-            multiplier = 10;
-        } else {
-            multiplier = 20;
-        }
+        multiplier = (height > LARGE_BOARD_THRESHOLD) ? LARGE_BOARD_MULTIPLIER : SMALL_BOARD_MULTIPLIER;
     }
 
     public boolean gameWon() {
-        return score == maxScore;
+        return coinsEaten == maxScore;
     }
 
     public void incScore() {
-        score++;
+        coinsEaten++;
     }
 
+    /**
+     * Reduces maxScore by (num - 1) to account for the grid cells now occupied
+     * by obstacles. The -1 accounts for the coin cell that was just consumed.
+     */
     public void decMaxScore(int num) {
-        this.maxScore -= (num - 1);
+        if (maxScore - (num - 1) > 0) {
+            maxScore -= (num - 1);
+        }
     }
 
     public int getWidth() {
@@ -57,12 +69,8 @@ public class Game {
     }
 
     public void resetScore() {
-        score = 0;
-        scorePoints = 0;
-    }
-
-    public Color getColor() {
-        return color;
+        coinsEaten = 0;
+        displayScore = 0;
     }
 
     public double getMultiplier() {
@@ -70,11 +78,11 @@ public class Game {
     }
 
     public void addPoints(int n) {
-        scorePoints += n;
+        displayScore += n;
     }
 
-    public int getScorePoints() {
-        return scorePoints;
+    public int getDisplayScore() {
+        return displayScore;
     }
 
     public boolean isPowerUp() {

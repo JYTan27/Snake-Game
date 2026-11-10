@@ -15,8 +15,8 @@ public class Main extends Application {
         Font.loadFont(getClass().getResourceAsStream("/com/comp2042/fonts/SFPixelate.ttf"), 14);
         Font.loadFont(getClass().getResourceAsStream("/com/comp2042/fonts/SFPixelateShaded-Bold.ttf"), 14);
 
-        viewManager = new ViewManager();
-        viewManager.initalizeMainMenu();
+        viewManager = new ViewManager(primaryStage);
+        viewManager.initializeMainMenu();
     }
 
     public static void main(String[] args) {

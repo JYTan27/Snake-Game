@@ -1,26 +1,22 @@
 package com.comp2042.model;
 
-import java.awt.Point;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 
 import javafx.scene.image.Image;
 
 public class Snake {
-    private static final Image IMG_HEAD =
-            new Image(Snake.class.getResourceAsStream("/com/comp2042/images/snake/snakehead.png"));
-    private static final Image IMG_BODY =
-            new Image(Snake.class.getResourceAsStream("/com/comp2042/images/snake/snakebody.png"));
-    private static final Image IMG_TURN =
-            new Image(Snake.class.getResourceAsStream("/com/comp2042/images/snake/snaketurnleft.png"));
-    private static final Image IMG_TAIL =
-            new Image(Snake.class.getResourceAsStream("/com/comp2042/images/snake/snaketail.png"));
+    private static final Image IMG_HEAD = new Image(Snake.class.getResourceAsStream("/com/comp2042/images/snake/snakehead.png"));
+    private static final Image IMG_BODY = new Image(Snake.class.getResourceAsStream("/com/comp2042/images/snake/snakebody.png"));
+    private static final Image IMG_TURN = new Image(Snake.class.getResourceAsStream("/com/comp2042/images/snake/snaketurnleft.png"));
+    private static final Image IMG_TAIL = new Image(Snake.class.getResourceAsStream("/com/comp2042/images/snake/snaketail.png"));
 
     private boolean dead = false;
-    private final Point head = new Point();
+    private final GridPoint head = new GridPoint(0, 0);
 
-    private final Deque<Point> body = new ArrayDeque<>();
+    private final Deque<GridPoint> body = new ArrayDeque<>();
 
     private final int gameWidth;
     private final int gameHeight;
@@ -35,18 +31,17 @@ public class Snake {
     private static final int DIR_DOWN  = 180;
     private static final int DIR_LEFT  = 270;
 
-
     public Snake(int gameWidth, int gameHeight, boolean noBorder, Obstacle obstacle) {
         this.obstacle = obstacle;
         this.borderWrap = noBorder;
         this.gameWidth  = gameWidth;
         this.gameHeight = gameHeight;
         this.head.setLocation(gameWidth / 2, gameHeight / 2);
-        this.body.addLast(new Point(gameWidth / 2 + 1, gameHeight / 2));
+        this.body.addLast(new GridPoint(gameWidth / 2 + 1, gameHeight / 2));
     }
 
     public void move(char dir) {
-        body.addLast(new Point(head));
+        body.addLast(new GridPoint(head));
 
         switch (dir) {
             case 'U' -> attemptMove(DIR_UP,    0, -1);
@@ -63,7 +58,7 @@ public class Snake {
     private void attemptMove(int dirAngle, int dx, int dy) {
         snakeDir = dirAngle;
 
-        Point target = new Point(head.x + dx, head.y + dy);
+        GridPoint target = new GridPoint(head.getX() + dx, head.getY() + dy);
 
         if (isOutOfBounds(target)) {
             if (borderWrap) {
@@ -78,10 +73,10 @@ public class Snake {
         }
     }
 
-    private Point wrapCoordinate(Point p) {
-        int wx = ((p.x % gameWidth)  + gameWidth)  % gameWidth;
-        int wy = ((p.y % gameHeight) + gameHeight) % gameHeight;
-        return new Point(wx, wy);
+    private GridPoint wrapCoordinate(GridPoint p) {
+        int wx = ((p.getX() % gameWidth)  + gameWidth)  % gameWidth;
+        int wy = ((p.getY() % gameHeight) + gameHeight) % gameHeight;
+        return new GridPoint(wx, wy);
     }
 
     public boolean ateCoin(Coin coin) {
@@ -92,8 +87,8 @@ public class Snake {
         return ate;
     }
 
-    private boolean isOutOfBounds(Point p) {
-        return p.x < 0 || p.y < 0 || p.x >= gameWidth || p.y >= gameHeight;
+    private boolean isOutOfBounds(GridPoint p) {
+        return p.getX() < 0 || p.getY() < 0 || p.getX() >= gameWidth || p.getY() >= gameHeight;
     }
 
     public boolean hitSelf() {
@@ -104,7 +99,7 @@ public class Snake {
         if (bodyCount == 0) {
             return 0;
         }
-        ArrayList<Point> bodyList = new ArrayList<>(body);
+        ArrayList<GridPoint> bodyList = new ArrayList<>(body);
         if (bodyList.get(bodyCount).getY() == bodyList.get(bodyCount - 1).getY()) {
             return DIR_LEFT;
         } else {
@@ -116,12 +111,12 @@ public class Snake {
         this.borderWrap = wrap;
     }
 
-    public ArrayList<Point> getBody() {
+    public List<GridPoint> getBody() {
         return new ArrayList<>(body);
     }
     
-    public Point getHead() {
-        return new Point(head);
+    public GridPoint getHead() {
+        return new GridPoint(head);
     }
 
     public boolean getDead() {
