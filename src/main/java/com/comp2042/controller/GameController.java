@@ -47,8 +47,7 @@ public class GameController {
     public KeyCode getCurrentKey() { return key; }
     public KeyCode getLastKey() { return lastKey; }
 
-    public GameController(Snake snake, Coin coin, Game game, GameView gameView,
-                          Obstacle obstacle, Stage stage, Runnable onReturnToMenu) {
+    public GameController(Snake snake, Coin coin, Game game, GameView gameView, Obstacle obstacle, Stage stage, Runnable onReturnToMenu) {
         this.snake = snake;
         this.coin = coin;
         this.gameView = gameView;

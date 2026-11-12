@@ -80,9 +80,9 @@ public class Snake {
     }
 
     public boolean ateCoin(Coin coin) {
-        boolean ate = head.equals(coin.getPos()); // Bug #15: single evaluation
+        boolean ate = head.equals(coin.getPos());
         if (!ate) {
-            body.pollFirst(); // Bug #14: O(1) tail removal via Deque
+            body.pollFirst();
         }
         return ate;
     }
