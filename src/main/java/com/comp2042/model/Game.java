@@ -16,9 +16,9 @@ public class Game {
     private boolean noBorder;
 
     public enum Difficulty {
-        EASY(8.5, true),
-        NORMAL(8.5, false),
-        HARD(13.0, false);
+        EASY(12.0, true),
+        NORMAL(15.0, false),
+        HARD(18.5, false);
 
         private final double speed;
         private final boolean noBorder;
