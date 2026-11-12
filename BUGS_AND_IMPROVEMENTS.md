@@ -112,3 +112,9 @@
    - Corrected downward key check in `GameController.valKey()` from `!key.equals(DOWN)` to `!key.equals(UP)`, properly preventing 180° neck collisions.
 30. **Deterministic coordinate sampling / infinite loop elimination (Addresses Bug #41)**:
    - Replaced unbounded `do...while` retry loops in `Coin` and `Obstacle` with deterministic free-cell sampling, ensuring instant termination even on near-full boards.
+31. **Responsive 2-Key FIFO Input Queue and Difficulty Speed Tuning**:
+   - Replaced the single-flag `keyPressed` boolean in `GameController` with a bounded 2-key FIFO queue (`Deque<KeyCode> inputQueue`).
+   - Prevents rapid sequential keystrokes (such as quick 90° double-turns around obstacles) from being dropped when pressed within a single tick window.
+   - Synchronized `turnDir()` invocation with logic tick execution, ensuring corner elbow sprites (`snaketurnleft.png`) are placed on the exact tile where the turn executed.
+   - Added `isValidNextDirection(newKey, referenceKey)` validation relative to the last queued direction, preventing 180° self-reversals and redundant keys.
+   - Tuned game speeds in `Game.Difficulty` (EASY: `7.0`, NORMAL: `9.0`, HARD: `12.0` moves/sec) for a balanced, responsive, and comfortable pace while maintaining 100% discrete pixel-art sprite integrity.
