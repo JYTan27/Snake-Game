@@ -41,6 +41,7 @@
 39. **Typo in public method name in `ViewManager`** – `initalizeMainMenu()` misspells "initialize", introducing API inconsistency. ✅ Fixed (renamed to `initializeMainMenu()`).
 40. **Flawed key validation logic in `GameController.valKey(KeyCode key)`** – when checking `KeyCode.DOWN`, it compares against `!this.key.equals(KeyCode.DOWN)` instead of `KeyCode.UP`, failing to properly prevent 180‑degree self‑reversals into the snake's neck. ✅ Fixed (corrected to check `!this.key.equals(KeyCode.UP)`).
 41. **Unbounded `do...while` coordinate generation / infinite loop vulnerability** – both `Coin` and `Obstacle` generate coordinates via unconstrained random guess‑and‑retry `do...while` loops. As the snake and obstacles occupy more grid cells near endgame, the probability of selecting an empty cell drops drastically, causing execution spikes. If the grid becomes full, the loop cannot exit and permanently freezes the application. ✅ Fixed (implemented deterministic available-cell sampling in both `Coin` and `Obstacle`).
+42. **Tail sprite direction inversion on border wrap** – `tailRotation` determined tail direction by checking `next.getY() == tail.getY() - 1 ? 0 : 180` and `next.getX() == tail.getX() - 1 ? 270 : 90`. When wrapping across the top border (moving up) or left border (moving left), the coordinate jump to the opposite border (`height - 1` or `width - 1`) caused the condition to fail, falling into the ternary `else` branch and inverting the tail direction by 180° on the last frame before crossing the border. ✅ Fixed (encapsulated toroidal wrapped delta calculation in `Snake.getTailDir()` and updated `GameView.drawBody`).
 
 ---
 
@@ -112,3 +113,6 @@
    - Corrected downward key check in `GameController.valKey()` from `!key.equals(DOWN)` to `!key.equals(UP)`, properly preventing 180° neck collisions.
 30. **Deterministic coordinate sampling / infinite loop elimination (Addresses Bug #41)**:
    - Replaced unbounded `do...while` retry loops in `Coin` and `Obstacle` with deterministic free-cell sampling, ensuring instant termination even on near-full boards.
+31. **Toroidal wrapped tail direction & MVC encapsulation (Addresses Bug #42)**:
+   - Added `Snake.getTailDir()` to compute the shortest toroidal displacement vector (`dx`, `dy`) between the tail and adjacent segment (`head` or next body segment), correctly accounting for border wrap across all 4 boundaries.
+   - Refactored `GameView.drawBody` to consistently use `tailRotation(snek)` for all tail segments (`index == 0`) and delegated `tailRotation` to `Snake.getTailDir()`.

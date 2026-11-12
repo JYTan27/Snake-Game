@@ -146,10 +146,7 @@ public class GameView {
         Image img;
         double rotateDeg;
 
-        if (snek.getBody().size() <= 1) {
-            img       = snek.getImageTail();
-            rotateDeg = snek.getSnakeDir();
-        } else if (index == 0) {
+        if (index == 0) {
             img       = snek.getImageTail();
             rotateDeg = tailRotation(snek);
         } else if (index > 0 &&
@@ -183,11 +180,7 @@ public class GameView {
     }
 
     private double tailRotation(Snake snek) {
-        if (snek.getBody().get(1).getX() == snek.getBody().get(0).getX()) {
-            return snek.getBody().get(1).getY() == snek.getBody().get(0).getY() - 1 ? 0 : 180;
-        } else {
-            return snek.getBody().get(1).getX() == snek.getBody().get(0).getX() - 1 ? 270 : 90;
-        }
+        return snek.getTailDir();
     }
 
     public void turnDir(Snake snek, KeyCode lastKey, KeyCode currentKey) {

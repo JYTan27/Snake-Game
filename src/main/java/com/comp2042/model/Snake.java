@@ -107,6 +107,42 @@ public class Snake {
         }
     }
 
+    public int getTailDir() {
+        if (body.isEmpty()) {
+            return snakeDir;
+        }
+
+        List<GridPoint> bodyList = new ArrayList<>(body);
+        GridPoint tail = bodyList.get(0);
+        GridPoint next = bodyList.size() > 1 ? bodyList.get(1) : head;
+
+        int dx = next.getX() - tail.getX();
+        int dy = next.getY() - tail.getY();
+
+        if (dx > gameWidth / 2) {
+            dx -= gameWidth;
+        } else if (dx < -gameWidth / 2) {
+            dx += gameWidth;
+        }
+
+        if (dy > gameHeight / 2) {
+            dy -= gameHeight;
+        } else if (dy < -gameHeight / 2) {
+            dy += gameHeight;
+        }
+
+        if (dy < 0) {
+            return DIR_UP;
+        } else if (dy > 0) {
+            return DIR_DOWN;
+        } else if (dx < 0) {
+            return DIR_LEFT;
+        } else if (dx > 0) {
+            return DIR_RIGHT;
+        }
+        return snakeDir;
+    }
+
     public void ignoreBorders(boolean wrap) {
         this.borderWrap = wrap;
     }
