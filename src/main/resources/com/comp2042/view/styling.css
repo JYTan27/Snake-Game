@@ -2,37 +2,36 @@
     -fx-background-color: White;
 }
 
-.button {
+.menuButton {
+    -fx-min-width: 180;
+    -fx-max-width: 180;
+    -fx-min-height: 40;
+    -fx-max-height: 40;
     -fx-font-family: "SF Pixelate";
     -fx-font-size: 18;
     -fx-text-fill: #ffffff;
-    -fx-background-image: url("../images/ui/btn.png");
-    -fx-background-repeat: no-repeat;
-    -fx-background-size: 115 40;
+    -fx-background-color: transparent;
+    -fx-border-image-source: url("../images/ui/btn.png");
+    -fx-border-image-slice: 10 fill;
+    -fx-border-image-width: 10;
+    -fx-border-image-repeat: stretch;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 0;
 }
 
-.button:pressed {
-    -fx-background-image: url("../images/ui/btn_pressed.png");
-    -fx-background-repeat: no-repeat;
-    -fx-background-size: 115 40;
+.menuButton:hover {
+    -fx-border-image-source: url("../images/ui/btn_hover.png");
 }
 
-.startAndQuitBtn {
-    -fx-font-family: "SF Pixelate";
-    -fx-font-size: 18;
-    -fx-text-fill: #ffffff;
-    -fx-background-image: url("../images/ui/btn.png");
-    -fx-background-repeat: no-repeat;
-    -fx-background-size: 115 40;
-}
-
-.startAndQuitBtn:pressed {
-    -fx-font-family: "SF Pixelate";
-    -fx-font-size: 18;
+.menuButton:pressed {
     -fx-text-fill: #000000;
-    -fx-background-image: url("../images/ui/btn_StartAndQuit_pressed.png");
-    -fx-background-repeat: no-repeat;
-    -fx-background-size: 115 40;
+    -fx-border-image-source: url("../images/ui/btn_pressed.png");
+}
+
+.menuButton:focused {
+    -fx-background-color: #0078a8;
+    -fx-background-insets: -2;
 }
 
 .label {
@@ -43,6 +42,69 @@
 #title {
     -fx-font-family: "SF Pixelate Shaded", bold;
     -fx-font-size: 40;
+}
+
+.difficultyLabel,
+.difficultySelector {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 18;
+}
+
+.difficultySelector {
+    /* Popup cells scale separately; their measured height must not resize the main control. */
+    -fx-min-height: 36;
+    -fx-max-height: 36;
+    -fx-background-color: #f5f5f2;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-color: #55554c;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-padding: 0;
+}
+
+.difficultySelector:focused,
+.difficultySelector:showing {
+    -fx-border-color: #0078a8;
+    -fx-border-width: 2;
+}
+
+.difficultySelector > .arrow-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-padding: 0 10;
+}
+
+.difficultySelector > .arrow-button > .arrow {
+    -fx-background-color: #33332e;
+}
+
+.difficultySelector .list-cell {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 18;
+    -fx-background-color: #f5f5f2;
+    -fx-text-fill: #33332e;
+    -fx-padding: 5 10;
+}
+
+.difficultySelector .list-view {
+    -fx-background-color: #f5f5f2;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-color: #55554c;
+    -fx-border-width: 1;
+    -fx-padding: 0;
+}
+
+.difficultySelector .list-view .list-cell:filled:hover {
+    -fx-background-color: #55554c;
+    -fx-text-fill: white;
+}
+
+.difficultySelector .list-view .list-cell:filled:selected,
+.difficultySelector .list-view .list-cell:filled:pressed {
+    -fx-background-color: #fa4659;
+    -fx-text-fill: #000000;
 }
 
 #gameOverLabel {
@@ -56,4 +118,23 @@
 #scoreLabel {
     -fx-font-family: "SF Pixelate";
     -fx-font-size: 20;
+}
+
+.helpPage .label {
+    -fx-font-size: 14;
+    -fx-text-fill: #44443d;
+}
+
+.helpPage .helpTitle {
+    -fx-font-family: "SF Pixelate Shaded";
+    -fx-font-size: 28;
+}
+
+.helpPage .helpSection {
+    -fx-font-size: 18;
+    -fx-text-fill: #20201c;
+}
+
+.helpPage .helpDivider {
+    -fx-background-color: #d6d6ce;
 }

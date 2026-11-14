@@ -58,10 +58,10 @@
   * Clean separation of concerns into distinct packages:
     * `com.comp2042.model`: Pure gameplay rules, coordinates, state, and entities (`Game`, `Snake`, `Obstacle`, `Coin`, `CoinFactory`, `BlueCoin`, `GoldCoin`, `SilverCoin`, `RainbowCoin`, `GridPoint`).
     * `com.comp2042.view`: Display and scene orchestration (`GameView`, `ViewManager`).
-    * `com.comp2042.controller`: Input handling, keyboard controls, and animation loop (`GameController`, `MainMenuController`).
+    * `com.comp2042.controller`: Input handling, keyboard controls, and animation loop (`GameController`, `MainMenuController`, `HowToPlayController`).
 * **Standard Maven Resource Packaging:**
-  * All 21 project assets migrated from legacy nested folders into structured directories:
-    * `src/main/resources/com/comp2042/view/` (`MainMenu.fxml`, `styling.css`)
+  * Project resources, including the new help layout, are packaged in structured directories:
+    * `src/main/resources/com/comp2042/view/` (`MainMenu.fxml`, `HowToPlay.fxml`, `styling.css`)
     * `src/main/resources/com/comp2042/images/` (`coins/`, `snake/`, `ui/`)
     * `src/main/resources/com/comp2042/audio/` (`coinSound.wav`)
     * `src/main/resources/com/comp2042/fonts/` (`SFPixelate.ttf`, `SFPixelateShaded-Bold.ttf`, `kenvector_future.ttf`)
@@ -98,6 +98,10 @@
 * **Core Gameplay Loop & Features:**
   * **Snake Movement & Controls:** Symmetrical 4‑directional navigation with correct anti‑reverse logic for all directions (including Down vs. Up).
   * **Responsive 2-Key FIFO Input Buffer:** Bounded input queue (`Deque<KeyCode>`) in `GameController` that buffers rapid sequential keystrokes. Quick double-turns (e.g. `UP` then `RIGHT` within a fraction of a second) are never dropped or ignored, while perfectly synchronizing corner elbow sprite (`snaketurnleft.png`) placement with logic tick execution.
+  * **Menu Difficulty Selection:** Choose Easy, Normal, or Hard before starting. The choice is remembered during the current session, including after visiting How to Play or returning from a game.
+  * **How to Play Screen:** Explains difficulty rules and keyboard controls. Use Back or Esc to return to the menu.
+  * **Menu Design:** The title and controls are centred, with consistent button states and clear difficulty-selection highlights. Exit closes the application.
+  * **Menu Fullscreen:** F toggles fullscreen on menu, help, and gameplay screens. Menu elements and dropdown options scale proportionally, and fullscreen is preserved between screens. Esc handles in-app navigation without JavaFX's default fullscreen exit message.
   * **Difficulty & Speed Configuration:** Strongly-typed `Game.Difficulty` enum with balanced speeds:
     * `EASY`: `7.0` moves/sec, with border wrapping always enabled, including after collecting any coin.
     * `NORMAL`: `9.0` moves/sec.
@@ -119,7 +123,7 @@
 
 ## 4. Implemented but Not Working Properly
 
-*(None currently recorded. All 48 entries in `BUGS_AND_IMPROVEMENTS.md` are marked as fixed.)*
+*(None currently recorded. All 49 entries in `BUGS_AND_IMPROVEMENTS.md` are marked as fixed.)*
 
 ---
 
@@ -133,8 +137,6 @@
 
 * **Persistent High Score Table:**
   * *Reason:* Local disk/file‑based leaderboard was not present in the original codebase; left out to prioritize core architectural refactoring and stability.
-* **Difficulty Selection UI in Main Menu:**
-  * *Reason:* The `Game` model supports strongly-typed difficulties (`Game.Difficulty.EASY`, `NORMAL`, `HARD`), but the current `MainMenu.fxml` UI does not yet feature a dropdown/picker. The setting can be configured in `MainMenuController`.
 * **Settings & Volume Control Slider:**
   * *Reason:* Focused on core gameplay mechanics and architectural decoupling before adding secondary audio settings.
 * **Automated Unit Testing Suite:**
@@ -146,6 +148,7 @@
 
 | Class | Package | Purpose & Description |
 | :--- | :--- | :--- |
+| **`HowToPlayController.java`** | `com.comp2042.controller` | Handles the help screen Back button, returning to the main menu through `ViewManager`. |
 | **`CoinFactory.java`** | `com.comp2042.model` | Centralizes replacement coin selection through `createCoin(Game, Snake, Obstacle)`, excludes blue coins when border wrapping is already enabled, and accepts an injectable `Random` for deterministic verification. |
 | **`GridPoint.java`** | `com.comp2042.model` | Pure Java integer coordinate representation (`x`, `y`) designed to replace legacy `java.awt.Point`. Provides getters, setters, translation, copy constructor, and standard `equals`/`hashCode`/`toString` methods without pulling in desktop AWT UI dependencies. |
 
@@ -156,8 +159,8 @@
 | Class | Original Package | New Package | Changes Made & Rationale |
 | :--- | :--- | :--- | :--- |
 | **`Main.java`** | `com.comp2042` | `com.comp2042` | Added explicit `ViewManager` import and programmatic font loading. Passes `primaryStage` to `new ViewManager(primaryStage)` and calls `viewManager.initializeMainMenu()`. |
-| **`ViewManager.java`** | `com.comp2042` | `com.comp2042.view` | Moved to `view` package. Implemented single-stage scene swapping (`showGameScene`, `showMainMenu`), eliminated multiple `Stage` anti-pattern, added safe `IOException` error dialog, and corrected method typo `initializeMainMenu()`. |
-| **`MainMenuController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Uses strongly-typed `Game.Difficulty.EASY`, refactored `launchSnake` into `buildGameScene` with proper static `StackPane` alignment, and wired escape key to clean return-to-menu callback. |
+| **`ViewManager.java`** | `com.comp2042` | `com.comp2042.view` | Moved to `view` package. Implemented single-stage scene swapping (`showGameScene`, `showMainMenu`), eliminated multiple `Stage` anti-pattern, added safe `IOException` error dialog, corrected method typo `initializeMainMenu()`, loads the How to Play scene through `showHowToPlay()` with Esc navigation and error handling, and stores the session difficulty through `getSelectedDifficulty()` / `setSelectedDifficulty(...)` (default Easy). |
+| **`MainMenuController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Populates a typed difficulty dropdown from `Game.Difficulty.values()`, restores the session selection, saves it before opening How to Play, and passes the chosen difficulty to game creation; refactored `launchSnake` into `buildGameScene` with proper static `StackPane` alignment, and wired escape key to clean return-to-menu callback. |
 | **`GameController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Implemented 2-key FIFO input queue (`inputQueue`) to prevent dropped inputs during rapid double-turns; synchronized `turnDir` calls with logic ticks; replaced plus/minus size shortcuts with an F fullscreen toggle (Bug #46); encapsulated static `key`/`lastKey` as private fields with getters; corrected `valKey` DOWN anti-reverse logic (Bug #40); removed dead code (`calculateBonusScore`, `legacyScoreMultiplier`, `unusedObstacleCount`); delegated replacement coin selection to `CoinFactory`, which owns the reusable `Random`; reset turn array on restart; and hooked return-to-menu callback to stop animation and swap scenes. |
 | **`GameView.java`** | `com.comp2042` | `com.comp2042.view` | Moved to `view` package. Encapsulated background fill color (`BACKGROUND_COLOR`); eliminated snapshots in favor of `GraphicsContext` rotation; fixed double-scaling bug; eliminated per-frame `SnapshotParameters`; added `resetTurnArray()`; migrated from `Point` to `GridPoint`; decoupled `turnDir` from controller static state; unified tail rendering in `drawBody` under `index == 0`; and delegated `tailRotation` to `Snake.getTailDir()`. |
 | **`Game.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Removed UI `Color` coupling; added strongly-typed `Game.Difficulty` enum with tuned speeds (`EASY: 7.0`, `NORMAL: 9.0`, `HARD: 12.0`); renamed dual score tracking (`coinsEaten` vs `displayScore`); replaced magic scaling numbers with named constants; and documented/guarded `decMaxScore`. |

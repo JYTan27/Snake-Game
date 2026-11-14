@@ -127,18 +127,22 @@ public class GameController {
         }
 
         if (code.equals(KeyCode.F)) {
-            boolean fullScreen = !stage.isFullScreen();
-            gameView.scaleToFullscreen(fullScreen, stage, obstacle, snake, coin);
-            String endLabelStyle = fullScreen ? "-fx-font-size: 50;" : "-fx-font-size: 15;";
-            gameView.gameOverLabel.setStyle(endLabelStyle);
-            gameView.gameWonLabel.setStyle(endLabelStyle);
-            gameView.scoreLabel.setStyle(fullScreen ? "-fx-font-size: 35;" : "-fx-font-size: 15;");
+            setFullScreen(!stage.isFullScreen());
         }
 
         if (code.equals(KeyCode.ESCAPE)) {
             animation.stop();
             onReturnToMenu.run();
         }
+    }
+
+    /** Applies the stage mode and matching board/label scale together. */
+    public void setFullScreen(boolean fullScreen) {
+        gameView.scaleToFullscreen(fullScreen, stage, obstacle, snake, coin);
+        String endLabelStyle = fullScreen ? "-fx-font-size: 50;" : "-fx-font-size: 15;";
+        gameView.gameOverLabel.setStyle(endLabelStyle);
+        gameView.gameWonLabel.setStyle(endLabelStyle);
+        gameView.scoreLabel.setStyle(fullScreen ? "-fx-font-size: 35;" : "-fx-font-size: 15;");
     }
 
     /**

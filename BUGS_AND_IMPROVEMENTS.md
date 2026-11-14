@@ -52,6 +52,7 @@
 47. **Head overlaps the neck after a fatal border or obstacle collision** — `Snake.move()` appended the old head position to the body before validating movement. A blocked move left the head stationary but added a body segment underneath it. ✅ Fixed (append the previous head only after a successful move; blocked fatal moves preserve head position, body, length, and direction, and already-dead snakes cannot move).
 
 48. **Full-board coin fallback overlaps occupied cells and completion is incomplete** — `Coin.generatePosition()` placed a coin at `(0,0)` when no free cell remained. Score-based wins also returned before updating the win label and final score, and could continue moving. ✅ Fixed (coin placement reports exhaustion explicitly, the factory returns an empty result, and the controller handles both completion paths by stopping movement, clearing the coin, and showing the final score and win message; reset restores a fresh board and target score).
+49. **Difficulty dropdown grows after selecting a fullscreen option** — Scaled popup cells increased the ComboBox skin's computed minimum height, making the main control expand after selection and remain enlarged until the menu was reloaded. ✅ Fixed (keep the main dropdown height stable while preserving fullscreen scaling).
 
 
 ---
@@ -159,3 +160,16 @@
    - Added `Game.markWon()` and a completion flag. Both full-board and score-based wins stop the animation, clear queued turns and the active coin, and refresh the final board, score, and win label.
    - Arrow keys cannot restart completed games; F redraws safely without a coin, while Tab and Esc retain their reset/menu controls.
    - Reset clears obstacles before coin placement, clears completion, and restores the original target score. Coin-selection probabilities and effects remain unchanged.
+39. **Added menu difficulty selection**:
+   - Players can select Easy, Normal, or Hard before starting. The choice is remembered for the session and retained after reset or menu navigation.
+40. **Added How to Play**:
+   - A separate screen explains difficulties and keybinds, with Back/Esc navigation that preserves the chosen difficulty.
+41. **Improved menu presentation**:
+   - Centred the title and controls, reused the supplied button images for normal/hover/pressed states, and added clear dropdown highlights.
+42. **Enabled fullscreen across screens**:
+   - F toggles fullscreen on menu, help, and gameplay screens. Content scales proportionally and the mode is retained when switching screens.
+   - Removed JavaFX's default fullscreen exit hint so Esc retains its in-app navigation role.
+43. **Stabilized dropdown height (Addresses Bug #49)**:
+   - Prevented scaled popup options from enlarging the main dropdown after selection.
+44. **Added Exit**:
+   - The main-menu Exit button closes the application through `Platform.exit()` in windowed or fullscreen mode.
