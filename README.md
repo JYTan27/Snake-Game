@@ -75,6 +75,7 @@
   * Border‑wrap behaviour unified into a single `borderWrap` flag, eliminating the redundant `ignoreBorders` / `noBorder` anti‑pattern.
   * `body` collection changed from `ArrayList` to `ArrayDeque`, making tail removal O(1) on every non‑eating tick.
   * "Move first, rollback on collision" pattern replaced by validate‑before‑move, eliminating fragile inverse‑translation code.
+  * **Obstacle Checks After Border Wrapping:** Wrapped destinations receive the same obstacle checks as ordinary moves, so obstacles on the opposite edge remain lethal in Easy mode and during blue-coin wrapping.
   * **Toroidal Tail Orientation Calculation (`getTailDir`):** Encapsulated tail orientation in the model using shortest-displacement toroidal vector calculation, ensuring the tail sprite smoothly faces the forward direction without 180° flipping when crossing wrap-around borders.
 * **Deterministic Coordinate Sampling (Elimination of Infinite Loops):**
   * Replaced unconstrained guess-and-retry `do...while` generation in both `Coin` and `Obstacle` with deterministic available-cell sampling. Guarantees instantaneous termination even on crowded endgame boards without freezing.
@@ -97,13 +98,13 @@
   * **Snake Movement & Controls:** Symmetrical 4‑directional navigation with correct anti‑reverse logic for all directions (including Down vs. Up).
   * **Responsive 2-Key FIFO Input Buffer:** Bounded input queue (`Deque<KeyCode>`) in `GameController` that buffers rapid sequential keystrokes. Quick double-turns (e.g. `UP` then `RIGHT` within a fraction of a second) are never dropped or ignored, while perfectly synchronizing corner elbow sprite (`snaketurnleft.png`) placement with logic tick execution.
   * **Difficulty & Speed Configuration:** Strongly-typed `Game.Difficulty` enum with balanced speeds:
-    * `EASY`: `7.0` moves/sec (with border-wrap enabled).
+    * `EASY`: `7.0` moves/sec, with border wrapping always enabled, including after collecting any coin.
     * `NORMAL`: `9.0` moves/sec.
     * `HARD`: `12.0` moves/sec.
   * **Polymorphic Food & Coin System:** Spawning coins with distinct attributes and behaviours using object‑oriented polymorphism (`Coin`, `GoldCoin`, `SilverCoin`, `BlueCoin`, `RainbowCoin`):
     * Standard Red Coin: Basic point increment (+5).
     * Gold Coin: Higher point reward (+15).
-    * Blue Coin: Temporary wall pass‑through / border‑ignore ability.
+    * Blue Coin: Enables border wrapping until the next coin is collected on Normal/Hard; Easy mode retains permanent border wrapping. Obstacles remain lethal.
     * Silver Coin: Spawns additional barrier obstacles on the board and adjusts target score.
     * Rainbow Coin: Grants speed boost (+5.0 speed) to the game loop.
   * **Asset Caching:** Snake and coin sprites are loaded once as `static final` assets — no disk reads or texture re‑allocations per tick or per coin spawn.
@@ -115,7 +116,7 @@
 
 ## 4. Implemented but Not Working Properly
 
-*(None. All 41 previously identified bugs and issues have been resolved, verified, and compiled successfully.)*
+*(None currently recorded. All 44 entries in `BUGS_AND_IMPROVEMENTS.md` are marked as fixed.)*
 
 ---
 
@@ -156,7 +157,7 @@
 | **`GameController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Implemented 2-key FIFO input queue (`inputQueue`) to prevent dropped inputs during rapid double-turns; synchronized `turnDir` calls with logic ticks; encapsulated static `key`/`lastKey` as private fields with getters; corrected `valKey` DOWN anti-reverse logic (Bug #40); removed dead code (`calculateBonusScore`, `legacyScoreMultiplier`, `unusedObstacleCount`); reused class-level `Random`; reset turn array on restart; and hooked return-to-menu callback to stop animation and swap scenes. |
 | **`GameView.java`** | `com.comp2042` | `com.comp2042.view` | Moved to `view` package. Encapsulated background fill color (`BACKGROUND_COLOR`); eliminated snapshots in favor of `GraphicsContext` rotation; fixed double-scaling bug; eliminated per-frame `SnapshotParameters`; added `resetTurnArray()`; migrated from `Point` to `GridPoint`; decoupled `turnDir` from controller static state; unified tail rendering in `drawBody` under `index == 0`; and delegated `tailRotation` to `Snake.getTailDir()`. |
 | **`Game.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Removed UI `Color` coupling; added strongly-typed `Game.Difficulty` enum with tuned speeds (`EASY: 7.0`, `NORMAL: 9.0`, `HARD: 12.0`); renamed dual score tracking (`coinsEaten` vs `displayScore`); replaced magic scaling numbers with named constants; and documented/guarded `decMaxScore`. |
-| **`Snake.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Fully migrated from `Point` to `GridPoint`; removed `ImageView` nodes and exposed `static final Image` singletons; extracted `attemptMove` / `wrapCoordinate`; unified border flags into `borderWrap`; switched body to `ArrayDeque`; cached coin collision checks; validate-before-move; renamed constructor parameters; and implemented `getTailDir()` with toroidal shortest-displacement vector calculation for border wrap orientation. |
+| **`Snake.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Fully migrated from `Point` to `GridPoint`; removed `ImageView` nodes and exposed `static final Image` singletons; extracted `attemptMove` / `wrapCoordinate`; unified border flags into `borderWrap`; switched body to `ArrayDeque`; cached coin collision checks; validate-before-move with obstacle checks after resolving wrapped destinations (Bug #44); renamed constructor parameters; and implemented `getTailDir()` with toroidal shortest-displacement vector calculation for border wrap orientation. |
 | **`Obstacle.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Migrated to `GridPoint`; replaced unbounded generation with deterministic free-cell sampling; fixed off-by-one X range; prevented duplicates; encapsulated `getObstacles()` via `Collections.unmodifiableList`; added proportional cap; and renamed dimension fields `boardWidth, boardHeight`. |
 | **`Coin.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Migrated to `GridPoint`; replaced unbounded `do...while` with deterministic free-cell sampling to eliminate freeze risks; cached static sprite; added polymorphic `applyEffect` and `getSpeedBonus`; and used shared `Random`. |
 | **`BlueCoin.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Cached static sprite, encapsulated border-ignore behavior inside `applyEffect(...)`, and removed redundant `getImage()`. |
@@ -183,3 +184,9 @@
 5. **Stage Accumulation and Window Focus Glitches on Return to Menu:**
    * *Problem:* The original implementation opened and closed new `Stage` instances on every game start and return-to-menu action, causing OS taskbar icon flickering and losing application focus.
    * *Resolution:* Converted `ViewManager` to a single-stage architecture that swaps `Scene` objects on the primary stage.
+6. **Easy Mode Border Wrapping Disabled After Collecting a Coin:**
+   * *Problem:* `GameController.powerCoin()` called `snake.ignoreBorders(false)` after every coin collection, overriding Easy mode's border setting.
+   * *Resolution:* Replaced the hard-coded `false` with `game.isNoBorder()` before applying the coin's effect. Easy mode now keeps border wrapping after every coin, while Normal/Hard retain the blue coin's temporary wrapping effect.
+7. **Snake Passed Through Obstacles at Wrapped Borders:**
+   * *Problem:* `Snake.attemptMove()` moved the head directly to the wrapped destination, bypassing the obstacle check in its `else if` branch. Edge obstacles could be crossed in Easy mode or after collecting a blue coin.
+   * *Resolution:* Resolve the wrapped target first, check that destination for obstacles, then update the head only if the cell is clear. A fatal collision leaves the head at its previous position; the fix applies to all four borders.

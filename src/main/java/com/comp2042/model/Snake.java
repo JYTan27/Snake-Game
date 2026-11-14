@@ -61,16 +61,19 @@ public class Snake {
         GridPoint target = new GridPoint(head.getX() + dx, head.getY() + dy);
 
         if (isOutOfBounds(target)) {
-            if (borderWrap) {
-                head.setLocation(wrapCoordinate(target));
-            } else {
+            if (!borderWrap) {
                 dead = true;
+                return;
             }
-        } else if (obstacle.getObstacles().contains(target)) {
-            dead = true;
-        } else {
-            head.setLocation(target);
+            target = wrapCoordinate(target);
         }
+
+        if (obstacle.getObstacles().contains(target)) {
+            dead = true;
+            return;
+        }
+
+        head.setLocation(target);
     }
 
     private GridPoint wrapCoordinate(GridPoint p) {

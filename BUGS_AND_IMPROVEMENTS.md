@@ -43,6 +43,10 @@
 41. **Unbounded `do...while` coordinate generation / infinite loop vulnerability** – both `Coin` and `Obstacle` generate coordinates via unconstrained random guess‑and‑retry `do...while` loops. As the snake and obstacles occupy more grid cells near endgame, the probability of selecting an empty cell drops drastically, causing execution spikes. If the grid becomes full, the loop cannot exit and permanently freezes the application. ✅ Fixed (implemented deterministic available-cell sampling in both `Coin` and `Obstacle`).
 42. **Tail sprite direction inversion on border wrap** – `tailRotation` determined tail direction by checking `next.getY() == tail.getY() - 1 ? 0 : 180` and `next.getX() == tail.getX() - 1 ? 270 : 90`. When wrapping across the top border (moving up) or left border (moving left), the coordinate jump to the opposite border (`height - 1` or `width - 1`) caused the condition to fail, falling into the ternary `else` branch and inverting the tail direction by 180° on the last frame before crossing the border. ✅ Fixed (encapsulated toroidal wrapped delta calculation in `Snake.getTailDir()` and updated `GameView.drawBody`).
 
+43. **Easy difficulty loses border wrapping after collecting a coin** – `GameController.powerCoin()` called `snake.ignoreBorders(false)` for every collected coin, overriding Easy mode's default wrapping. ✅ Fixed (restores `game.isNoBorder()` before applying each coin's effect, preserving permanent wrapping on Easy and temporary blue-coin wrapping on Normal/Hard).
+44. **Obstacle collision skipped after border wrapping** — `Snake.attemptMove()` moved the head directly to the wrapped destination and skipped the obstacle check in its `else if` branch. This allowed the snake to pass through obstacles on the opposite edge in Easy mode or after collecting a blue coin. ✅ Fixed (resolve the wrapped target first, check it for obstacles, then move; fatal collisions leave the head at its previous position).
+
+
 ---
 
 # Improvements Made
@@ -122,3 +126,11 @@
    - Synchronized `turnDir()` invocation with logic tick execution, ensuring corner elbow sprites (`snaketurnleft.png`) are placed on the exact tile where the turn executed.
    - Added `isValidNextDirection(newKey, referenceKey)` validation relative to the last queued direction, preventing 180° self-reversals and redundant keys.
    - Tuned game speeds in `Game.Difficulty` (EASY: `7.0`, NORMAL: `9.0`, HARD: `12.0` moves/sec) for a balanced, responsive, and comfortable pace while maintaining 100% discrete pixel-art sprite integrity.
+33. **Preserved Easy difficulty border wrapping after coin collection (Addresses Bug #43)**:
+   - Replaced `snake.ignoreBorders(false)` in `GameController.powerCoin()` with `snake.ignoreBorders(game.isNoBorder())`.
+   - Restores the difficulty's default border setting before `coin.applyEffect(...)`, so collecting any coin keeps wrapping enabled on Easy.
+   - Normal/Hard keep solid borders by default; the blue coin enables wrapping until the next coin is collected. Obstacle and self-collision rules are unchanged.
+34. **Checked obstacle collisions at wrapped destinations (Addresses Bug #44)**:
+   - Updated `Snake.attemptMove()` to resolve an out-of-bounds target with `wrapCoordinate()` before checking for obstacles.
+   - Both ordinary and wrapped moves now use the same obstacle check before updating the head; a blocked destination marks the snake dead without moving it.
+   - Applies to all four borders in Easy mode and while the blue coin enables wrapping on Normal/Hard. Crossing an unwrapped border remains fatal.
