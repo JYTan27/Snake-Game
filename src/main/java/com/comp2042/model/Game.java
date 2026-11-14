@@ -14,6 +14,7 @@ public class Game {
     private double speed;
     private boolean powerUp;
     private boolean noBorder;
+    private boolean completed;
 
     public enum Difficulty {
         EASY(7.0, true),
@@ -43,7 +44,11 @@ public class Game {
     }
 
     public boolean gameWon() {
-        return coinsEaten == maxScore;
+        return completed || coinsEaten == maxScore;
+    }
+
+    public void markWon() {
+        completed = true;
     }
 
     public void incScore() {
@@ -71,6 +76,8 @@ public class Game {
     public void resetScore() {
         coinsEaten = 0;
         displayScore = 0;
+        maxScore = width * height - 2;
+        completed = false;
     }
 
     public double getMultiplier() {

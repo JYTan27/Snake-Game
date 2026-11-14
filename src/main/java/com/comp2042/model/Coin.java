@@ -7,6 +7,13 @@ import java.util.Random;
 import javafx.scene.image.Image;
 
 public class Coin {
+    /** Signals that the board has no unoccupied cell for a coin. */
+    public static class NoFreeCellException extends IllegalStateException {
+        public NoFreeCellException() {
+            super("No free cell is available for a coin");
+        }
+    }
+
     protected static final Random RANDOM = new Random();
     private static final Image RED_COIN_IMAGE = new Image(Coin.class.getResourceAsStream("/com/comp2042/images/coins/redcoin.png"));
 
@@ -41,9 +48,7 @@ public class Coin {
         }
 
         if (freeCells.isEmpty()) {
-            // No free cell available; place at (0,0) as fallback
-            pos = new GridPoint(0, 0);
-            return;
+            throw new NoFreeCellException();
         }
 
         pos = freeCells.get(RANDOM.nextInt(freeCells.size()));

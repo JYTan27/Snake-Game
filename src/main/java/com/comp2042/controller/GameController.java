@@ -57,7 +57,7 @@ public class GameController {
     }
 
     private final Timeline animation = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
-        if (snake.getDead()) {
+        if (snake.getDead() || game.gameWon()) {
             return;
         }
 
@@ -83,10 +83,14 @@ public class GameController {
             game.incScore();
             coinSoundEffect.play();
             if (game.gameWon()) {
-                gameView.drawGrid(coin, snake, obstacle, gameView.gc, false, 0);
+                finishGame();
                 return;
             }
             newCoin();
+            if (coin == null) {
+                finishGame();
+                return;
+            }
         }
 
         if (!snake.getDead() || snake.hitSelf()) {
@@ -101,7 +105,7 @@ public class GameController {
     public void handle(KeyEvent event) {
         KeyCode code = event.getCode();
 
-        if (code.isArrowKey()) {
+        if (code.isArrowKey() && !game.gameWon()) {
             animation.play();
 
             // Enqueue valid direction if buffer has room
@@ -122,18 +126,13 @@ public class GameController {
             gameView.scoreLabel.setText("Score: " + game.getDisplayScore());
         }
 
-        if (code.equals(KeyCode.PLUS)) {
-            gameView.scaleToFullscreen(true, stage, obstacle, snake, coin);
-            gameView.gameOverLabel.setStyle("-fx-font-size: 50;");
-            gameView.gameWonLabel.setStyle("-fx-font-size: 50;");
-            gameView.scoreLabel.setStyle("-fx-font-size: 35;");
-        }
-
-        if (code.equals(KeyCode.MINUS)) {
-            gameView.scaleToFullscreen(false, stage, obstacle, snake, coin);
-            gameView.gameOverLabel.setStyle("-fx-font-size: 15;");
-            gameView.gameWonLabel.setStyle("-fx-font-size: 15;");
-            gameView.scoreLabel.setStyle("-fx-font-size: 15;");
+        if (code.equals(KeyCode.F)) {
+            boolean fullScreen = !stage.isFullScreen();
+            gameView.scaleToFullscreen(fullScreen, stage, obstacle, snake, coin);
+            String endLabelStyle = fullScreen ? "-fx-font-size: 50;" : "-fx-font-size: 15;";
+            gameView.gameOverLabel.setStyle(endLabelStyle);
+            gameView.gameWonLabel.setStyle(endLabelStyle);
+            gameView.scoreLabel.setStyle(fullScreen ? "-fx-font-size: 35;" : "-fx-font-size: 15;");
         }
 
         if (code.equals(KeyCode.ESCAPE)) {
@@ -162,14 +161,14 @@ public class GameController {
 
         inputQueue.clear();
 
+        obstacle.reset();
+        game.resetScore();
         snake = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
         coin  = new Coin(game.getWidth(), game.getHeight(), snake, obstacle);
 
         animation.setRate(game.getSpeed());
         key = KeyCode.LEFT;
         lastKey = KeyCode.LEFT;
-        game.resetScore();
-        obstacle.reset();
 
         gameView.resetTurnArray();
 
@@ -188,6 +187,16 @@ public class GameController {
     }
 
     private void newCoin() {
-        coin = coinFactory.createCoin(game, snake, obstacle);
+        coin = coinFactory.createCoin(game, snake, obstacle).orElse(null);
+    }
+
+    private void finishGame() {
+        game.markWon();
+        animation.stop();
+        inputQueue.clear();
+        coin = null;
+        gameView.drawGrid(coin, snake, obstacle, gameView.gc, false, 0);
+        gameView.updateScoreLabel();
+        gameView.gameWon();
     }
 }

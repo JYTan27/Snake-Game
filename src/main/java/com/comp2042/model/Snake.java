@@ -41,39 +41,49 @@ public class Snake {
     }
 
     public void move(char dir) {
-        body.addLast(new GridPoint(head));
+        if (dead) {
+            return;
+        }
 
-        switch (dir) {
+        GridPoint previousHead = new GridPoint(head);
+        boolean moved = switch (dir) {
             case 'U' -> attemptMove(DIR_UP,    0, -1);
             case 'D' -> attemptMove(DIR_DOWN,  0,  1);
             case 'L' -> attemptMove(DIR_LEFT, -1,  0);
             case 'R' -> attemptMove(DIR_RIGHT, 1,  0);
+            default -> false;
+        };
+
+        if (!moved) {
+            return;
         }
+
+        body.addLast(previousHead);
 
         if (body.size() > 4 && hitSelf() && !body.peekFirst().equals(head)) {
             dead = true;
         }
     }
 
-    private void attemptMove(int dirAngle, int dx, int dy) {
-        snakeDir = dirAngle;
-
+    private boolean attemptMove(int dirAngle, int dx, int dy) {
         GridPoint target = new GridPoint(head.getX() + dx, head.getY() + dy);
 
         if (isOutOfBounds(target)) {
             if (!borderWrap) {
                 dead = true;
-                return;
+                return false;
             }
             target = wrapCoordinate(target);
         }
 
         if (obstacle.getObstacles().contains(target)) {
             dead = true;
-            return;
+            return false;
         }
 
         head.setLocation(target);
+        snakeDir = dirAngle;
+        return true;
     }
 
     private GridPoint wrapCoordinate(GridPoint p) {

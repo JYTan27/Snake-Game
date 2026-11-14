@@ -1,6 +1,7 @@
 package com.comp2042.model;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 
 /** Selects coins according to the game's rules and current board state. */
@@ -15,7 +16,16 @@ public class CoinFactory {
         this.random = Objects.requireNonNull(random);
     }
 
-    public Coin createCoin(Game game, Snake snake, Obstacle obstacle) {
+    /** Returns empty when the board has no free cell; other failures propagate. */
+    public Optional<Coin> createCoin(Game game, Snake snake, Obstacle obstacle) {
+        try {
+            return Optional.of(selectCoin(game, snake, obstacle));
+        } catch (Coin.NoFreeCellException exception) {
+            return Optional.empty();
+        }
+    }
+
+    private Coin selectCoin(Game game, Snake snake, Obstacle obstacle) {
         int width = game.getWidth();
         int height = game.getHeight();
         if (game.isPowerUp()) {

@@ -47,6 +47,12 @@
 44. **Obstacle collision skipped after border wrapping** — `Snake.attemptMove()` moved the head directly to the wrapped destination and skipped the obstacle check in its `else if` branch. This allowed the snake to pass through obstacles on the opposite edge in Easy mode or after collecting a blue coin. ✅ Fixed (resolve the wrapped target first, check it for obstacles, then move; fatal collisions leave the head at its previous position).
 45. **Redundant blue coins spawn in Easy difficulty** — Coin selection checked only the power-up toggle, allowing border-wrapping coins even when wrapping was permanently enabled. ✅ Fixed (`CoinFactory` permits blue coins only when `!game.isNoBorder()` and replaces ineligible blue rolls with regular coins).
 
+46. **Fullscreen shortcut does not recognize the keyboard plus key** — Pressing Shift + = produces `EQUALS` with Shift held, but `GameController.handle()` checked only `PLUS`, so fullscreen was never entered. ✅ Fixed (replaced the separate plus/minus handlers with `F`, which toggles fullscreen using the current stage state).
+
+47. **Head overlaps the neck after a fatal border or obstacle collision** — `Snake.move()` appended the old head position to the body before validating movement. A blocked move left the head stationary but added a body segment underneath it. ✅ Fixed (append the previous head only after a successful move; blocked fatal moves preserve head position, body, length, and direction, and already-dead snakes cannot move).
+
+48. **Full-board coin fallback overlaps occupied cells and completion is incomplete** — `Coin.generatePosition()` placed a coin at `(0,0)` when no free cell remained. Score-based wins also returned before updating the win label and final score, and could continue moving. ✅ Fixed (coin placement reports exhaustion explicitly, the factory returns an empty result, and the controller handles both completion paths by stopping movement, clearing the coin, and showing the final score and win message; reset restores a fresh board and target score).
+
 
 ---
 
@@ -140,3 +146,16 @@
    - Blue coins require `!game.isNoBorder()`; Easy replaces blue rolls with regular coins, while Normal/Hard retain blue coins.
    - Preserved the 12-outcome selection, other coin probabilities, power-up toggle, and silver-coin eligibility. Initial and reset coins remain regular coins; coin effects are unchanged.
    - Added default and injectable `Random` constructors so selection can be verified deterministically.
+36. **Replaced size shortcuts with F fullscreen toggle (Addresses Bug #46)**:
+   - `GameController.handle()` now uses `KeyCode.F` and `!stage.isFullScreen()` to enter or leave fullscreen through the existing scaling method.
+   - Preserved fullscreen and original label sizes; removed the old plus/minus handlers.
+   - Repeated toggles restore the original board dimensions rather than accumulating scale.
+37. **Preserved the complete snake pose on blocked fatal moves (Addresses Bug #47)**:
+   - `attemptMove()` now returns whether movement succeeded and updates the head and direction only after border, wrapping, and obstacle validation.
+   - `move()` appends the previous head position to the body only after successful movement; blocked moves and calls on an already-dead snake return without advancing the body.
+   - Keeps the last valid pose on solid-border, ordinary-obstacle, and wrapped-obstacle deaths, including after fullscreen redraws. Successful movement, coin growth, tail removal, and self-collision behavior are preserved.
+38. **Handled exhausted coin placement and completed-game lifecycle (Addresses Bug #48)**:
+   - Replaced the `(0,0)` fallback with `Coin.NoFreeCellException`; `CoinFactory.createCoin()` returns `Optional<Coin>` and catches only this dedicated exception.
+   - Added `Game.markWon()` and a completion flag. Both full-board and score-based wins stop the animation, clear queued turns and the active coin, and refresh the final board, score, and win label.
+   - Arrow keys cannot restart completed games; F redraws safely without a coin, while Tab and Esc retain their reset/menu controls.
+   - Reset clears obstacles before coin placement, clears completion, and restores the original target score. Coin-selection probabilities and effects remain unchanged.

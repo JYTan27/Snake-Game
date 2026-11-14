@@ -69,8 +69,7 @@ public class GameView {
         scoreLabel.setVisible(true);
     }
 
-    public void scaleToFullscreen(boolean fullScreen, Stage primaryStage,
-                                  Obstacle obstacle, Snake snek, Coin coin) {
+    public void scaleToFullscreen(boolean fullScreen, Stage primaryStage, Obstacle obstacle, Snake snek, Coin coin) {
         primaryStage.setFullScreen(fullScreen);
 
         double xScaling = Screen.getPrimary().getVisualBounds().getHeight() / initY;
@@ -101,13 +100,15 @@ public class GameView {
         double cellSize = game.getMultiplier() * fullScale; // Bug #9: single scale factor
 
         // Draw coin
-        gc.drawImage(
+        if (coin != null) {
+            gc.drawImage(
                 coin.getImage(),
                 coin.getPos().getX() * cellSize,
                 coin.getPos().getY() * cellSize,
                 cellSize - 3 * fullScale,
                 cellSize - 3 * fullScale
-        );
+            );
+        }
 
         // Draw body segments
         int bodyIndex = 0;
