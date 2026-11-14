@@ -13,19 +13,19 @@ public class Coin {
     private GridPoint pos;
     private final Image image;
 
-    public Coin(int gridWidth, int gridHeight, Snake snek, Obstacle obstacle) {
-        this(gridWidth, gridHeight, snek, obstacle, RED_COIN_IMAGE);
+    public Coin(int gridWidth, int gridHeight, Snake snake, Obstacle obstacle) {
+        this(gridWidth, gridHeight, snake, obstacle, RED_COIN_IMAGE);
     }
 
-    protected Coin(int gridWidth, int gridHeight, Snake snek, Obstacle obstacle, Image image) {
+    protected Coin(int gridWidth, int gridHeight, Snake snake, Obstacle obstacle, Image image) {
         this.image = image;
-        generatePosition(gridWidth, gridHeight, snek, obstacle);
+        generatePosition(gridWidth, gridHeight, snake, obstacle);
     }
 
-    private void generatePosition(int gridWidth, int gridHeight, Snake snek, Obstacle obstacle) {
+    private void generatePosition(int gridWidth, int gridHeight, Snake snake, Obstacle obstacle) {
         List<GridPoint> occupied = new ArrayList<>();
-        occupied.add(snek.getHead());
-        occupied.addAll(snek.getBody());
+        occupied.add(snake.getHead());
+        occupied.addAll(snake.getBody());
         if (obstacle != null) {
             occupied.addAll(obstacle.getObstacles());
         }

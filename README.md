@@ -56,7 +56,7 @@
 
 * **MVC (Model-View-Controller) Architectural Refactoring:**
   * Clean separation of concerns into distinct packages:
-    * `com.comp2042.model`: Pure gameplay rules, coordinates, state, and entities (`Game`, `Snake`, `Obstacle`, `Coin`, `BlueCoin`, `GoldCoin`, `SilverCoin`, `RainbowCoin`, `GridPoint`).
+    * `com.comp2042.model`: Pure gameplay rules, coordinates, state, and entities (`Game`, `Snake`, `Obstacle`, `Coin`, `CoinFactory`, `BlueCoin`, `GoldCoin`, `SilverCoin`, `RainbowCoin`, `GridPoint`).
     * `com.comp2042.view`: Display and scene orchestration (`GameView`, `ViewManager`).
     * `com.comp2042.controller`: Input handling, keyboard controls, and animation loop (`GameController`, `MainMenuController`).
 * **Standard Maven Resource Packaging:**
@@ -104,9 +104,10 @@
   * **Polymorphic Food & Coin System:** Spawning coins with distinct attributes and behaviours using object‑oriented polymorphism (`Coin`, `GoldCoin`, `SilverCoin`, `BlueCoin`, `RainbowCoin`):
     * Standard Red Coin: Basic point increment (+5).
     * Gold Coin: Higher point reward (+15).
-    * Blue Coin: Enables border wrapping until the next coin is collected on Normal/Hard; Easy mode retains permanent border wrapping. Obstacles remain lethal.
+    * Blue Coin: Spawns only on Normal/Hard and enables border wrapping until the next coin is collected. Easy mode has permanent wrapping, so blue-coin rolls produce regular coins instead. Obstacles remain lethal.
     * Silver Coin: Spawns additional barrier obstacles on the board and adjusts target score.
     * Rainbow Coin: Grants speed boost (+5.0 speed) to the game loop.
+  * **Coin Selection Factory:** `GameController` delegates replacement coin creation to `CoinFactory.createCoin(Game, Snake, Obstacle)`. Blue coins require `!game.isNoBorder()`. The factory preserves the 12-outcome selection and other coin probabilities, the power-up toggle, and silver-coin eligibility (no existing obstacles). Initial and reset coins remain regular coins. A default constructor supplies `Random`; an injectable `Random` constructor supports deterministic verification.
   * **Asset Caching:** Snake and coin sprites are loaded once as `static final` assets — no disk reads or texture re‑allocations per tick or per coin spawn.
   * **Score & Win Conditions:** Clarified score tracking (`coinsEaten` vs `displayScore`) with documented, guarded target score decrements (`decMaxScore`).
   * **Audio Playback:** Low‑latency coin collection sound effects via `AudioClip`.
@@ -116,7 +117,7 @@
 
 ## 4. Implemented but Not Working Properly
 
-*(None currently recorded. All 44 entries in `BUGS_AND_IMPROVEMENTS.md` are marked as fixed.)*
+*(None currently recorded. All 45 entries in `BUGS_AND_IMPROVEMENTS.md` are marked as fixed.)*
 
 ---
 
@@ -143,6 +144,7 @@
 
 | Class | Package | Purpose & Description |
 | :--- | :--- | :--- |
+| **`CoinFactory.java`** | `com.comp2042.model` | Centralizes replacement coin selection through `createCoin(Game, Snake, Obstacle)`, excludes blue coins when border wrapping is already enabled, and accepts an injectable `Random` for deterministic verification. |
 | **`GridPoint.java`** | `com.comp2042.model` | Pure Java integer coordinate representation (`x`, `y`) designed to replace legacy `java.awt.Point`. Provides getters, setters, translation, copy constructor, and standard `equals`/`hashCode`/`toString` methods without pulling in desktop AWT UI dependencies. |
 
 ---
@@ -154,7 +156,7 @@
 | **`Main.java`** | `com.comp2042` | `com.comp2042` | Added explicit `ViewManager` import and programmatic font loading. Passes `primaryStage` to `new ViewManager(primaryStage)` and calls `viewManager.initializeMainMenu()`. |
 | **`ViewManager.java`** | `com.comp2042` | `com.comp2042.view` | Moved to `view` package. Implemented single-stage scene swapping (`showGameScene`, `showMainMenu`), eliminated multiple `Stage` anti-pattern, added safe `IOException` error dialog, and corrected method typo `initializeMainMenu()`. |
 | **`MainMenuController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Uses strongly-typed `Game.Difficulty.EASY`, refactored `launchSnake` into `buildGameScene` with proper static `StackPane` alignment, and wired escape key to clean return-to-menu callback. |
-| **`GameController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Implemented 2-key FIFO input queue (`inputQueue`) to prevent dropped inputs during rapid double-turns; synchronized `turnDir` calls with logic ticks; encapsulated static `key`/`lastKey` as private fields with getters; corrected `valKey` DOWN anti-reverse logic (Bug #40); removed dead code (`calculateBonusScore`, `legacyScoreMultiplier`, `unusedObstacleCount`); reused class-level `Random`; reset turn array on restart; and hooked return-to-menu callback to stop animation and swap scenes. |
+| **`GameController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Implemented 2-key FIFO input queue (`inputQueue`) to prevent dropped inputs during rapid double-turns; synchronized `turnDir` calls with logic ticks; encapsulated static `key`/`lastKey` as private fields with getters; corrected `valKey` DOWN anti-reverse logic (Bug #40); removed dead code (`calculateBonusScore`, `legacyScoreMultiplier`, `unusedObstacleCount`); delegated replacement coin selection to `CoinFactory`, which owns the reusable `Random`; reset turn array on restart; and hooked return-to-menu callback to stop animation and swap scenes. |
 | **`GameView.java`** | `com.comp2042` | `com.comp2042.view` | Moved to `view` package. Encapsulated background fill color (`BACKGROUND_COLOR`); eliminated snapshots in favor of `GraphicsContext` rotation; fixed double-scaling bug; eliminated per-frame `SnapshotParameters`; added `resetTurnArray()`; migrated from `Point` to `GridPoint`; decoupled `turnDir` from controller static state; unified tail rendering in `drawBody` under `index == 0`; and delegated `tailRotation` to `Snake.getTailDir()`. |
 | **`Game.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Removed UI `Color` coupling; added strongly-typed `Game.Difficulty` enum with tuned speeds (`EASY: 7.0`, `NORMAL: 9.0`, `HARD: 12.0`); renamed dual score tracking (`coinsEaten` vs `displayScore`); replaced magic scaling numbers with named constants; and documented/guarded `decMaxScore`. |
 | **`Snake.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Fully migrated from `Point` to `GridPoint`; removed `ImageView` nodes and exposed `static final Image` singletons; extracted `attemptMove` / `wrapCoordinate`; unified border flags into `borderWrap`; switched body to `ArrayDeque`; cached coin collision checks; validate-before-move with obstacle checks after resolving wrapped destinations (Bug #44); renamed constructor parameters; and implemented `getTailDir()` with toroidal shortest-displacement vector calculation for border wrap orientation. |

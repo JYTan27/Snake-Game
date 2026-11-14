@@ -2,15 +2,11 @@ package com.comp2042.controller;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Random;
 
-import com.comp2042.model.BlueCoin;
 import com.comp2042.model.Coin;
+import com.comp2042.model.CoinFactory;
 import com.comp2042.model.Game;
-import com.comp2042.model.GoldCoin;
 import com.comp2042.model.Obstacle;
-import com.comp2042.model.RainbowCoin;
-import com.comp2042.model.SilverCoin;
 import com.comp2042.model.Snake;
 import com.comp2042.view.GameView;
 
@@ -42,7 +38,7 @@ public class GameController {
     // FIFO input queue so rapid turns are never dropped
     private final Deque<KeyCode> inputQueue = new ArrayDeque<>();
 
-    private final Random random = new Random();
+    private final CoinFactory coinFactory = new CoinFactory();
 
     public KeyCode getCurrentKey() { return key; }
     public KeyCode getLastKey() { return lastKey; }
@@ -192,21 +188,6 @@ public class GameController {
     }
 
     private void newCoin() {
-        if (game.isPowerUp()) {
-            int ran = random.nextInt(12);
-            if (ran == 1) {
-                coin = new GoldCoin(game.getWidth(), game.getHeight(), snake, obstacle);
-            } else if (ran == 2) {
-                coin = new RainbowCoin(game.getWidth(), game.getHeight(), snake, obstacle);
-            } else if (ran == 3) {
-                coin = new BlueCoin(game.getWidth(), game.getHeight(), snake, obstacle);
-            } else if (ran == 4 && obstacle.getObstacles().isEmpty()) {
-                coin = new SilverCoin(game.getWidth(), game.getHeight(), snake, obstacle);
-            } else {
-                coin = new Coin(game.getWidth(), game.getHeight(), snake, obstacle);
-            }
-        } else {
-            coin = new Coin(game.getWidth(), game.getHeight(), snake, obstacle);
-        }
+        coin = coinFactory.createCoin(game, snake, obstacle);
     }
 }

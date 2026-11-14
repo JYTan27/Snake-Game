@@ -2,7 +2,7 @@
 
 1. **Duplicate `drawGrid` methods** – there are two `drawGrid` implementations (one handling obstacles, one without) causing dead code and maintenance overhead. ✅ Fixed.
 2. **`drawBody` snapshot per segment** – `ImageView.snapshot` is called for every snake body segment each tick, creating many temporary `Image` objects and leading to GC spikes and performance degradation. ✅ Fixed (rendering now uses `GraphicsContext.rotate`).
-3. **Duplicate `if (ran == 1)` in `GameController.newCoin`** – logical error prevents the `RainbowCoin` branch from ever executing. ✅ Fixed (condition corrected to `ran == 2`).
+3. **Duplicate `if (ran == 1)` in `GameController.newCoin`** – logical error prevents the `RainbowCoin` branch from ever executing. ✅ Fixed (condition corrected to `ran == 2`; selection now lives in `CoinFactory` as `roll == 2`).
 4. **Static coupling of `GameView` to `GameController.key`** – `GameView` reads controller static fields directly, violating MVC separation and making testing harder. ✅ Fixed (key/lastKey are private instance fields; `turnDir` accepts direction parameters).
 5. **Dead code in `GameController.reset()`** – methods/variables like `calculateBonusScore()`, `legacyScoreMultiplier`, `unusedObstacleCount` are never used. ✅ Fixed (removed unused methods and variables).
 6. **Misleading `multiplier` naming & magic numbers** – hard‑coded values (10, 20, 50) for board scaling are opaque and should be replaced with named constants. ✅ Fixed (introduced `SMALL_BOARD_MULTIPLIER`, `LARGE_BOARD_MULTIPLIER`, `LARGE_BOARD_THRESHOLD`, and reusable `Random`).
@@ -45,6 +45,7 @@
 
 43. **Easy difficulty loses border wrapping after collecting a coin** – `GameController.powerCoin()` called `snake.ignoreBorders(false)` for every collected coin, overriding Easy mode's default wrapping. ✅ Fixed (restores `game.isNoBorder()` before applying each coin's effect, preserving permanent wrapping on Easy and temporary blue-coin wrapping on Normal/Hard).
 44. **Obstacle collision skipped after border wrapping** — `Snake.attemptMove()` moved the head directly to the wrapped destination and skipped the obstacle check in its `else if` branch. This allowed the snake to pass through obstacles on the opposite edge in Easy mode or after collecting a blue coin. ✅ Fixed (resolve the wrapped target first, check it for obstacles, then move; fatal collisions leave the head at its previous position).
+45. **Redundant blue coins spawn in Easy difficulty** — Coin selection checked only the power-up toggle, allowing border-wrapping coins even when wrapping was permanently enabled. ✅ Fixed (`CoinFactory` permits blue coins only when `!game.isNoBorder()` and replaces ineligible blue rolls with regular coins).
 
 
 ---
@@ -59,7 +60,7 @@
    - Added polymorphic `applyEffect(Game game, Snake snake, Obstacle obstacle)` and `getSpeedBonus()` methods to `Coin`.
    - Replaced brittle `if‑else` type‑checking in `GameController.powerCoin()` with a one‑line polymorphic call.
 3. **Fixed unreachable `RainbowCoin` spawn bug (Addresses Bug #3)**:
-   - Corrected `GameController.newCoin()` condition so `RainbowCoin` spawns on `ran == 2`.
+   - Corrected the original `GameController.newCoin()` condition so `RainbowCoin` spawns on `ran == 2`; selection now lives in `CoinFactory` as `roll == 2`.
 4. **Optimized random coordinate generation (Addresses Bug #27)**:
    - Shared a single static `Random` generator for position generation.
 5. **Fixed broken Maven Wrapper configuration**:
@@ -90,7 +91,7 @@
 19. **Removed dead code and unused variables (Addresses Bug #5)**:
    - Deleted `calculateBonusScore()`, `legacyScoreMultiplier`, and unused obstacle count generation.
 20. **Replaced magic numbers with named constants (Addresses Bug #6)**:
-   - Added `SMALL_BOARD_MULTIPLIER`, `LARGE_BOARD_MULTIPLIER`, and `LARGE_BOARD_THRESHOLD` in `Game`. Reused `Random` generator instance in `GameController`.
+   - Added `SMALL_BOARD_MULTIPLIER`, `LARGE_BOARD_MULTIPLIER`, and `LARGE_BOARD_THRESHOLD` in `Game`. Coin selection reuses a `Random` instance, now owned by `CoinFactory`.
 21. **Fixed turn array stale entries upon reset (Addresses Bug #8)**:
    - Added `resetTurnArray()` in `GameView` and invoked it in `GameController.reset()`.
 22. **Fixed `Obstacle` coordinate generation, off-by-one, and encapsulation (Addresses Bugs #21, #22, #23, #24, #25)**:
@@ -134,3 +135,8 @@
    - Updated `Snake.attemptMove()` to resolve an out-of-bounds target with `wrapCoordinate()` before checking for obstacles.
    - Both ordinary and wrapped moves now use the same obstacle check before updating the head; a blocked destination marks the snake dead without moving it.
    - Applies to all four borders in Easy mode and while the blue coin enables wrapping on Normal/Hard. Crossing an unwrapped border remains fatal.
+35. **Extracted capability-aware coin selection (Addresses Bug #45)**:
+   - Added `CoinFactory.createCoin(Game, Snake, Obstacle)` and delegated replacement coin creation from `GameController.newCoin()`.
+   - Blue coins require `!game.isNoBorder()`; Easy replaces blue rolls with regular coins, while Normal/Hard retain blue coins.
+   - Preserved the 12-outcome selection, other coin probabilities, power-up toggle, and silver-coin eligibility. Initial and reset coins remain regular coins; coin effects are unchanged.
+   - Added default and injectable `Random` constructors so selection can be verified deterministically.
