@@ -186,7 +186,7 @@ public class GameController {
 
     private void powerCoin() {
         animation.setRate(game.getSpeed() + coin.getSpeedBonus());
-        snake.ignoreBorders(false);
+        snake.ignoreBorders(game.isNoBorder());
         coin.applyEffect(game, snake, obstacle);
         game.addPoints(coin.getPoints());
     }
