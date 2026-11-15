@@ -1,7 +1,8 @@
 package com.comp2042.controller;
 
 import com.comp2042.Main;
-import com.comp2042.model.Coin;
+import com.comp2042.model.Pickup;
+import com.comp2042.model.DiamondPickup;
 import com.comp2042.model.Game;
 import com.comp2042.model.Obstacle;
 import com.comp2042.model.Snake;
@@ -103,17 +104,17 @@ public class MainMenuController {
         Game game = new Game(X_VALUE, Y_VALUE, POWER_UP, difficulty);
         Obstacle obstacle = new Obstacle(game.getWidth(), game.getHeight());
         Snake snake = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
-        Coin coin = new Coin(game.getWidth(), game.getHeight(), snake, obstacle);
+        Pickup pickup = new DiamondPickup(game.getWidth(), game.getHeight(), snake, obstacle);
 
         GameView gameView = new GameView(game);
-        GameController controller = new GameController(snake, coin, game, gameView, obstacle, stage, () -> viewManager.showMainMenu());
+        GameController controller = new GameController(snake, pickup, game, gameView, obstacle, stage, () -> viewManager.showMainMenu());
 
         StackPane gamePane = new StackPane();
         gameScene = new Scene(gamePane, game.getWidth() * game.getMultiplier(), game.getHeight() * game.getMultiplier());
 
         gameScene.setOnKeyPressed(controller::handle);
 
-        gameView.makeScene(gameScene, snake, coin);
+        gameView.makeScene(gameScene, snake, pickup);
         gamePane.getChildren().addAll(gameView.gridCanvas, gameView.gameOverLabel, gameView.gameWonLabel, gameView.scoreLabel);
         gamePane.setPadding(new Insets(20));
         StackPane.setAlignment(gameView.gameOverLabel, Pos.TOP_CENTER);

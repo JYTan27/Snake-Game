@@ -6,25 +6,20 @@ import java.util.Random;
 
 import javafx.scene.image.Image;
 
-public class Coin {
-    /** Signals that the board has no unoccupied cell for a coin. */
+public abstract class Pickup {
+    /** Signals that the board has no unoccupied cell for a pickup. */
     public static class NoFreeCellException extends IllegalStateException {
         public NoFreeCellException() {
-            super("No free cell is available for a coin");
+            super("No free cell is available for a pickup");
         }
     }
 
     protected static final Random RANDOM = new Random();
-    private static final Image RED_COIN_IMAGE = new Image(Coin.class.getResourceAsStream("/com/comp2042/images/coins/redcoin.png"));
 
     private GridPoint pos;
     private final Image image;
 
-    public Coin(int gridWidth, int gridHeight, Snake snake, Obstacle obstacle) {
-        this(gridWidth, gridHeight, snake, obstacle, RED_COIN_IMAGE);
-    }
-
-    protected Coin(int gridWidth, int gridHeight, Snake snake, Obstacle obstacle, Image image) {
+    protected Pickup(int gridWidth, int gridHeight, Snake snake, Obstacle obstacle, Image image) {
         this.image = image;
         generatePosition(gridWidth, gridHeight, snake, obstacle);
     }
@@ -67,7 +62,7 @@ public class Coin {
     }
 
     public void applyEffect(Game game, Snake snake, Obstacle obstacle) {
-        // Base coin has no special side effect
+        // Base pickup has no special side effect
     }
 
     public Image getImage() {

@@ -92,8 +92,8 @@ public class Snake {
         return new GridPoint(wx, wy);
     }
 
-    public boolean ateCoin(Coin coin) {
-        boolean ate = head.equals(coin.getPos());
+    public boolean atePickup(Pickup pickup) {
+        boolean ate = head.equals(pickup.getPos());
         if (!ate) {
             body.pollFirst();
         }

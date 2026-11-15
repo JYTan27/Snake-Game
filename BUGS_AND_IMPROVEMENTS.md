@@ -177,3 +177,10 @@
    - Added `CoinType` and immutable allowed-coin sets in `Game.Difficulty`. Easy permits Regular/Gold/Rainbow, Normal adds Blue, and Hard adds Silver.
    - `CoinFactory` checks those rules before construction. Disallowed rolls become regular coins; existing probabilities, power-up settings, blue restrictions, and silver's obstacle-free-board requirement remain unchanged.
    - Difficulty display names now live with their configuration, allowing new difficulties without a menu-name switch. Updated How to Play and README; snake movement and coin effects are unchanged.
+46. **Replaced coin visuals with distinct pickup sprites**:
+   - Mapped Regular/Gold/Blue/Rainbow/Silver to the supplied diamond/star/ring/bolt/blocks PNGs, retaining internal class names, scoring, effects, and difficulty rules.
+   - Centred pickup rendering within each cell and disabled smoothing for pickup draws. Updated How to Play and README terminology; retained legacy images.
+47. **Renamed the pickup model to match its sprites**:
+   - Replaced the coin classes with an abstract `Pickup` base and `DiamondPickup`, `StarPickup`, `RingPickup`, `BoltPickup`, and `BlocksPickup`.
+   - Renamed the factory/type to `PickupFactory` / `PickupType`, with DIAMOND/STAR/RING/BOLT/BLOCKS values, and updated collection, spawning, configuration, and counter identifiers throughout the code.
+   - Initial/reset/fallback spawning uses diamonds. Effects, probabilities, difficulty restrictions, resource filenames, and full-board completion remain unchanged. Historical bug notes retain the original terminology.

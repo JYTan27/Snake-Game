@@ -1,7 +1,7 @@
 package com.comp2042.view;
 
 import com.comp2042.controller.MainMenuController;
-import com.comp2042.model.Coin;
+import com.comp2042.model.Pickup;
 import com.comp2042.model.Game;
 import com.comp2042.model.GridPoint;
 import com.comp2042.model.Obstacle;
@@ -43,12 +43,12 @@ public class GameView {
         this.game = game;
     }
 
-    public void makeScene(Scene scene, Snake snek, Coin coin) {
+    public void makeScene(Scene scene, Snake snek, Pickup pickup) {
         gridCanvas = new Canvas(scene.getWidth(), scene.getHeight());
         initX = scene.getWidth();
         initY = scene.getHeight();
         gc = gridCanvas.getGraphicsContext2D();
-        drawGrid(coin, snek, null, gc, false, 0);
+        drawGrid(pickup, snek, null, gc, false, 0);
 
         String css = getClass().getResource("/com/comp2042/view/styling.css").toExternalForm();
 
@@ -69,7 +69,7 @@ public class GameView {
         scoreLabel.setVisible(true);
     }
 
-    public void scaleToFullscreen(boolean fullScreen, Stage primaryStage, Obstacle obstacle, Snake snek, Coin coin) {
+    public void scaleToFullscreen(boolean fullScreen, Stage primaryStage, Obstacle obstacle, Snake snek, Pickup pickup) {
         primaryStage.setFullScreen(fullScreen);
 
         double xScaling = Screen.getPrimary().getVisualBounds().getHeight() / initY;
@@ -89,25 +89,30 @@ public class GameView {
 
         gameOverLabel.setFont(new Font("Arial", 25 * fullScale));
         gameWonLabel.setFont(new Font("Arial", 25 * fullScale));
-        drawGrid(coin, snek, obstacle, gc, false, 0);
+        drawGrid(pickup, snek, obstacle, gc, false, 0);
     }
 
-    public void drawGrid(Coin coin, Snake snek, Obstacle obstacle,
+    public void drawGrid(Pickup pickup, Snake snek, Obstacle obstacle,
                          GraphicsContext gc, boolean a, int b) {
         gc.setFill(BACKGROUND_COLOR);
         gc.fillRect(0, 0, gridCanvas.getWidth(), gridCanvas.getHeight());
 
         double cellSize = game.getMultiplier() * fullScale; // Bug #9: single scale factor
 
-        // Draw coin
-        if (coin != null) {
+        // Centre the pickup sprite; keep pixel-art sampling local to this draw.
+        if (pickup != null) {
+            double pickupSize = cellSize - 3 * fullScale;
+            double inset = (cellSize - pickupSize) / 2;
+            gc.save();
+            gc.setImageSmoothing(false);
             gc.drawImage(
-                coin.getImage(),
-                coin.getPos().getX() * cellSize,
-                coin.getPos().getY() * cellSize,
-                cellSize - 3 * fullScale,
-                cellSize - 3 * fullScale
+                pickup.getImage(),
+                pickup.getPos().getX() * cellSize + inset,
+                pickup.getPos().getY() * cellSize + inset,
+                pickupSize,
+                pickupSize
             );
+            gc.restore();
         }
 
         // Draw body segments

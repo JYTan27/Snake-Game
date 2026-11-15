@@ -20,7 +20,7 @@ public class Obstacle {
         this.boardHeight = boardHeight;
     }
 
-    public void newObstacles(Snake snek, Coin coin, int amount) {
+    public void newObstacles(Snake snek, Pickup pickup, int amount) {
         if (obstacles.size() > boardWidth * boardHeight / 4) {
             return;
         }
@@ -28,7 +28,7 @@ public class Obstacle {
         List<GridPoint> occupied = new ArrayList<>();
         occupied.add(snek.getHead());
         occupied.addAll(snek.getBody());
-        occupied.add(coin.getPos());
+        occupied.add(pickup.getPos());
         occupied.addAll(obstacles);
 
         List<GridPoint> freeCells = new ArrayList<>();

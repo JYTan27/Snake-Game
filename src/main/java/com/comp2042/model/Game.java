@@ -9,7 +9,7 @@ public class Game {
 
     private int width;
     private int height;
-    private int coinsEaten;
+    private int pickupsCollected;
     private int maxScore;
     private double multiplier;
     private int displayScore;
@@ -20,26 +20,26 @@ public class Game {
     private final Difficulty difficulty;
 
     public enum Difficulty {
-        EASY("Easy", 7.0, true, Set.of(CoinType.REGULAR, CoinType.GOLD, CoinType.RAINBOW)),
-        NORMAL("Normal", 9.0, false, Set.of(CoinType.REGULAR, CoinType.GOLD, CoinType.RAINBOW, CoinType.BLUE)),
-        HARD("Hard", 12.0, false, Set.of(CoinType.REGULAR, CoinType.GOLD, CoinType.RAINBOW, CoinType.BLUE, CoinType.SILVER));
+        EASY("Easy", 7.0, true, Set.of(PickupType.DIAMOND, PickupType.STAR, PickupType.BOLT)),
+        NORMAL("Normal", 9.0, false, Set.of(PickupType.DIAMOND, PickupType.STAR, PickupType.BOLT, PickupType.RING)),
+        HARD("Hard", 12.0, false, Set.of(PickupType.DIAMOND, PickupType.STAR, PickupType.BOLT, PickupType.RING, PickupType.BLOCKS));
 
         private final String displayName;
         private final double speed;
         private final boolean noBorder;
-        private final Set<CoinType> allowedCoins;
+        private final Set<PickupType> allowedPickups;
 
-        Difficulty(String displayName, double speed, boolean noBorder, Set<CoinType> allowedCoins) {
+        Difficulty(String displayName, double speed, boolean noBorder, Set<PickupType> allowedPickups) {
             this.displayName = displayName;
             this.speed = speed;
             this.noBorder = noBorder;
-            this.allowedCoins = Set.copyOf(allowedCoins);
+            this.allowedPickups = Set.copyOf(allowedPickups);
         }
 
         public String getDisplayName() { return displayName; }
         public double getSpeed() { return speed; }
         public boolean isNoBorder() { return noBorder; }
-        public boolean allowsCoin(CoinType type) { return allowedCoins.contains(type); }
+        public boolean allowsPickup(PickupType type) { return allowedPickups.contains(type); }
     }
 
     public Game(int x, int y, boolean powerUp, Difficulty difficulty) {
@@ -54,7 +54,7 @@ public class Game {
     }
 
     public boolean gameWon() {
-        return completed || coinsEaten == maxScore;
+        return completed || pickupsCollected == maxScore;
     }
 
     public void markWon() {
@@ -62,12 +62,12 @@ public class Game {
     }
 
     public void incScore() {
-        coinsEaten++;
+        pickupsCollected++;
     }
 
     /**
      * Reduces maxScore by (num - 1) to account for the grid cells now occupied
-     * by obstacles. The -1 accounts for the coin cell that was just consumed.
+     * by obstacles. The -1 accounts for the pickup cell that was just consumed.
      */
     public void decMaxScore(int num) {
         if (maxScore - (num - 1) > 0) {
@@ -84,7 +84,7 @@ public class Game {
     }
 
     public void resetScore() {
-        coinsEaten = 0;
+        pickupsCollected = 0;
         displayScore = 0;
         maxScore = width * height - 2;
         completed = false;
@@ -106,8 +106,8 @@ public class Game {
         return powerUp;
     }
 
-    public boolean allowsCoin(CoinType type) {
-        return difficulty.allowsCoin(type);
+    public boolean allowsPickup(PickupType type) {
+        return difficulty.allowsPickup(type);
     }
 
     public double getSpeed() {

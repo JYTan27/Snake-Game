@@ -22,15 +22,15 @@
             </columnConstraints>
             <children>
                 <Label text="Easy" GridPane.rowIndex="0" />
-                <Label text="7 moves/sec · Wraps borders · No blue coins" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                <Label text="7 moves/sec · Wraps borders · No rings" GridPane.columnIndex="1" GridPane.rowIndex="0" />
                 <Label text="Normal" GridPane.rowIndex="1" />
                 <Label text="9 moves/sec · Solid borders" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                 <Label text="Hard" GridPane.rowIndex="2" />
                 <Label text="12 moves/sec · Solid borders" GridPane.columnIndex="1" GridPane.rowIndex="2" />
             </children>
         </GridPane>
-        <Label layoutX="24.0" layoutY="154.0" prefWidth="502.0" text="Blue coins on Normal/Hard: wrap until the next coin." />
-        <Label layoutX="24.0" layoutY="174.0" prefWidth="502.0" text="Silver: Hard-only obstacles. Avoid them and your body." />
+        <Label layoutX="24.0" layoutY="154.0" prefWidth="502.0" text="Rings on Normal/Hard: wrap until the next pickup." />
+        <Label layoutX="24.0" layoutY="174.0" prefWidth="502.0" text="Blocks: Hard-only obstacles. Avoid them and your body." />
         <Region layoutX="24.0" layoutY="197.0" prefWidth="502.0" prefHeight="1.0" styleClass="helpDivider" />
         <Label layoutX="24.0" layoutY="205.0" styleClass="helpSection" text="Controls" />
         <GridPane layoutX="24.0" layoutY="233.0" vgap="3.0">

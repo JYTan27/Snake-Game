@@ -3,8 +3,9 @@ package com.comp2042.controller;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-import com.comp2042.model.Coin;
-import com.comp2042.model.CoinFactory;
+import com.comp2042.model.Pickup;
+import com.comp2042.model.DiamondPickup;
+import com.comp2042.model.PickupFactory;
 import com.comp2042.model.Game;
 import com.comp2042.model.Obstacle;
 import com.comp2042.model.Snake;
@@ -23,12 +24,12 @@ public class GameController {
     private static final int MAX_BUFFERED_INPUTS = 2;
 
     private Snake snake;
-    private Coin coin;
+    private Pickup pickup;
     private GameView gameView;
     private Game game;
     private Stage stage;
-    private final String coinSoundPath = getClass().getResource("/com/comp2042/audio/coinSound.wav").toExternalForm();
-    private final AudioClip coinSoundEffect = new AudioClip(coinSoundPath);
+    private final String pickupSoundPath = getClass().getResource("/com/comp2042/audio/coinSound.wav").toExternalForm();
+    private final AudioClip pickupSoundEffect = new AudioClip(pickupSoundPath);
     private Obstacle obstacle;
     private final Runnable onReturnToMenu;
 
@@ -38,14 +39,14 @@ public class GameController {
     // FIFO input queue so rapid turns are never dropped
     private final Deque<KeyCode> inputQueue = new ArrayDeque<>();
 
-    private final CoinFactory coinFactory = new CoinFactory();
+    private final PickupFactory pickupFactory = new PickupFactory();
 
     public KeyCode getCurrentKey() { return key; }
     public KeyCode getLastKey() { return lastKey; }
 
-    public GameController(Snake snake, Coin coin, Game game, GameView gameView, Obstacle obstacle, Stage stage, Runnable onReturnToMenu) {
+    public GameController(Snake snake, Pickup pickup, Game game, GameView gameView, Obstacle obstacle, Stage stage, Runnable onReturnToMenu) {
         this.snake = snake;
-        this.coin = coin;
+        this.pickup = pickup;
         this.gameView = gameView;
         this.game = game;
         this.stage = stage;
@@ -78,23 +79,23 @@ public class GameController {
             snake.move('D');
         }
 
-        if (!snake.getDead() && snake.ateCoin(coin)) {
-            powerCoin();
+        if (!snake.getDead() && snake.atePickup(pickup)) {
+            applyPickupEffect();
             game.incScore();
-            coinSoundEffect.play();
+            pickupSoundEffect.play();
             if (game.gameWon()) {
                 finishGame();
                 return;
             }
-            newCoin();
-            if (coin == null) {
+            spawnPickup();
+            if (pickup == null) {
                 finishGame();
                 return;
             }
         }
 
         if (!snake.getDead() || snake.hitSelf()) {
-            gameView.drawGrid(coin, snake, obstacle, gameView.gc, false, 0);
+            gameView.drawGrid(pickup, snake, obstacle, gameView.gc, false, 0);
         }
 
         gameView.gameWon();
@@ -138,7 +139,7 @@ public class GameController {
 
     /** Applies the stage mode and matching board/label scale together. */
     public void setFullScreen(boolean fullScreen) {
-        gameView.scaleToFullscreen(fullScreen, stage, obstacle, snake, coin);
+        gameView.scaleToFullscreen(fullScreen, stage, obstacle, snake, pickup);
         String endLabelStyle = fullScreen ? "-fx-font-size: 50;" : "-fx-font-size: 15;";
         gameView.gameOverLabel.setStyle(endLabelStyle);
         gameView.gameWonLabel.setStyle(endLabelStyle);
@@ -168,7 +169,7 @@ public class GameController {
         obstacle.reset();
         game.resetScore();
         snake = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
-        coin  = new Coin(game.getWidth(), game.getHeight(), snake, obstacle);
+        pickup  = new DiamondPickup(game.getWidth(), game.getHeight(), snake, obstacle);
 
         animation.setRate(game.getSpeed());
         key = KeyCode.LEFT;
@@ -180,26 +181,26 @@ public class GameController {
         gameView.gameOver(snake);
         gameView.updateScoreLabel();
 
-        gameView.drawGrid(coin, snake, obstacle, gameView.gc, false, 0);
+        gameView.drawGrid(pickup, snake, obstacle, gameView.gc, false, 0);
     }
 
-    private void powerCoin() {
-        animation.setRate(game.getSpeed() + coin.getSpeedBonus());
+    private void applyPickupEffect() {
+        animation.setRate(game.getSpeed() + pickup.getSpeedBonus());
         snake.ignoreBorders(game.isNoBorder());
-        coin.applyEffect(game, snake, obstacle);
-        game.addPoints(coin.getPoints());
+        pickup.applyEffect(game, snake, obstacle);
+        game.addPoints(pickup.getPoints());
     }
 
-    private void newCoin() {
-        coin = coinFactory.createCoin(game, snake, obstacle).orElse(null);
+    private void spawnPickup() {
+        pickup = pickupFactory.createPickup(game, snake, obstacle).orElse(null);
     }
 
     private void finishGame() {
         game.markWon();
         animation.stop();
         inputQueue.clear();
-        coin = null;
-        gameView.drawGrid(coin, snake, obstacle, gameView.gc, false, 0);
+        pickup = null;
+        gameView.drawGrid(pickup, snake, obstacle, gameView.gc, false, 0);
         gameView.updateScoreLabel();
         gameView.gameWon();
     }
