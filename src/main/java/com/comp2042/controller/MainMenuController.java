@@ -43,16 +43,15 @@ public class MainMenuController {
             @Override
             public String toString(Game.Difficulty difficulty) {
                 if (difficulty == null) return "";
-                return switch (difficulty) {
-                    case EASY -> "Easy";
-                    case NORMAL -> "Normal";
-                    case HARD -> "Hard";
-                };
+                return difficulty.getDisplayName();
             }
 
             @Override
             public Game.Difficulty fromString(String text) {
-                return Game.Difficulty.valueOf(text.toUpperCase(java.util.Locale.ROOT));
+                return java.util.Arrays.stream(Game.Difficulty.values())
+                        .filter(difficulty -> difficulty.getDisplayName().equalsIgnoreCase(text))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("Unknown difficulty: " + text));
             }
         });
         difficultySelector.setValue(viewManager.getSelectedDifficulty());

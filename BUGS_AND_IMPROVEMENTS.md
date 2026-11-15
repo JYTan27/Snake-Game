@@ -173,3 +173,7 @@
    - Prevented scaled popup options from enlarging the main dropdown after selection.
 44. **Added Exit**:
    - The main-menu Exit button closes the application through `Platform.exit()` in windowed or fullscreen mode.
+45. **Configured allowed coins per difficulty**:
+   - Added `CoinType` and immutable allowed-coin sets in `Game.Difficulty`. Easy permits Regular/Gold/Rainbow, Normal adds Blue, and Hard adds Silver.
+   - `CoinFactory` checks those rules before construction. Disallowed rolls become regular coins; existing probabilities, power-up settings, blue restrictions, and silver's obstacle-free-board requirement remain unchanged.
+   - Difficulty display names now live with their configuration, allowing new difficulties without a menu-name switch. Updated How to Play and README; snake movement and coin effects are unchanged.

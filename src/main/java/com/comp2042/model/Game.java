@@ -1,5 +1,7 @@
 package com.comp2042.model;
 
+import java.util.Set;
+
 public class Game {
     private static final double SMALL_BOARD_MULTIPLIER = 20.0;
     private static final double LARGE_BOARD_MULTIPLIER = 10.0;
@@ -15,25 +17,33 @@ public class Game {
     private boolean powerUp;
     private boolean noBorder;
     private boolean completed;
+    private final Difficulty difficulty;
 
     public enum Difficulty {
-        EASY(7.0, true),
-        NORMAL(9.0, false),
-        HARD(12.0, false);
+        EASY("Easy", 7.0, true, Set.of(CoinType.REGULAR, CoinType.GOLD, CoinType.RAINBOW)),
+        NORMAL("Normal", 9.0, false, Set.of(CoinType.REGULAR, CoinType.GOLD, CoinType.RAINBOW, CoinType.BLUE)),
+        HARD("Hard", 12.0, false, Set.of(CoinType.REGULAR, CoinType.GOLD, CoinType.RAINBOW, CoinType.BLUE, CoinType.SILVER));
 
+        private final String displayName;
         private final double speed;
         private final boolean noBorder;
+        private final Set<CoinType> allowedCoins;
 
-        Difficulty(double speed, boolean noBorder) {
+        Difficulty(String displayName, double speed, boolean noBorder, Set<CoinType> allowedCoins) {
+            this.displayName = displayName;
             this.speed = speed;
             this.noBorder = noBorder;
+            this.allowedCoins = Set.copyOf(allowedCoins);
         }
 
+        public String getDisplayName() { return displayName; }
         public double getSpeed() { return speed; }
         public boolean isNoBorder() { return noBorder; }
+        public boolean allowsCoin(CoinType type) { return allowedCoins.contains(type); }
     }
 
     public Game(int x, int y, boolean powerUp, Difficulty difficulty) {
+        this.difficulty = difficulty;
         this.speed = difficulty.getSpeed();
         this.noBorder = difficulty.isNoBorder();
         this.powerUp = powerUp;
@@ -94,6 +104,10 @@ public class Game {
 
     public boolean isPowerUp() {
         return powerUp;
+    }
+
+    public boolean allowsCoin(CoinType type) {
+        return difficulty.allowsCoin(type);
     }
 
     public double getSpeed() {

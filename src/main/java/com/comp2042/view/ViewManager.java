@@ -20,7 +20,7 @@ public class ViewManager {
 
     private Stage primaryStage;
     private AnchorPane root;
-    private Game.Difficulty selectedDifficulty = Game.Difficulty.EASY;
+    private Game.Difficulty selectedDifficulty = Game.Difficulty.NORMAL;
 
     private Image snakeLogo = new Image(getClass().getResourceAsStream("/com/comp2042/images/ui/SnakeLogoWhite.png"));
 

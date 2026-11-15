@@ -30,7 +30,7 @@
             </children>
         </GridPane>
         <Label layoutX="24.0" layoutY="154.0" prefWidth="502.0" text="Blue coins on Normal/Hard: wrap until the next coin." />
-        <Label layoutX="24.0" layoutY="174.0" prefWidth="502.0" text="Obstacles and self-collisions are lethal in all modes." />
+        <Label layoutX="24.0" layoutY="174.0" prefWidth="502.0" text="Silver: Hard-only obstacles. Avoid them and your body." />
         <Region layoutX="24.0" layoutY="197.0" prefWidth="502.0" prefHeight="1.0" styleClass="helpDivider" />
         <Label layoutX="24.0" layoutY="205.0" styleClass="helpSection" text="Controls" />
         <GridPane layoutX="24.0" layoutY="233.0" vgap="3.0">

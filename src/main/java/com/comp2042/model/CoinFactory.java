@@ -28,18 +28,25 @@ public class CoinFactory {
     private Coin selectCoin(Game game, Snake snake, Obstacle obstacle) {
         int width = game.getWidth();
         int height = game.getHeight();
-        if (game.isPowerUp()) {
-            int roll = random.nextInt(12);
-            if (roll == 1) {
-                return new GoldCoin(width, height, snake, obstacle);
-            } else if (roll == 2) {
-                return new RainbowCoin(width, height, snake, obstacle);
-            } else if (roll == 3 && !game.isNoBorder()) {
-                return new BlueCoin(width, height, snake, obstacle);
-            } else if (roll == 4 && obstacle.getObstacles().isEmpty()) {
-                return new SilverCoin(width, height, snake, obstacle);
-            }
+        CoinType type = game.isPowerUp() ? switch (random.nextInt(12)) {
+            case 1 -> CoinType.GOLD;
+            case 2 -> CoinType.RAINBOW;
+            case 3 -> CoinType.BLUE;
+            case 4 -> CoinType.SILVER;
+            default -> CoinType.REGULAR;
+        } : CoinType.REGULAR;
+
+        if (!game.allowsCoin(type)
+                || (type == CoinType.BLUE && game.isNoBorder())
+                || (type == CoinType.SILVER && !obstacle.getObstacles().isEmpty())) {
+            type = CoinType.REGULAR;
         }
-        return new Coin(width, height, snake, obstacle);
+        return switch (type) {
+            case REGULAR -> new Coin(width, height, snake, obstacle);
+            case GOLD -> new GoldCoin(width, height, snake, obstacle);
+            case RAINBOW -> new RainbowCoin(width, height, snake, obstacle);
+            case BLUE -> new BlueCoin(width, height, snake, obstacle);
+            case SILVER -> new SilverCoin(width, height, snake, obstacle);
+        };
     }
 }
