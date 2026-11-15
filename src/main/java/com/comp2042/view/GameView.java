@@ -6,6 +6,11 @@ import com.comp2042.model.Game;
 import com.comp2042.model.GridPoint;
 import com.comp2042.model.Obstacle;
 import com.comp2042.model.Snake;
+import com.comp2042.view.board.BoardRenderer;
+import com.comp2042.view.board.BoardTheme;
+import com.comp2042.view.board.CheckerboardBoardRenderer;
+
+import java.util.Objects;
 
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -13,14 +18,11 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 public class GameView {
-
-    private static final Color BACKGROUND_COLOR = Color.web("feffe4");
 
     public Canvas gridCanvas;
     public GraphicsContext gc;
@@ -32,6 +34,8 @@ public class GameView {
     private boolean gameWonVis  = false;
 
     private final Game game;
+    private final BoardRenderer boardRenderer;
+    private final BoardTheme boardTheme;
     private double initX;
     private double initY;
     private double fullScale = 1;
@@ -40,7 +44,13 @@ public class GameView {
             new int[MainMenuController.getxValue()][MainMenuController.getyValue()];
 
     public GameView(Game game) {
+        this(game, new CheckerboardBoardRenderer(), BoardTheme.SOFT_CREAM);
+    }
+
+    public GameView(Game game, BoardRenderer boardRenderer, BoardTheme boardTheme) {
         this.game = game;
+        this.boardRenderer = Objects.requireNonNull(boardRenderer);
+        this.boardTheme = Objects.requireNonNull(boardTheme);
     }
 
     public void makeScene(Scene scene, Snake snek, Pickup pickup) {
@@ -94,10 +104,8 @@ public class GameView {
 
     public void drawGrid(Pickup pickup, Snake snek, Obstacle obstacle,
                          GraphicsContext gc, boolean a, int b) {
-        gc.setFill(BACKGROUND_COLOR);
-        gc.fillRect(0, 0, gridCanvas.getWidth(), gridCanvas.getHeight());
-
         double cellSize = game.getMultiplier() * fullScale; // Bug #9: single scale factor
+        boardRenderer.draw(gc, game.getWidth(), game.getHeight(), cellSize, boardTheme);
 
         // Centre the pickup sprite; keep pixel-art sampling local to this draw.
         if (pickup != null) {

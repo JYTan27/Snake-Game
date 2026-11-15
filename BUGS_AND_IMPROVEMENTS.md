@@ -184,3 +184,7 @@
    - Replaced the coin classes with an abstract `Pickup` base and `DiamondPickup`, `StarPickup`, `RingPickup`, `BoltPickup`, and `BlocksPickup`.
    - Renamed the factory/type to `PickupFactory` / `PickupType`, with DIAMOND/STAR/RING/BOLT/BLOCKS values, and updated collection, spawning, configuration, and counter identifiers throughout the code.
    - Initial/reset/fallback spawning uses diamonds. Effects, probabilities, difficulty restrictions, resource filenames, and full-board completion remain unchanged. Historical bug notes retain the original terminology.
+48. **Added modular board rendering and a Soft Cream checkerboard**:
+   - Separate `BoardRenderer` patterns from `BoardTheme` palettes in the view layer. `GameView` accepts both, while its existing constructor defaults to the subtle checkerboard.
+   - Shared rounded cell boundaries avoid gaps at fractional fullscreen scales. Background rendering restores graphics state and runs before pickups, snake, and obstacles.
+   - Prepared for future appearance choices without adding menu controls or changing gameplay rules.
