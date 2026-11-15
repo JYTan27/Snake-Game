@@ -95,7 +95,7 @@ public class GameController {
         }
 
         if (!snake.getDead() || snake.hitSelf()) {
-            gameView.drawGrid(pickup, snake, obstacle, gameView.gc, false, 0);
+            gameView.drawGrid(pickup, snake, obstacle, gameView.gc);
         }
 
         gameView.gameWon();
@@ -181,7 +181,7 @@ public class GameController {
         gameView.gameOver(snake);
         gameView.updateScoreLabel();
 
-        gameView.drawGrid(pickup, snake, obstacle, gameView.gc, false, 0);
+        gameView.drawGrid(pickup, snake, obstacle, gameView.gc);
     }
 
     private void applyPickupEffect() {
@@ -200,7 +200,7 @@ public class GameController {
         animation.stop();
         inputQueue.clear();
         pickup = null;
-        gameView.drawGrid(pickup, snake, obstacle, gameView.gc, false, 0);
+        gameView.drawGrid(pickup, snake, obstacle, gameView.gc);
         gameView.updateScoreLabel();
         gameView.gameWon();
     }

@@ -188,3 +188,5 @@
    - Separate `BoardRenderer` patterns from `BoardTheme` palettes in the view layer. `GameView` accepts both, while its existing constructor defaults to the subtle checkerboard.
    - Shared rounded cell boundaries avoid gaps at fractional fullscreen scales. Background rendering restores graphics state and runs before pickups, snake, and obstacles.
    - Prepared for future appearance choices without adding menu controls or changing gameplay rules.
+49. **Removed unused drawing parameters**:
+   - Removed the unused `boolean a` and `int b` from `GameView.drawGrid()` and the corresponding `false, 0` arguments from all callers. Rendering behaviour is unchanged.

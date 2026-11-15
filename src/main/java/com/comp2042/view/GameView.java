@@ -53,12 +53,12 @@ public class GameView {
         this.boardTheme = Objects.requireNonNull(boardTheme);
     }
 
-    public void makeScene(Scene scene, Snake snek, Pickup pickup) {
+    public void makeScene(Scene scene, Snake snake, Pickup pickup) {
         gridCanvas = new Canvas(scene.getWidth(), scene.getHeight());
         initX = scene.getWidth();
         initY = scene.getHeight();
         gc = gridCanvas.getGraphicsContext2D();
-        drawGrid(pickup, snek, null, gc, false, 0);
+        drawGrid(pickup, snake, null, gc);
 
         String css = getClass().getResource("/com/comp2042/view/styling.css").toExternalForm();
 
@@ -79,7 +79,7 @@ public class GameView {
         scoreLabel.setVisible(true);
     }
 
-    public void scaleToFullscreen(boolean fullScreen, Stage primaryStage, Obstacle obstacle, Snake snek, Pickup pickup) {
+    public void scaleToFullscreen(boolean fullScreen, Stage primaryStage, Obstacle obstacle, Snake snake, Pickup pickup) {
         primaryStage.setFullScreen(fullScreen);
 
         double xScaling = Screen.getPrimary().getVisualBounds().getHeight() / initY;
@@ -99,11 +99,10 @@ public class GameView {
 
         gameOverLabel.setFont(new Font("Arial", 25 * fullScale));
         gameWonLabel.setFont(new Font("Arial", 25 * fullScale));
-        drawGrid(pickup, snek, obstacle, gc, false, 0);
+        drawGrid(pickup, snake, obstacle, gc);
     }
 
-    public void drawGrid(Pickup pickup, Snake snek, Obstacle obstacle,
-                         GraphicsContext gc, boolean a, int b) {
+    public void drawGrid(Pickup pickup, Snake snake, Obstacle obstacle, GraphicsContext gc) {
         double cellSize = game.getMultiplier() * fullScale; // Bug #9: single scale factor
         boardRenderer.draw(gc, game.getWidth(), game.getHeight(), cellSize, boardTheme);
 
@@ -125,13 +124,13 @@ public class GameView {
 
         // Draw body segments
         int bodyIndex = 0;
-        for (GridPoint point : snek.getBody()) {
-            drawBody(snek, point, bodyIndex, cellSize);
+        for (GridPoint point : snake.getBody()) {
+            drawBody(snake, point, bodyIndex, cellSize);
             bodyIndex++;
         }
 
         // Draw head
-        drawHead(snek, cellSize);
+        drawHead(snake, cellSize);
 
         // Draw obstacles
         if (obstacle != null) {
@@ -142,43 +141,43 @@ public class GameView {
         }
     }
 
-    private void drawHead(Snake snek, double cellSize) {
-        Image img = snek.getImageHead();
-        double x   = snek.getHead().getX() * cellSize;
-        double y   = snek.getHead().getY() * cellSize;
+    private void drawHead(Snake snake, double cellSize) {
+        Image img = snake.getImageHead();
+        double x   = snake.getHead().getX() * cellSize;
+        double y   = snake.getHead().getY() * cellSize;
         double cx  = x + cellSize / 2;
         double cy  = y + cellSize / 2;
 
         gc.save();
         gc.translate(cx, cy);
-        gc.rotate(snek.getSnakeDir());
+        gc.rotate(snake.getSnakeDir());
         gc.drawImage(img, -cellSize / 2, -cellSize / 2, cellSize, cellSize);
         gc.restore();
     }
 
-    private void drawBody(Snake snek, GridPoint point, int index, double cellSize) {
+    private void drawBody(Snake snake, GridPoint point, int index, double cellSize) {
         Image img;
         double rotateDeg;
 
         if (index == 0) {
-            img       = snek.getImageTail();
-            rotateDeg = tailRotation(snek);
+            img       = snake.getImageTail();
+            rotateDeg = tailRotation(snake);
         } else if (index > 0 &&
-                   turnArray[snek.getBody().get(index).getX()]
-                             [snek.getBody().get(index).getY()] != 0) {
-            img       = snek.getImageTurn();
-            rotateDeg = 90.0 * turnArray[snek.getBody().get(index).getX()]
-                                         [snek.getBody().get(index).getY()];
+                   turnArray[snake.getBody().get(index).getX()]
+                             [snake.getBody().get(index).getY()] != 0) {
+            img       = snake.getImageTurn();
+            rotateDeg = 90.0 * turnArray[snake.getBody().get(index).getX()]
+                                         [snake.getBody().get(index).getY()];
         } else {
-            img       = snek.getImageBody();
-            rotateDeg = snek.getBodyDir(index);
+            img       = snake.getImageBody();
+            rotateDeg = snake.getBodyDir(index);
         }
 
         // Clear stale turn entry when the tail segment leaves a turn cell
-        if (turnArray[snek.getBody().get(0).getX()]
-                      [snek.getBody().get(0).getY()] != 0) {
-            turnArray[snek.getBody().get(0).getX()]
-                      [snek.getBody().get(0).getY()] = 0;
+        if (turnArray[snake.getBody().get(0).getX()]
+                      [snake.getBody().get(0).getY()] != 0) {
+            turnArray[snake.getBody().get(0).getX()]
+                      [snake.getBody().get(0).getY()] = 0;
         }
 
         double x  = point.getX() * cellSize;
@@ -193,25 +192,25 @@ public class GameView {
         gc.restore();
     }
 
-    private double tailRotation(Snake snek) {
-        return snek.getTailDir();
+    private double tailRotation(Snake snake) {
+        return snake.getTailDir();
     }
 
-    public void turnDir(Snake snek, KeyCode lastKey, KeyCode currentKey) {
+    public void turnDir(Snake snake, KeyCode lastKey, KeyCode currentKey) {
         if ((lastKey == KeyCode.LEFT  && currentKey == KeyCode.UP)   ||
             (lastKey == KeyCode.DOWN  && currentKey == KeyCode.RIGHT)) {
-            turnArray[snek.getHead().getX()][snek.getHead().getY()] = 2;
+            turnArray[snake.getHead().getX()][snake.getHead().getY()] = 2;
         } else if ((lastKey == KeyCode.LEFT  && currentKey == KeyCode.DOWN) ||
                    (lastKey == KeyCode.UP    && currentKey == KeyCode.RIGHT)) {
-            turnArray[snek.getHead().getX()][snek.getHead().getY()] = 3;
+            turnArray[snake.getHead().getX()][snake.getHead().getY()] = 3;
         } else if ((lastKey == KeyCode.RIGHT && currentKey == KeyCode.UP)   ||
                    (lastKey == KeyCode.DOWN  && currentKey == KeyCode.LEFT)) {
-            turnArray[snek.getHead().getX()][snek.getHead().getY()] = 1;
+            turnArray[snake.getHead().getX()][snake.getHead().getY()] = 1;
         } else if ((lastKey == KeyCode.UP    && currentKey == KeyCode.LEFT)  ||
                    (lastKey == KeyCode.RIGHT && currentKey == KeyCode.DOWN)) {
-            turnArray[snek.getHead().getX()][snek.getHead().getY()] = 4;
+            turnArray[snake.getHead().getX()][snake.getHead().getY()] = 4;
         } else {
-            turnArray[snek.getHead().getX()][snek.getHead().getY()] = 0;
+            turnArray[snake.getHead().getX()][snake.getHead().getY()] = 0;
         }
     }
 
@@ -221,11 +220,11 @@ public class GameView {
         }
     }
 
-    public void gameOver(Snake snek) {
-        if (snek.getDead() && !gameOverVis) {
+    public void gameOver(Snake snake) {
+        if (snake.getDead() && !gameOverVis) {
             gameOverVis = true;
             gameOverLabel.setVisible(true);
-        } else if (!snek.getDead() && gameOverVis) {
+        } else if (!snake.getDead() && gameOverVis) {
             gameOverLabel.setVisible(false);
             gameOverVis = false;
         }
