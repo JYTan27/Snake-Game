@@ -135,7 +135,7 @@
   * **Full-Board Completion:** When no free pickup cell remains, the game ends as a win without placing an overlapping pickup. Both full-board and score-based wins stop movement and show the final score immediately. F can redraw the completed board; Tab resets completion, obstacles, and the target score for a fresh game.
   * **Score & Win Conditions:** Clarified score tracking (`pickupsCollected` vs `displayScore`) with documented, guarded target score decrements (`decMaxScore`).
   * **Audio Playback:** Low‑latency pickup collection sound effects via `AudioClip`.
-  * **Controls:** Pause (`P`), Reset (`TAB`), Fullscreen toggle (`F`, press again to restore the original size), Return to Menu (`ESC` with animation stop and scene return).
+  * **Controls:** Move/start/resume with `W` (up), `A` (left), `S` (down), and `D` (right). Arrow keys remain available for menu navigation only. Pause (`P`), Reset (`TAB`), Fullscreen toggle (`F`, press again to restore the original size), Return to Menu (`ESC` with animation stop and scene return).
 
 ---
 

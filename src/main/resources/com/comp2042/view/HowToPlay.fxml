@@ -39,8 +39,8 @@
                 <ColumnConstraints prefWidth="372.0" />
             </columnConstraints>
             <children>
-                <Label text="Arrow keys" GridPane.rowIndex="0" />
-                <Label text="Start, move, or resume" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                <Label text="W A S D" GridPane.rowIndex="0" />
+                <Label text="Up / Left / Down / Right; start/resume" GridPane.columnIndex="1" GridPane.rowIndex="0" />
                 <Label text="P" GridPane.rowIndex="1" />
                 <Label text="Pause" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                 <Label text="Tab" GridPane.rowIndex="2" />

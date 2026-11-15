@@ -105,15 +105,22 @@ public class GameController {
 
     public void handle(KeyEvent event) {
         KeyCode code = event.getCode();
+        KeyCode direction = switch (code) {
+            case W -> KeyCode.UP;
+            case A -> KeyCode.LEFT;
+            case S -> KeyCode.DOWN;
+            case D -> KeyCode.RIGHT;
+            default -> null;
+        };
 
-        if (code.isArrowKey() && !game.gameWon()) {
+        if (direction != null && !game.gameWon()) {
             animation.play();
 
             // Enqueue valid direction if buffer has room
             if (inputQueue.size() < MAX_BUFFERED_INPUTS) {
                 KeyCode reference = inputQueue.isEmpty() ? key : inputQueue.peekLast();
-                if (isValidNextDirection(code, reference)) {
-                    inputQueue.addLast(code);
+                if (isValidNextDirection(direction, reference)) {
+                    inputQueue.addLast(direction);
                 }
             }
         }

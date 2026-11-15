@@ -190,3 +190,6 @@
    - Prepared for future appearance choices without adding menu controls or changing gameplay rules.
 49. **Removed unused drawing parameters**:
    - Removed the unused `boolean a` and `int b` from `GameView.drawGrid()` and the corresponding `false, 0` arguments from all callers. Rendering behaviour is unchanged.
+50. **Changed movement controls to WASD**:
+   - W/A/S/D now start, move, and resume the snake (up/left/down/right). Translate inputs into existing internal directions to preserve buffered turns, reverse prevention, and sprite orientation.
+   - Arrow keys no longer control gameplay but retain menu navigation. P, Tab, F, Esc, reset direction, and completed-game restrictions are unchanged. Updated How to Play and README.
