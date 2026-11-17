@@ -138,3 +138,24 @@
 .helpPage .helpDivider {
     -fx-background-color: #d6d6ce;
 }
+
+.helpPage .helpScroll {
+    -fx-background-color: white;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 1;
+}
+
+.helpPage .helpScroll > .viewport {
+    -fx-background-color: white;
+}
+
+.helpPage .helpScroll .scroll-bar:vertical {
+    -fx-background-color: #f5f5f2;
+}
+
+.helpPage .helpScroll .scroll-bar:vertical .thumb {
+    -fx-background-color: #b4b4a8;
+    -fx-background-radius: 0;
+}

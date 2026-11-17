@@ -116,6 +116,7 @@ public class ViewManager {
                 }
             });
             showScene(helpScene);
+            helpScene.lookup("#helpScroll").requestFocus();
         } catch (IOException exception) {
             exception.printStackTrace();
             javafx.scene.control.Alert alert = new javafx.scene.control.Alert(

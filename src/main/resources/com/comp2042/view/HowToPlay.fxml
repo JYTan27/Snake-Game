@@ -1,57 +1,87 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import java.net.URL?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefWidth="550.0" prefHeight="400.0" styleClass="helpPage"
+<BorderPane prefWidth="550.0" prefHeight="400.0" styleClass="helpPage"
             xmlns="http://javafx.com/javafx/25.0.1" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.comp2042.controller.HowToPlayController">
     <stylesheets><URL value="@styling.css" /></stylesheets>
-    <children>
-        <Label layoutY="16.0" prefWidth="550.0" alignment="CENTER" styleClass="helpTitle" text="How to Play" />
-        <Label layoutX="24.0" layoutY="62.0" styleClass="helpSection" text="Difficulty" />
-        <GridPane layoutX="24.0" layoutY="90.0" vgap="3.0">
-            <columnConstraints>
-                <ColumnConstraints prefWidth="82.0" />
-                <ColumnConstraints prefWidth="420.0" />
-            </columnConstraints>
-            <children>
-                <Label text="Easy" GridPane.rowIndex="0" />
-                <Label text="7 moves/sec · Wraps borders · No rings" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                <Label text="Normal" GridPane.rowIndex="1" />
-                <Label text="9 moves/sec · Solid borders" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                <Label text="Hard" GridPane.rowIndex="2" />
-                <Label text="12 moves/sec · Solid borders" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-            </children>
-        </GridPane>
-        <Label layoutX="24.0" layoutY="154.0" prefWidth="502.0" text="Rings on Normal/Hard: wrap until the next pickup." />
-        <Label layoutX="24.0" layoutY="174.0" prefWidth="502.0" text="Blocks: Hard-only obstacles. Avoid them and your body." />
-        <Region layoutX="24.0" layoutY="197.0" prefWidth="502.0" prefHeight="1.0" styleClass="helpDivider" />
-        <Label layoutX="24.0" layoutY="205.0" styleClass="helpSection" text="Controls" />
-        <GridPane layoutX="24.0" layoutY="233.0" vgap="3.0">
-            <columnConstraints>
-                <ColumnConstraints prefWidth="130.0" />
-                <ColumnConstraints prefWidth="372.0" />
-            </columnConstraints>
-            <children>
-                <Label text="W A S D" GridPane.rowIndex="0" />
-                <Label text="Up / Left / Down / Right; start/resume" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                <Label text="P" GridPane.rowIndex="1" />
-                <Label text="Pause" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                <Label text="Tab" GridPane.rowIndex="2" />
-                <Label text="Restart with current difficulty" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                <Label text="F" GridPane.rowIndex="3" />
-                <Label text="Toggle fullscreen" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                <Label text="Esc" GridPane.rowIndex="4" />
-                <Label text="Return to menu" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-            </children>
-        </GridPane>
-        <Button fx:id="btn_back" layoutX="185.0" layoutY="344.0" prefWidth="180.0" prefHeight="40.0"
-                styleClass="menuButton" text="Back" onAction="#handleBack" mnemonicParsing="false" />
-    </children>
-</AnchorPane>
+    <top>
+        <StackPane>
+            <padding><Insets top="16.0" right="24.0" bottom="16.0" left="24.0" /></padding>
+            <children><Label fx:id="helpTitle" styleClass="helpTitle" text="How to Play" /></children>
+        </StackPane>
+    </top>
+    <center>
+        <ScrollPane fx:id="helpScroll" fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" pannable="true" focusTraversable="true" styleClass="helpScroll">
+            <content>
+                <VBox spacing="16.0" minHeight="-Infinity">
+                    <padding><Insets top="16.0" right="24.0" bottom="16.0" left="24.0" /></padding>
+                    <children>
+                        <VBox spacing="8.0">
+                            <children>
+                                <Label styleClass="helpSection" text="Difficulty" />
+                                <GridPane vgap="8.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints percentWidth="20.0" />
+                                        <ColumnConstraints percentWidth="80.0" />
+                                    </columnConstraints>
+                                    <children>
+                                        <Label text="Easy" GridPane.rowIndex="0" />
+                                        <Label text="7 moves/sec · Wraps borders · No rings" wrapText="true" minWidth="0.0" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                        <Label text="Normal" GridPane.rowIndex="1" />
+                                        <Label text="9 moves/sec · Solid borders" wrapText="true" minWidth="0.0" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                        <Label text="Hard" GridPane.rowIndex="2" />
+                                        <Label text="12 moves/sec · Solid borders" wrapText="true" minWidth="0.0" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                    </children>
+                                </GridPane>
+                                <Label text="Rings on Normal/Hard: wrap until the next pickup." wrapText="true" minWidth="0.0" maxWidth="Infinity" />
+                                <Label text="Blocks: Hard-only obstacles. Avoid them and your body." wrapText="true" minWidth="0.0" maxWidth="Infinity" />
+                            </children>
+                        </VBox>
+                        <Region prefHeight="1.0" minHeight="1.0" maxHeight="1.0" styleClass="helpDivider" />
+                        <VBox spacing="8.0">
+                            <children>
+                                <Label styleClass="helpSection" text="Controls" />
+                                <GridPane vgap="8.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints percentWidth="26.0" />
+                                        <ColumnConstraints percentWidth="74.0" />
+                                    </columnConstraints>
+                                    <children>
+                                        <Label text="W A S D" GridPane.rowIndex="0" />
+                                        <Label text="Up / Left / Down / Right; start/resume" wrapText="true" minWidth="0.0" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                        <Label text="P" GridPane.rowIndex="1" />
+                                        <Label text="Pause" wrapText="true" minWidth="0.0" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                        <Label text="Tab" GridPane.rowIndex="2" />
+                                        <Label text="Restart with current difficulty" wrapText="true" minWidth="0.0" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                        <Label text="F" GridPane.rowIndex="3" />
+                                        <Label text="Toggle fullscreen" wrapText="true" minWidth="0.0" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                        <Label text="Esc" GridPane.rowIndex="4" />
+                                        <Label text="Return to menu" wrapText="true" minWidth="0.0" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                    </children>
+                                </GridPane>
+                            </children>
+                        </VBox>
+                    </children>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+    <bottom>
+        <StackPane>
+            <padding><Insets top="12.0" right="24.0" bottom="12.0" left="24.0" /></padding>
+            <children><Button fx:id="btn_back" prefWidth="180.0" prefHeight="40.0" styleClass="menuButton" text="Back" onAction="#handleBack" mnemonicParsing="false" /></children>
+        </StackPane>
+    </bottom>
+</BorderPane>

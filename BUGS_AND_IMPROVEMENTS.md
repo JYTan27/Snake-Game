@@ -193,3 +193,6 @@
 50. **Changed movement controls to WASD**:
    - W/A/S/D now start, move, and resume the snake (up/left/down/right). Translate inputs into existing internal directions to preserve buffered turns, reverse prevention, and sprite orientation.
    - Arrow keys no longer control gameplay but retain menu navigation. P, Tab, F, Esc, reset direction, and completed-game restrictions are unchanged. Updated How to Play and README.
+51. **Made How to Play scrollable**:
+   - Kept the heading and Back button fixed around a vertically scrollable content area, with wrapping descriptions and proportional table columns.
+   - Supports mouse-wheel, scrollbar, and keyboard navigation; each visit starts at the top. Fullscreen scaling, Back/Esc navigation, and selected-difficulty memory are preserved.

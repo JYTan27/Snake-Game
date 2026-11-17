@@ -102,7 +102,7 @@
   * **Snake Movement & Controls:** Symmetrical 4‑directional navigation with correct anti‑reverse logic for all directions (including Down vs. Up).
   * **Responsive 2-Key FIFO Input Buffer:** Bounded input queue (`Deque<KeyCode>`) in `GameController` that buffers rapid sequential keystrokes. Quick double-turns (e.g. `UP` then `RIGHT` within a fraction of a second) are never dropped or ignored, while perfectly synchronizing corner elbow sprite (`snaketurnleft.png`) placement with logic tick execution.
   * **Menu Difficulty Selection:** Choose Easy, Normal, or Hard before starting. The choice is remembered during the current session, including after visiting How to Play or returning from a game.
-  * **How to Play Screen:** Explains difficulty rules and keyboard controls. Use Back or Esc to return to the menu.
+  * **How to Play Screen:** Explains difficulty rules and keyboard controls in a vertically scrollable area, with the heading and Back button always visible. Scroll using the mouse wheel, scrollbar, or keyboard; use Back or Esc to return to the menu.
   * **Menu Design:** The title and controls are centred, with consistent button states and clear difficulty-selection highlights. Exit closes the application.
   * **Menu Fullscreen:** F toggles fullscreen on menu, help, and gameplay screens. Menu elements and dropdown options scale proportionally, and fullscreen is preserved between screens. Esc handles in-app navigation without JavaFX's default fullscreen exit message.
   * **Difficulty & Speed Configuration:** Strongly-typed `Game.Difficulty` enum with balanced speeds:
