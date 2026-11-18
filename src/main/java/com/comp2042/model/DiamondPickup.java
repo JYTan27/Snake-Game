@@ -9,4 +9,7 @@ public class DiamondPickup extends Pickup {
     public DiamondPickup(int gridWidth, int gridHeight, Snake snake, Obstacle obstacle) {
         super(gridWidth, gridHeight, snake, obstacle, DIAMOND_IMAGE);
     }
+
+    @Override
+    public PickupType getType() { return PickupType.DIAMOND; }
 }

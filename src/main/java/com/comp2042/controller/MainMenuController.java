@@ -9,6 +9,7 @@ import com.comp2042.model.Obstacle;
 import com.comp2042.model.Snake;
 import com.comp2042.view.GameView;
 import com.comp2042.view.ViewManager;
+import com.comp2042.service.audio.SoundEffect;
 import javafx.fxml.FXML;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -29,7 +30,6 @@ public class MainMenuController {
 
     private static final int X_VALUE = 20;
     private static final int Y_VALUE = 20;
-    private static final boolean POWER_UP = true;
     @FXML
     private ComboBox<GameMode> modeSelector;
     private final DoubleProperty optionScale = new SimpleDoubleProperty(1);
@@ -82,6 +82,7 @@ public class MainMenuController {
     }
 
     public void handleStart() {
+        viewManager.getSoundService().play(SoundEffect.BUTTON);
         boolean fullScreen = viewManager.getPrimaryStage().isFullScreen();
         GameMode mode = modeSelector.getValue();
         viewManager.setSelectedMode(mode);
@@ -93,22 +94,24 @@ public class MainMenuController {
     }
 
     public void handleHowToPlay() {
+        viewManager.getSoundService().play(SoundEffect.BUTTON);
         viewManager.setSelectedMode(modeSelector.getValue());
         viewManager.showHowToPlay();
     }
 
     public void handleExit() {
+        viewManager.getSoundService().play(SoundEffect.BUTTON);
         Platform.exit();
     }
 
     private GameController buildGameScene(Stage stage, GameMode mode) {
-        Game game = new Game(X_VALUE, Y_VALUE, POWER_UP, mode);
+        Game game = new Game(X_VALUE, Y_VALUE, mode);
         Obstacle obstacle = new Obstacle(game.getWidth(), game.getHeight());
         Snake snake = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
         Pickup pickup = new DiamondPickup(game.getWidth(), game.getHeight(), snake, obstacle);
 
         GameView gameView = new GameView(game);
-        GameController controller = new GameController(snake, pickup, game, gameView, obstacle, stage, () -> viewManager.showMainMenu());
+        GameController controller = new GameController(snake, pickup, game, gameView, obstacle, stage, viewManager.getSoundService(), () -> viewManager.showMainMenu());
 
         StackPane gamePane = new StackPane();
         gameScene = new Scene(gamePane, game.getWidth() * game.getMultiplier(), game.getHeight() * game.getMultiplier());

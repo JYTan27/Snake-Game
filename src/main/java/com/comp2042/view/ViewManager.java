@@ -1,6 +1,7 @@
 package com.comp2042.view;
 
 import com.comp2042.model.GameMode;
+import com.comp2042.service.audio.SoundService;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.Group;
@@ -19,13 +20,15 @@ import java.io.IOException;
 public class ViewManager {
 
     private Stage primaryStage;
+    private final SoundService soundService;
     private AnchorPane root;
     private GameMode selectedMode = GameMode.CLASSIC;
 
     private Image snakeLogo = new Image(getClass().getResourceAsStream("/com/comp2042/images/ui/SnakeLogoWhite.png"));
 
-    public ViewManager(Stage primaryStage) {
+    public ViewManager(Stage primaryStage, SoundService soundService) {
         this.primaryStage = primaryStage;
+        this.soundService = java.util.Objects.requireNonNull(soundService);
         primaryStage.setFullScreenExitHint("");
         primaryStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
     }
@@ -58,6 +61,8 @@ public class ViewManager {
     public Stage getPrimaryStage() {
         return primaryStage;
     }
+
+    public SoundService getSoundService() { return soundService; }
 
     public GameMode getSelectedMode() {
         return selectedMode;

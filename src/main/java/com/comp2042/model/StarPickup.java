@@ -14,4 +14,7 @@ public class StarPickup extends Pickup {
     public int getPoints() {
         return STAR_POINTS;
     }
+
+    @Override
+    public PickupType getType() { return PickupType.STAR; }
 }

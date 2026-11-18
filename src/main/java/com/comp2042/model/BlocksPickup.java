@@ -14,4 +14,7 @@ public class BlocksPickup extends Pickup {
         int obstacleCount = RANDOM.nextInt(Math.max(1, game.getWidth() * game.getHeight() / 20)) + 3;
         obstacle.newObstacles(snake, this, obstacleCount);
     }
+
+    @Override
+    public PickupType getType() { return PickupType.BLOCKS; }
 }

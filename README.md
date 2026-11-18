@@ -54,16 +54,23 @@
 
 ## 3. Implemented and Working Properly
 
+* **Configuration Sources:** Exact tuning values are maintained in the source rather than repeated here:
+  * [GameMode](src/main/java/com/comp2042/model/GameMode.java): mode speeds and pickup weights.
+  * [Pickup](src/main/java/com/comp2042/model/Pickup.java) and its subclasses in the same package: point rewards, speed bonuses, and pickup effects.
+  * [Obstacle](src/main/java/com/comp2042/model/Obstacle.java): obstacle capacity; [BlocksPickup](src/main/java/com/comp2042/model/BlocksPickup.java): obstacle additions per collection.
+  * [GameController](src/main/java/com/comp2042/controller/GameController.java): input-buffer capacity.
+  * [SoundEffect](src/main/java/com/comp2042/service/audio/SoundEffect.java): default audio volume.
+  * [Game](src/main/java/com/comp2042/model/Game.java): board scaling; [MainMenuController](src/main/java/com/comp2042/controller/MainMenuController.java): initial board dimensions.
 * **MVC (Model-View-Controller) Architectural Refactoring:**
   * Clean separation of concerns into distinct packages:
-    * `com.comp2042.model`: Pure gameplay rules, coordinates, state, and entities (`Game`, `GameMode`, `Snake`, `Obstacle`, `Pickup`, `DiamondPickup`, `PickupFactory`, `PickupType`, `RingPickup`, `StarPickup`, `BlocksPickup`, `BoltPickup`, `GridPoint`).
+    * `com.comp2042.model`: Pure gameplay rules, coordinates, state, and entities (`Game`, `GameMode`, `Snake`, `Obstacle`, `Pickup`, `DiamondPickup`, `PickupFactory`, `WeightedPickupSelector`, `PickupType`, `RingPickup`, `StarPickup`, `BlocksPickup`, `BoltPickup`, `GridPoint`).
     * `com.comp2042.view`: Display and scene orchestration (`GameView`, `ViewManager`).
     * `com.comp2042.controller`: Input handling, keyboard controls, and animation loop (`GameController`, `MainMenuController`, `HowToPlayController`).
 * **Standard Maven Resource Packaging:**
   * Project resources, including the new help layout, are packaged in structured directories:
     * `src/main/resources/com/comp2042/view/` (`MainMenu.fxml`, `HowToPlay.fxml`, `styling.css`)
     * `src/main/resources/com/comp2042/images/` (`coins/`, `snake/`, `ui/`)
-    * `src/main/resources/com/comp2042/audio/` (`coinSound.wav`)
+    * `src/main/resources/com/comp2042/audio/` (pickup, button, death, and win MP3s; unused experimental variants retained)
     * `src/main/resources/com/comp2042/fonts/` (`SFPixelate.ttf`, `SFPixelateShaded-Bold.ttf`, `kenvector_future.ttf`)
 * **Classpath Asset Loading:**
   * Replaced brittle relative file paths with standard `getClass().getResourceAsStream(...)` and `getResource(...).toExternalForm()` to ensure resources load reliably in both IDE and standalone JAR packaging.
@@ -84,7 +91,7 @@
   * Corrected off-by-one bounds check so obstacles spawn in valid `[0, boardWidth)` columns.
   * Duplicate obstacle placement strictly prevented by checking against existing obstacles.
   * Encapsulation enforced via `Collections.unmodifiableList(obstacles)`.
-  * Scalable obstacle cap based on board dimensions (`boardWidth * boardHeight / 4`).
+  * Scalable obstacle cap proportional to board dimensions, defined in `Obstacle`.
 * **Modular Board Appearance:**
   * The default board is a subtle Soft Cream checkerboard. Board patterns (`BoardRenderer`) and colour palettes (`BoardTheme`) are independent, ready for future menu choices.
   * `GameView(Game, BoardRenderer, BoardTheme)` supports custom appearance; the existing constructor selects the default. Background tiles align with gameplay cells in windowed and fullscreen modes. No appearance menu controls are added yet.
@@ -101,28 +108,28 @@
   * Method typo corrected: `initializeMainMenu()`.
 * **Core Gameplay Loop & Features:**
   * **Snake Movement & Controls:** Symmetrical 4‑directional navigation with correct anti‑reverse logic for all directions (including Down vs. Up).
-  * **Responsive 2-Key FIFO Input Buffer:** Bounded input queue (`Deque<KeyCode>`) in `GameController` that buffers rapid sequential keystrokes. Quick double-turns (e.g. `UP` then `RIGHT` within a fraction of a second) are never dropped or ignored, while perfectly synchronizing corner elbow sprite (`snaketurnleft.png`) placement with logic tick execution.
+  * **Responsive FIFO Input Buffer:** Bounded input queue (`Deque<KeyCode>`) in `GameController` that buffers rapid sequential keystrokes up to its configured capacity. Buffered turns (e.g. `UP` then `RIGHT`) are applied on successive logic ticks, synchronizing corner elbow sprite (`snaketurnleft.png`) placement with movement.
   * **Game Mode Selection:** Choose Classic, Obstacles, Hyperspeed, Power-ups, or Wraparound before starting. New sessions default to Classic. The choice is remembered during the current session, including after visiting How to Play or returning from a game.
   * **How to Play Screen:** Explains game-mode rules and keyboard controls in a vertically scrollable area, with the heading and Back button always visible. Scroll using the mouse wheel, scrollbar, or keyboard; use Back or Esc to return to the menu.
   * **Menu Design:** The title and controls are centred, with consistent button states and clear mode-selection highlights. Exit closes the application.
   * **Menu Fullscreen:** F toggles fullscreen on menu, help, and gameplay screens. Menu elements and dropdown options scale proportionally, and fullscreen is preserved between screens. Esc handles in-app navigation without JavaFX's default fullscreen exit message.
-  * **Game Modes:** A standalone `GameMode` enum defines names, help descriptions, base speeds, border rules, and immutable pickup sets. Select one mode at a time:
+  * **Game Modes:** A standalone `GameMode` enum defines names, help descriptions, base speeds, border rules, and immutable pickup weights. Select one mode at a time:
 
-    | Mode | Base speed | Borders | Pickups |
-    | :--- | :--- | :--- | :--- |
-    | Classic | 9 moves/sec | Solid | Diamond |
-    | Obstacles | 9 moves/sec | Solid | Diamond, Blocks |
-    | Hyperspeed | 16 moves/sec | Solid | Diamond |
-    | Power-ups | 9 moves/sec | Solid | Diamond, Star, Ring, Bolt |
-    | Wraparound | 9 moves/sec | Wrapping | Diamond |
+    | Mode | Borders | Pickups |
+    | :--- | :--- | :--- |
+    | Classic | Solid | Diamond |
+    | Obstacles | Solid | Diamond, Blocks |
+    | Hyperspeed | Solid | Diamond |
+    | Power-ups | Solid | Diamond, Star, Ring, Bolt |
+    | Wraparound | Wrapping | Diamond |
 
     Self-collision is lethal in every mode. All modes win when no free pickup cell remains. Reset keeps the selected mode and clears obstacles, points, temporary effects, and completion.
   * **Collectible Pickups:** Distinct pixel-art collectibles use an abstract `Pickup` base and distinct subclasses:
-    * Diamond (`DiamondPickup`, `DIAMOND`): +5 points.
-    * Star (`StarPickup`, `STAR`): +15 points.
+    * Diamond (`DiamondPickup`, `DIAMOND`): Awards the standard pickup points.
+    * Star (`StarPickup`, `STAR`): Awards pickup-specific points defined by `StarPickup`.
     * Ring (`RingPickup`, `RING`): Border wrapping until the next pickup; Power-ups only.
-    * Bolt (`BoltPickup`, `BOLT`): +5 speed bonus until the next pickup.
-    * Blocks (`BlocksPickup`, `BLOCKS`): Adds barriers in Obstacles mode until the strict one-quarter-board cap is reached.
+    * Bolt (`BoltPickup`, `BOLT`): Applies a temporary speed boost until the next pickup.
+    * Blocks (`BlocksPickup`, `BLOCKS`): Adds barriers in Obstacles mode while the configured obstacle cap and available cells permit.
     * Sprites are centred within their cells and drawn without image smoothing. Supplied PNGs and unused legacy coin assets are preserved.
   * **Coin-to-Pickup Rename:**
 
@@ -130,21 +137,22 @@
 
     | Original class | Replacement | Preserved behaviour |
     | :--- | :--- | :--- |
-    | `Coin` | Abstract `Pickup` base + `DiamondPickup` | Regular pickup, +5 points |
-    | `GoldCoin` | `StarPickup` | +15 points |
+    | `Coin` | Abstract `Pickup` base + `DiamondPickup` | Standard pickup point reward |
+    | `GoldCoin` | `StarPickup` | Pickup-specific point reward |
     | `BlueCoin` | `RingPickup` | Border wrapping until the next pickup |
     | `RainbowCoin` | `BoltPickup` | Speed boost until the next pickup |
     | `SilverCoin` | `BlocksPickup` | Creates obstacles; numeric target adjustment was later removed |
 
     `CoinFactory` became `PickupFactory`, and `CoinType` became `PickupType`. The rename itself did not change effects, spawn probabilities, or mode restrictions. Historical bug notes retain the original names to describe the code as it existed at the time.
 
-  * **Pickup Selection Factory:** `PickupFactory` checks `GameMode` pickup rules and board state. Existing 12-outcome probabilities remain unchanged; disallowed rolls become diamonds. Blocks can recur in Obstacles mode while capacity remains, adding only as many barriers as the cap and available cells permit. Initial/reset pickups are diamonds.
+  * **Pickup Selection Factory:** `GameMode` defines immutable positive pickup weights; `PickupFactory` passes them to `WeightedPickupSelector`, which selects a `PickupType` proportionally using its stored, injectable `Random`. The factory then constructs the pickup, replacing selected blocks with diamonds without rerolling when the obstacle cap is reached. Obstacles selects diamonds and blocks; Power-ups selects diamonds, stars, rings, and bolts. Other modes are diamond-only; initial/reset pickups remain diamonds. Exact probabilities follow the weights configured in `GameMode`.
+  * **Simplified Rule Configuration:** `Game(width, height, mode)` gets its base speed and default border behaviour directly from `GameMode`. The separate `powerUp` flag and duplicate `allowsPickup()` methods have been removed; the mode's weights determine which types can be selected. The factory no longer repeats mode-permission or ring checks that cannot reject a selection under the current five modes. Temporary ring wrapping remains state held by `Snake`; selector weight and random-source validation remain in place.
   * **Asset Caching:** Snake and pickup sprites are loaded once as `static final` assets — no disk reads or texture re‑allocations per tick or per pickup spawn.
   * **Full-Board Completion:** The objective is to occupy every non-obstacle cell. After collection, `PickupFactory.createPickup(...)` returns empty only when no free cell remains for a replacement pickup. The controller then records completion, stops movement, clears buffered inputs and the pickup, and displays the final score and win message. F can redraw the completed board; Tab clears completion, obstacles, and display points before recreating the snake and initial diamond.
   * **End-Message Visibility:** `GameView.gameOver(Snake)` and `gameWon()` set label visibility directly from the model's death and victory state, removing duplicate visibility flags. Existing controller calls refresh the messages during play, completion, and reset.
   * **Score & Win Conditions:** Display points reward collected pickups and do not determine victory. `Game.gameWon()` reports the completion flag set by `markWon()`; numeric collection targets and obstacle-related target adjustments have been removed. `resetScore()` clears display points and completion, with no target to recalculate.
   * **Centralised Pickup Collection:** After collection is detected, `GameController.collectPickup()` delegates to `Game.collectPickup(Pickup, Snake, Obstacle)`. The model calculates movement speed from the mode's base speed and the pickup's bonus, restores default border behaviour, applies the pickup's effect, and adds display points. It returns the resulting speed for the controller to apply to its animation. The controller retains collection detection, sound playback, completion handling, replacement spawning, and rendering; pickup subclasses retain their individual values and effects.
-  * **Audio Playback:** Low‑latency pickup collection sound effects via `AudioClip`.
+  * **Audio Playback:** A shared `SoundService` caches the unnumbered pickup, button, death, and win clips. Each pickup has a distinct sound; terminal sounds play once and interrupt ongoing effects. Reset/menu return stops playback. Default volume is defined in `SoundEffect` and adjustable through the service. Numbered variants, alternate jingles, and pause/resume/turn sounds remain unused.
   * **Controls:** Move/start/resume with `W` (up), `A` (left), `S` (down), and `D` (right). Arrow keys remain available for menu navigation only. Pause (`P`), Reset (`TAB`), Fullscreen toggle (`F`, press again to restore the original size), Return to Menu (`ESC` with animation stop and scene return).
 
 ---
@@ -169,6 +177,7 @@
   * *Reason:* Focused on core gameplay mechanics and architectural decoupling before adding secondary audio settings.
 * **Automated Unit Testing Suite:**
   * *Reason:* With pure POJO models (`GridPoint`, `Snake`, `Obstacle`, `Game`) now decoupled from UI nodes and legacy AWT, headless JUnit tests can be readily added in a future milestone.
+  * *Validation completed:* The redundancy cleanup was verified with `mvnw.cmd compile` and 72 temporary programmatic smoke checks covering mode weights, obstacle-cap fallback, temporary effects, wrapping after collection, WASD movement, buffered turns, reverse-direction rejection, and Tab reset. The temporary harness was removed; no permanent automated test suite was added.
 
 ---
 
@@ -178,10 +187,12 @@
 | :--- | :--- | :--- |
 | **`HowToPlayController.java`** | `com.comp2042.controller` | Handles the help screen Back button, returning to the main menu through `ViewManager`. |
 | **`BoardRenderer.java`**, **`CheckerboardBoardRenderer.java`**, **`BoardTheme.java`** | `com.comp2042.view.board` | Separate board patterns from colour themes; provide the default Soft Cream checkerboard. |
-| **`GameMode.java`** | `com.comp2042.model` | Defines the five independent gameplay modes and their shared menu/help descriptions. |
+| **`SoundEffect.java`**, **`SoundService.java`**, **`JavaFxSoundService.java`** | `com.comp2042.service.audio` | Shared cached audio, central resource mapping and volume, replaceable playback for testing. |
+| **`WeightedPickupSelector.java`** | `com.comp2042.model` | Selects a pickup type from positive weights in stable enum order; stores the injected `Random` and validates weights and the random source. |
+| **`GameMode.java`** | `com.comp2042.model` | Defines the five independent gameplay modes, shared menu/help descriptions, base speeds, border rules, and immutable pickup weights. |
 | **`PickupType.java`** | `com.comp2042.model` | Identifies pickup types for per-mode spawning configuration. |
-| **`DiamondPickup.java`** | `com.comp2042.model` | Standard diamond pickup, used for initial spawning, reset, and disallowed-roll fallback. |
-| **`PickupFactory.java`** | `com.comp2042.model` | Centralizes replacement pickup selection through `createPickup(Game, Snake, Obstacle)`, checks each mode's allowed pickups and current board restrictions, and accepts an injectable `Random` for deterministic verification. |
+| **`DiamondPickup.java`** | `com.comp2042.model` | Standard diamond pickup, used for initial spawning, reset, and blocks-to-diamond fallback at the obstacle cap. |
+| **`PickupFactory.java`** | `com.comp2042.model` | Centralizes replacement spawning through `createPickup(Game, Snake, Obstacle)`: delegates selection from mode weights to `WeightedPickupSelector`, replaces selected blocks with diamonds at the obstacle cap, and constructs the pickup. Returns empty only when no free cell remains; accepts an injectable `Random` passed to the selector for deterministic type selection. |
 | **`GridPoint.java`** | `com.comp2042.model` | Pure Java integer coordinate representation (`x`, `y`) designed to replace legacy `java.awt.Point`. Provides getters, setters, translation, copy constructor, and standard `equals`/`hashCode`/`toString` methods without pulling in desktop AWT UI dependencies. |
 
 ---
@@ -190,17 +201,17 @@
 
 | Class | Original Package | New Package | Changes Made & Rationale |
 | :--- | :--- | :--- | :--- |
-| **`Main.java`** | `com.comp2042` | `com.comp2042` | Added explicit `ViewManager` import and programmatic font loading. Passes `primaryStage` to `new ViewManager(primaryStage)` and calls `viewManager.initializeMainMenu()`. |
+| **`Main.java`** | `com.comp2042` | `com.comp2042` | Added explicit `ViewManager` import and programmatic font loading. Creates the shared sound service, passes it with the stage to `new ViewManager(primaryStage, sounds)`, calls `viewManager.initializeMainMenu()`, and closes the sound service on shutdown. |
 | **`ViewManager.java`** | `com.comp2042` | `com.comp2042.view` | Moved to `view` package. Implemented single-stage scene swapping (`showGameScene`, `showMainMenu`), eliminated multiple `Stage` anti-pattern, added safe `IOException` error dialog, corrected method typo `initializeMainMenu()`, loads the How to Play scene through `showHowToPlay()` with Esc navigation and error handling, and stores the session mode through `getSelectedMode()` / `setSelectedMode(...)` (default Classic). |
-| **`MainMenuController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Populates a typed game-mode dropdown from `GameMode.values()`, uses mode-owned display names, restores the session selection, saves it before opening How to Play, and passes the chosen mode to game creation; refactored `launchSnake` into `buildGameScene` with proper static `StackPane` alignment, and wired escape key to clean return-to-menu callback. |
-| **`GameController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Implemented 2-key FIFO input queue (`inputQueue`) to prevent dropped inputs during rapid double-turns; synchronized `turnDir` calls with logic ticks; replaced plus/minus size shortcuts with an F fullscreen toggle (Bug #46); encapsulated static `key`/`lastKey` as private fields with getters; corrected `valKey` DOWN anti-reverse logic (Bug #40); removed dead code (`calculateBonusScore`, `legacyScoreMultiplier`, `unusedObstacleCount`); delegated replacement pickup selection to `PickupFactory`, which owns the reusable `Random`; delegated pickup effects and display-point updates to `Game.collectPickup(...)`, applying its returned animation speed; removed the numeric win check before spawning and retained `finishGame()` for exhausted pickup placement; reset turn array on restart; and hooked return-to-menu callback to stop animation and swap scenes. |
+| **`MainMenuController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Populates a typed game-mode dropdown from `GameMode.values()`, uses mode-owned display names, restores the session selection, and saves it before opening How to Play. Creates `Game(width, height, mode)` without the former always-true `POWER_UP` constant; refactored `launchSnake` into `buildGameScene` with proper static `StackPane` alignment, and wired escape key to clean return-to-menu callback. |
+| **`GameController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Implemented a bounded FIFO input queue (`inputQueue`) for rapid sequential turns; synchronized `turnDir` calls with logic ticks; replaced plus/minus size shortcuts with an F fullscreen toggle (Bug #46); encapsulated static `key`/`lastKey` as private fields with getters; corrected `valKey` DOWN anti-reverse logic (Bug #40); removed dead code (`calculateBonusScore`, `legacyScoreMultiplier`, `unusedObstacleCount`); delegated replacement pickup creation to `PickupFactory`, which uses `WeightedPickupSelector` for random type selection; delegated pickup effects and display-point updates to `Game.collectPickup(...)`, applying its returned animation speed; removed the numeric win check before spawning and retained `finishGame()` for exhausted pickup placement; reset turn array on restart; and hooked return-to-menu callback to stop animation and swap scenes. Removed the repeated score-label update after `reset()` and the arrow-key check already guaranteed by the WASD mapping, preserving duplicate-direction and reverse-direction rejection. |
 | **`GameView.java`** | `com.comp2042` | `com.comp2042.view` | Moved to `view` package. delegated background rendering to configurable `BoardRenderer` / `BoardTheme`; removed unused `a`/`b` parameters from `drawGrid`, leaving only pickup, snake, obstacle, and graphics context; eliminated snapshots in favor of `GraphicsContext` rotation; fixed double-scaling bug; eliminated per-frame `SnapshotParameters`; added `resetTurnArray()`; migrated from `Point` to `GridPoint`; decoupled `turnDir` from controller static state; unified tail rendering in `drawBody` under `index == 0`; reused one body-list copy throughout each redraw; cleared the tail's turn-history entry once; and called `Snake.getTailDir()` directly after removing the redundant `tailRotation()` wrapper. |
-| **`Game.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Removed UI `Color` coupling; uses standalone `GameMode` rule configurations; added `collectPickup(Pickup, Snake, Obstacle)` to restore default border behaviour, apply pickup effects, award display points, and return movement speed; replaced magic scaling numbers with named constants; made `gameWon()` report recorded completion; and removed numeric win targets, the collection counter, and target-adjustment methods. `resetScore()` clears display points and completion. |
+| **`Game.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Removed UI `Color` coupling; accepts `Game(width, height, mode)` and delegates `getSpeed()` / `isNoBorder()` to `GameMode`, removing copied rule fields, the unused `powerUp` flag/getter, and the unused `allowsPickup()` wrapper. Added `collectPickup(Pickup, Snake, Obstacle)` to restore default border behaviour, apply pickup effects, award display points, and return movement speed; replaced magic scaling numbers with named constants; made `gameWon()` report recorded completion; and removed numeric win targets, the collection counter, and target-adjustment methods. `resetScore()` clears display points and completion. |
 | **`Snake.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Fully migrated from `Point` to `GridPoint`; removed `ImageView` nodes and exposed `static final Image` singletons; extracted `attemptMove` / `wrapCoordinate`; unified border flags into `borderWrap`; switched body to `ArrayDeque`; cached pickup collision checks; validate-before-move with obstacle checks after resolving wrapped destinations (Bug #44); preserved the complete snake pose on blocked fatal moves by advancing the body only after successful movement (Bug #47); renamed constructor parameters; replaced `getBodyDir(int)` with `getBodyDir(GridPoint current, GridPoint previous)` to avoid list copying; and kept toroidal border-wrap orientation in `getTailDir()` while reading its two points directly from the deque. |
 | **`Obstacle.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Migrated to `GridPoint`; replaced unbounded generation with deterministic free-cell sampling; fixed off-by-one X range; prevented duplicates; encapsulated `getObstacles()` via `Collections.unmodifiableList`; added proportional cap; and renamed dimension fields `boardWidth, boardHeight`. |
 | **`Pickup.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Migrated to `GridPoint`; replaced unbounded `do...while` with deterministic free-cell sampling to eliminate freeze risks; renamed from `Coin` to the abstract `Pickup` base; added polymorphic `applyEffect` and `getSpeedBonus`; and used shared `Random`. |
 | **`RingPickup.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Cached static sprite, encapsulated border-ignore behavior inside `applyEffect(...)`, and removed redundant `getImage()`. |
-| **`StarPickup.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Cached static sprite, overridden `getPoints()` with constant reward (15), and removed redundant `getImage()`. |
+| **`StarPickup.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Cached static sprite, overridden `getPoints()` with a pickup-specific reward constant, and removed redundant `getImage()`. |
 | **`BlocksPickup.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Cached static sprite, encapsulated dynamic barrier spawning in `applyEffect(...)`, removed numeric target adjustment because pickup placement already excludes obstacles, and removed redundant `getImage()`. |
 | **`BoltPickup.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Cached static sprite, provided speed bonus value, and removed redundant `getImage()`. |
 

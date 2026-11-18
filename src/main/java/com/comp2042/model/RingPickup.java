@@ -13,4 +13,7 @@ public class RingPickup extends Pickup {
     public void applyEffect(Game game, Snake snake, Obstacle obstacle) {
         snake.ignoreBorders(true);
     }
+
+    @Override
+    public PickupType getType() { return PickupType.RING; }
 }

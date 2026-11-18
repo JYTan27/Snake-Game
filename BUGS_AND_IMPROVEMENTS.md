@@ -1,11 +1,13 @@
 # Bugs / Unoptimised Sections
 
+Exact tuning values are maintained in the source. See the [configuration sources in README](README.md#3-implemented-and-working-properly); current and historical descriptions below explain behaviour without duplicating those settings.
+
 1. **Duplicate `drawGrid` methods** – there are two `drawGrid` implementations (one handling obstacles, one without) causing dead code and maintenance overhead. ✅ Fixed.
 2. **`drawBody` snapshot per segment** – `ImageView.snapshot` is called for every snake body segment each tick, creating many temporary `Image` objects and leading to GC spikes and performance degradation. ✅ Fixed (rendering now uses `GraphicsContext.rotate`).
 3. **Duplicate `if (ran == 1)` in `GameController.newCoin`** – logical error prevents the `RainbowCoin` branch from ever executing. ✅ Fixed (condition corrected to `ran == 2`; selection now lives in `CoinFactory` as `roll == 2`).
 4. **Static coupling of `GameView` to `GameController.key`** – `GameView` reads controller static fields directly, violating MVC separation and making testing harder. ✅ Fixed (key/lastKey are private instance fields; `turnDir` accepts direction parameters).
 5. **Dead code in `GameController.reset()`** – methods/variables like `calculateBonusScore()`, `legacyScoreMultiplier`, `unusedObstacleCount` are never used. ✅ Fixed (removed unused methods and variables).
-6. **Misleading `multiplier` naming & magic numbers** – hard‑coded values (10, 20, 50) for board scaling are opaque and should be replaced with named constants. ✅ Fixed (introduced `SMALL_BOARD_MULTIPLIER`, `LARGE_BOARD_MULTIPLIER`, `LARGE_BOARD_THRESHOLD`, and reusable `Random`).
+6. **Misleading `multiplier` naming & magic numbers** – hard-coded board scaling values and thresholds are opaque and should be replaced with named constants. ✅ Fixed (introduced `SMALL_BOARD_MULTIPLIER`, `LARGE_BOARD_MULTIPLIER`, `LARGE_BOARD_THRESHOLD`, and reusable `Random`).
 7. **Repeated creation of `SnapshotParameters` set to `Color.TRANSPARENT`** – this object is recreated for every draw call; could be cached for efficiency. ✅ Fixed (eliminated per-frame snapshot allocations).
 8. **Potential stale entries in `turnArray`** – cleanup only occurs when the tail passes a turn; if the snake dies mid‑turn, stale entries may remain. ✅ Fixed (`resetTurnArray()` clears all turn history upon game reset).
 9. **Double scaling bug in `drawBody`** – image size calculated as `game.getMultiplier() * fullScale * fullScale`, resulting in stretched sprites; should use a single `fullScale` factor. ✅ Fixed (single `cellSize` factor).
@@ -23,19 +25,19 @@
 21. **Off‑by‑one coordinate bug in `Obstacle.newObstacles(...)`** – `p = new Point(rnd.nextInt(x) + 1, rnd.nextInt(y))` shifts X‑coordinates into the range `[1, x]`. This can spawn obstacles at column `x` (out‑of‑bounds) and prevents obstacles from ever spawning at column `0`. ✅ Fixed (deterministic free-cell sampling samples valid `[0, boardWidth)` range).
 22. **Missing duplicate obstacle collision check in `Obstacle.newObstacles(...)`** – the `do...while` generation loop validates points against the snake and coin, but never checks `obstacles.contains(p)`. This allows duplicate identical obstacle points to be added to the list. ✅ Fixed (sampling validates against occupied list including existing obstacles).
 23. **Broken encapsulation in `Obstacle.getObstacles()`** – returns a direct reference to the internal mutable `ArrayList<Point>`, allowing external callers to directly mutate or clear the collection without encapsulation control. ✅ Fixed (returns `Collections.unmodifiableList(obstacles)`).
-24. **Arbitrary magic number cap (`obstacles.size() > 50`)** – hard‑codes an obstacle cap of 50 regardless of board dimensions, which fails to scale appropriately for custom grid sizes. ✅ Fixed (dynamic proportional cap: `boardWidth * boardHeight / 4`).
+24. **Arbitrary magic number cap** – hard-codes an obstacle count limit regardless of board dimensions, which fails to scale appropriately for custom grid sizes. ✅ Fixed (dynamic obstacle cap proportional to board dimensions, defined in `Obstacle`).
 25. **Misleading dimension fields `x` and `y` in `Obstacle`** – represents board dimensions (`width` and `height`) using `x` and `y`, continuing the ambiguous coordinate vs. dimension naming smell found across the codebase. ✅ Fixed (renamed to `boardWidth` and `boardHeight`).
 26. **Repeated disk I/O and image decoding on every coin creation** – `Coin` and all subclasses (`GoldCoin`, `SilverCoin`, `BlueCoin`, `RainbowCoin`) load PNG resources from disk via `new Image(getResourceAsStream(...))` on each instantiation. Eating coins causes repeated file reads and texture allocations instead of reusing cached or `static final` images. ✅ Fixed (static singleton `Image` instances).
 27. **Redundant `new Random()` instantiation in `Coin` collision loop** – `new Random()` is invoked inside the `do...while` body on every collision retry iteration rather than instantiating the generator once outside the loop. ✅ Fixed (static reusable `Random`).
 28. **Field shadowing and boilerplate in `Coin` subclasses** – each subclass re‑declares a private `Image image` field and shadows the superclass field while duplicating `getImage()`, rather than passing the image or path to `super` or using clean inheritance. ✅ Fixed (subclasses delegate to `super` constructor).
 29. **Violation of Open‑Closed Principle (OCP) in coin power‑up handling** – `GameController.powerCoin()` uses an explicit `if‑else` chain comparing `coin.getClass().equals(...)` with downcasting instead of polymorphic delegation (e.g. `coin.applyEffect(...)`), requiring modifications to the controller whenever a new coin type is introduced. ✅ Fixed (polymorphic `applyEffect`).
-30. **Redundant local variable assignments before returning** – methods such as `Coin.getPoints()` and `RainbowCoin.getSpeedBonus()` declare redundant intermediate local variables (e.g., `int points = 5; return points;`) instead of returning literals or named constants directly. ✅ Fixed (direct literal returns).
+30. **Redundant local variable assignments before returning** – methods such as `Coin.getPoints()` and `RainbowCoin.getSpeedBonus()` store a reward or bonus in an intermediate local variable solely to return it. ✅ Fixed (return the value directly).
 31. **Unvalidated `difficulty` parameter in `Game` constructor** – accepts raw `char` (`'E'`, `'N'`, `'H'`) without an `else` fallback; passing any invalid character leaves `speed` at `0.0`, breaking game animation. Should use a strongly‑typed `enum Difficulty`. ✅ Fixed (introduced strongly-typed `Game.Difficulty` enum with speeds and border settings).
 32. **Ambiguous dual score tracking in `Game`** – maintains both `score` (eaten coin count used for victory calculation) and `scorePoints` (accumulated coin value for UI display) without clear naming distinctions. ✅ Fixed (renamed to `coinsEaten` and `displayScore`, with `getDisplayScore()`).
 33. **Cryptic calculation in `Game.decMaxScore(int num)`** – subtracts `(num - 1)` from `maxScore` using obscure arithmetic that lacks documentation and risks underflow. ✅ Fixed (documented arithmetic rationale with Javadoc and added underflow protection guard).
-34. **UI coupling in `Game` model** – `Game` directly instantiates and returns a JavaFX `Color` (`Color.web("feffe4")`), mixing view styling with core model state. ✅ Fixed (`Color` moved out of `Game` model into `GameView` as `BACKGROUND_COLOR`).
+34. **UI coupling in `Game` model** – `Game` directly instantiates and returns a JavaFX `Color` through `Color.web(...)`, mixing view styling with core model state. ✅ Fixed (`Color` moved out of `Game` model into `GameView` as `BACKGROUND_COLOR`).
 35. **"God‑method" coupling in `MainMenuController.launchSnake(...)`** – constructs and wires models, views, controllers, layout panes, scene graphs, keyboard listeners, and inline CSS directly inside a menu controller instead of delegating to a factory or game scene builder. ✅ Fixed (refactored into clean `buildGameScene` with proper static alignment calls and decoupled navigation callback).
-36. **Hard‑coded game settings in `MainMenuController`** – static constants (`X_VALUE = 20`, `Y_VALUE = 20`, `DIFFICULTY = 'N'`) prevent menu UI selections from dynamically configuring game options. ✅ Fixed (uses `Game.Difficulty.EASY` enum instead of raw character).
+36. **Hard-coded game settings in `MainMenuController`** – static board-dimension constants (`X_VALUE`, `Y_VALUE`) and a raw-character `DIFFICULTY` setting prevent menu UI selections from dynamically configuring game options. ✅ Fixed (uses `Game.Difficulty.EASY` enum instead of raw character).
 37. **Multiple Stage anti‑pattern in JavaFX** – `ViewManager` and `MainMenuController` close existing stages and create new `Stage` instances (`new Stage()`) rather than reusing the primary `Stage` and swapping `Scene`s, leading to window focus issues and extra OS taskbar icons. ✅ Fixed (`ViewManager` receives and reuses `primaryStage`, swapping scenes seamlessly via `showGameScene` and `showMainMenu`).
 38. **Unsafe FXML loading and immediate NPE risk in `ViewManager`** – catches `IOException` during FXML loading and only logs a stack trace, proceeding immediately to `new Scene(root)` where `root` is `null`, producing an unhandled `NullPointerException`. ✅ Fixed (catches `IOException`, displays error alert dialog, and returns early to prevent NPE).
 39. **Typo in public method name in `ViewManager`** – `initalizeMainMenu()` misspells "initialize", introducing API inconsistency. ✅ Fixed (renamed to `initializeMainMenu()`).
@@ -105,7 +107,7 @@
    - Fixed off-by-one: coordinate generation now strictly samples within valid grid bounds `[0, boardWidth)`.
    - Prevented duplicate obstacle placement by verifying against existing obstacles in occupied collection.
    - Wrapped `getObstacles()` in `Collections.unmodifiableList(...)`.
-   - Replaced magic obstacle cap with proportional board limit (`boardWidth * boardHeight / 4`).
+   - Replaced the magic obstacle cap with a proportional board limit defined in `Obstacle`.
    - Renamed dimension fields `x, y` to `boardWidth, boardHeight`.
 23. **Strongly-typed difficulty configuration (Addresses Bug #31)**:
    - Replaced unvalidated `char` parameter with `Game.Difficulty` enum (`EASY`, `NORMAL`, `HARD`).
@@ -128,12 +130,12 @@
 31. **Toroidal wrapped tail direction & MVC encapsulation (Addresses Bug #42)**:
    - Added `Snake.getTailDir()` to compute the shortest toroidal displacement vector (`dx`, `dy`) between the tail and adjacent segment (`head` or next body segment), correctly accounting for border wrap across all 4 boundaries.
    - Refactored `GameView.drawBody` to consistently use `tailRotation(snek)` for all tail segments (`index == 0`) and delegated `tailRotation` to `Snake.getTailDir()`.
-32. **Responsive 2-Key FIFO Input Queue and Difficulty Speed Tuning**:
-   - Replaced the single-flag `keyPressed` boolean in `GameController` with a bounded 2-key FIFO queue (`Deque<KeyCode> inputQueue`).
+32. **Responsive FIFO Input Queue and Difficulty Speed Tuning**:
+   - Replaced the single-flag `keyPressed` boolean in `GameController` with a bounded FIFO queue (`Deque<KeyCode> inputQueue`), with capacity defined in the controller.
    - Prevents rapid sequential keystrokes (such as quick 90° double-turns around obstacles) from being dropped when pressed within a single tick window.
    - Synchronized `turnDir()` invocation with logic tick execution, ensuring corner elbow sprites (`snaketurnleft.png`) are placed on the exact tile where the turn executed.
    - Added `isValidNextDirection(newKey, referenceKey)` validation relative to the last queued direction, preventing 180° self-reversals and redundant keys.
-   - Tuned game speeds in `Game.Difficulty` (EASY: `7.0`, NORMAL: `9.0`, HARD: `12.0` moves/sec) for a balanced, responsive, and comfortable pace while maintaining 100% discrete pixel-art sprite integrity.
+   - Tuned difficulty-specific speeds in `Game.Difficulty` for a responsive pace while preserving discrete pixel-art rendering. Current mode speeds are defined in `GameMode`.
 33. **Preserved Easy difficulty border wrapping after coin collection (Addresses Bug #43)**:
    - Replaced `snake.ignoreBorders(false)` in `GameController.powerCoin()` with `snake.ignoreBorders(game.isNoBorder())`.
    - Restores the difficulty's default border setting before `coin.applyEffect(...)`, so collecting any coin keeps wrapping enabled on Easy.
@@ -145,7 +147,7 @@
 35. **Extracted capability-aware coin selection (Addresses Bug #45)**:
    - Added `CoinFactory.createCoin(Game, Snake, Obstacle)` and delegated replacement coin creation from `GameController.newCoin()`.
    - Blue coins require `!game.isNoBorder()`; Easy replaces blue rolls with regular coins, while Normal/Hard retain blue coins.
-   - Preserved the 12-outcome selection, other coin probabilities, power-up toggle, and silver-coin eligibility. Initial and reset coins remain regular coins; coin effects are unchanged.
+   - Preserved the existing random-selection distribution, power-up toggle, and silver-coin eligibility. Initial and reset coins remain regular coins; coin effects are unchanged.
    - Added default and injectable `Random` constructors so selection can be verified deterministically.
 36. **Replaced size shortcuts with F fullscreen toggle (Addresses Bug #46)**:
    - `GameController.handle()` now uses `KeyCode.F` and `!stage.isFullScreen()` to enter or leave fullscreen through the existing scaling method.
@@ -217,7 +219,22 @@
    - `resetScore()` retains its name and clears display points and completion. The controller preserves its existing reset sequence, including clearing obstacles before recreating the snake and initial diamond and restoring speed, direction, and labels.
    - This supersedes the numeric-target and dual-counter descriptions in earlier historical entries, including improvements #25, #38, and #52. Display points remain rewards rather than a victory threshold; no fixed-target override, game modes, classes, or automated tests were added.
 56. **Replaced difficulty with independent game modes**:
-   - Added `GameMode` configurations for Classic, Obstacles, Hyperspeed, Power-ups, and Wraparound. All use a base speed of 9 except fixed-speed Hyperspeed at 16; only Wraparound has default border wrapping.
-   - Mode-specific pickup sets separate diamond-only play, recurring obstacle creation, and power-ups. Blocks accumulate only in Obstacles mode, with a strict one-quarter-board cap and no overlapping placements.
+   - Added `GameMode` configurations for Classic, Obstacles, Hyperspeed, Power-ups, and Wraparound, each with a mode-defined base speed; only Wraparound has default border wrapping.
+   - Mode-specific pickup sets separate diamond-only play, recurring obstacle creation, and power-ups. Blocks accumulate only in Obstacles mode, subject to the configured proportional obstacle cap and available cells, with no overlapping placements.
    - Replaced the menu's difficulty selector with Game Mode, defaulting to Classic and retaining the selection during the session. Scrollable help uses descriptions from the same mode definitions.
    - Preserved full-board completion, reset, WASD, fullscreen, rendering refactors, board themes, and pickup probabilities. This supersedes historical Easy/Normal/Hard rules without altering those historical descriptions.
+57. **Added modular sound effects**:
+   - Added an application-scoped `SoundService` with cached JavaFX clips, a central `SoundEffect` catalog, and adjustable volume whose default is defined in `SoundEffect`. Controllers request playback; pickup models expose only their existing type.
+   - Map unnumbered diamond/star/ring/bolt/blocks files to collection, button.mp3 to button activation, death.mp3 to death, and win.mp3 to completion. Terminal audio plays once, interrupts effects, and stops on reset/menu return or shutdown. Audio failures are logged without stopping gameplay.
+   - Retained numbered experiments and unused alternatives without referencing them. No pause/resume/turn or movement sounds; Exit remains immediate.
+58. **Added per-mode pickup weights and increased blocks frequency**:
+   - Replaced allowed-pickup sets with immutable positive weights in `GameMode`, deriving availability from the same configuration. `WeightedPickupSelector` stores the random source injected through the factory and uses stable enum ordering.
+   - Obstacles selects diamonds and blocks using its configured weights below the obstacle cap. Power-ups excludes blocks and uses its own configured weights; other modes remain diamond-only.
+   - At the cap, selected blocks become diamonds. Initial/reset diamonds, full-board completion, and the shared audio service are preserved. Independent weighted rolls do not guarantee a fixed interval between blocks pickups.
+   - The separate power-up toggle was retained at this stage; improvement #59 removes it because the application always enabled it and the mode weights already define pickup availability.
+
+59. **Removed redundant pickup checks and simplified game configuration**:
+   - Removed the factory's `allowsPickup()` check because selection already uses the mode's weights, and removed the ring restriction because none of the five current modes both selects rings and enables default wrapping. Kept the blocks-to-diamond fallback at the obstacle cap, initial/reset diamonds, and full-board completion.
+   - Removed the separate `powerUp` field/getter, the always-true menu constant, and the factory's diamond-only toggle branch. `Game(width, height, mode)` now uses the mode as the source of pickup rules. This supersedes the disabled-power-up behaviour retained in improvement #58.
+   - Removed copied speed and default-border fields from `Game`; the existing getters delegate to `GameMode`. Removed the unused `allowsPickup()` methods from `Game` and `GameMode`. The snake retains its own temporary border-wrap state for ring effects.
+   - Removed the factory's duplicate random-source null check; `WeightedPickupSelector` still validates the injected `Random` and the supplied weights. Removed the second score-label update after `reset()` and the private direction validator's arrow-key check, since the WASD mapping guarantees arrow directions. Duplicate-direction and reverse-direction rejection remain.

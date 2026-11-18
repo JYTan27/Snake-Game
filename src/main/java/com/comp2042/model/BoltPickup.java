@@ -14,4 +14,7 @@ public class BoltPickup extends Pickup {
     public double getSpeedBonus() {
         return SPEED_BONUS;
     }
+
+    @Override
+    public PickupType getType() { return PickupType.BOLT; }
 }

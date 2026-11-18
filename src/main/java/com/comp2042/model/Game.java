@@ -11,19 +11,13 @@ public class Game {
     private int height;
     private double multiplier;
     private int displayScore;
-    private double speed;
-    private boolean powerUp;
-    private boolean noBorder;
     private boolean completed;
     private final GameMode mode;
 
-    public Game(int x, int y, boolean powerUp, GameMode mode) {
+    public Game(int width, int height, GameMode mode) {
         this.mode = Objects.requireNonNull(mode);
-        this.speed = mode.getSpeed();
-        this.noBorder = mode.isNoBorder();
-        this.powerUp = powerUp;
-        width = x;
-        height = y;
+        this.width = width;
+        this.height = height;
         multiplier = (height > LARGE_BOARD_THRESHOLD) ? LARGE_BOARD_MULTIPLIER : SMALL_BOARD_MULTIPLIER;
     }
 
@@ -82,19 +76,11 @@ public class Game {
         return mode;
     }
 
-    public boolean isPowerUp() {
-        return powerUp;
-    }
-
-    public boolean allowsPickup(PickupType type) {
-        return mode.allowsPickup(type);
-    }
-
     public double getSpeed() {
-        return speed;
+        return mode.getSpeed();
     }
 
     public boolean isNoBorder() {
-        return noBorder;
+        return mode.isNoBorder();
     }
 }

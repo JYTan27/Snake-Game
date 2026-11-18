@@ -53,6 +53,8 @@ public abstract class Pickup {
         return new GridPoint(pos);
     }
 
+    public abstract PickupType getType();
+
     public int getPoints() {
         return 5;
     }

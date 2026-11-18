@@ -10,13 +10,14 @@ import com.comp2042.model.Game;
 import com.comp2042.model.Obstacle;
 import com.comp2042.model.Snake;
 import com.comp2042.view.GameView;
+import com.comp2042.service.audio.SoundEffect;
+import com.comp2042.service.audio.SoundService;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.media.AudioClip;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -28,8 +29,7 @@ public class GameController {
     private GameView gameView;
     private Game game;
     private Stage stage;
-    private final String pickupSoundPath = getClass().getResource("/com/comp2042/audio/coinSound.wav").toExternalForm();
-    private final AudioClip pickupSoundEffect = new AudioClip(pickupSoundPath);
+    private final SoundService sounds;
     private Obstacle obstacle;
     private final Runnable onReturnToMenu;
 
@@ -44,7 +44,7 @@ public class GameController {
     public KeyCode getCurrentKey() { return key; }
     public KeyCode getLastKey() { return lastKey; }
 
-    public GameController(Snake snake, Pickup pickup, Game game, GameView gameView, Obstacle obstacle, Stage stage, Runnable onReturnToMenu) {
+    public GameController(Snake snake, Pickup pickup, Game game, GameView gameView, Obstacle obstacle, Stage stage, SoundService sounds, Runnable onReturnToMenu) {
         this.snake = snake;
         this.pickup = pickup;
         this.gameView = gameView;
@@ -52,6 +52,7 @@ public class GameController {
         this.stage = stage;
         this.onReturnToMenu = onReturnToMenu;
         this.obstacle = obstacle;
+        this.sounds = java.util.Objects.requireNonNull(sounds);
 
         animation.setCycleCount(Animation.INDEFINITE);
         animation.setRate(game.getSpeed());
@@ -79,9 +80,13 @@ public class GameController {
             snake.move('D');
         }
 
-        if (!snake.getDead() && snake.atePickup(pickup)) {
+        if (snake.getDead()) {
+            finishDeath();
+            return;
+        }
+
+        if (snake.atePickup(pickup)) {
             collectPickup();
-            pickupSoundEffect.play();
             spawnPickup();
             if (pickup == null) {
                 finishGame();
@@ -89,9 +94,7 @@ public class GameController {
             }
         }
 
-        if (!snake.getDead() || snake.hitSelf()) {
-            gameView.drawGrid(pickup, snake, obstacle, gameView.gc);
-        }
+        gameView.drawGrid(pickup, snake, obstacle, gameView.gc);
 
         gameView.gameWon();
         gameView.gameOver(snake);
@@ -108,7 +111,7 @@ public class GameController {
             default -> null;
         };
 
-        if (direction != null && !game.gameWon()) {
+        if (direction != null && !game.gameWon() && !snake.getDead()) {
             animation.play();
 
             // Enqueue valid direction if buffer has room
@@ -126,7 +129,6 @@ public class GameController {
 
         if (code.equals(KeyCode.TAB)) {
             reset();
-            gameView.scoreLabel.setText("Score: " + game.getDisplayScore());
         }
 
         if (code.equals(KeyCode.F)) {
@@ -135,6 +137,7 @@ public class GameController {
 
         if (code.equals(KeyCode.ESCAPE)) {
             animation.stop();
+            sounds.stopAll();
             onReturnToMenu.run();
         }
     }
@@ -153,7 +156,6 @@ public class GameController {
      * Prevents reversing into own body and duplicate keys.
      */
     private boolean isValidNextDirection(KeyCode newKey, KeyCode referenceKey) {
-        if (!newKey.isArrowKey()) return false;
         if (newKey.equals(referenceKey)) return false;
         if (newKey.equals(KeyCode.LEFT)  && referenceKey.equals(KeyCode.RIGHT)) return false;
         if (newKey.equals(KeyCode.RIGHT) && referenceKey.equals(KeyCode.LEFT))  return false;
@@ -163,6 +165,7 @@ public class GameController {
     }
 
     private void reset() {
+        sounds.stopAll();
         animation.jumpTo(Duration.ZERO);
         animation.stop();
 
@@ -188,6 +191,7 @@ public class GameController {
 
     private void collectPickup() {
         animation.setRate(game.collectPickup(pickup, snake, obstacle));
+        sounds.play(SoundEffect.forPickup(pickup.getType()));
     }
 
     private void spawnPickup() {
@@ -195,6 +199,7 @@ public class GameController {
     }
 
     private void finishGame() {
+        if (game.gameWon()) return;
         game.markWon();
         animation.stop();
         inputQueue.clear();
@@ -202,5 +207,17 @@ public class GameController {
         gameView.drawGrid(pickup, snake, obstacle, gameView.gc);
         gameView.updateScoreLabel();
         gameView.gameWon();
+        sounds.stopAll();
+        sounds.play(SoundEffect.WIN);
+    }
+
+    private void finishDeath() {
+        animation.stop();
+        inputQueue.clear();
+        gameView.drawGrid(pickup, snake, obstacle, gameView.gc);
+        gameView.gameOver(snake);
+        gameView.updateScoreLabel();
+        sounds.stopAll();
+        sounds.play(SoundEffect.DEATH);
     }
 }

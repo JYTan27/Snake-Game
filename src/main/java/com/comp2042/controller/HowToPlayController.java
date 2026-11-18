@@ -2,6 +2,7 @@ package com.comp2042.controller;
 
 import com.comp2042.Main;
 import com.comp2042.model.GameMode;
+import com.comp2042.service.audio.SoundEffect;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
@@ -28,6 +29,7 @@ public class HowToPlayController {
 
     @FXML
     private void handleBack() {
+        Main.getViewManager().getSoundService().play(SoundEffect.BUTTON);
         Main.getViewManager().showMainMenu();
     }
 }
