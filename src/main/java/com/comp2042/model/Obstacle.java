@@ -47,7 +47,7 @@ public class Obstacle {
      * @param amount the requested number of additional obstacles
      */
     public void newObstacles(Snake snake, Pickup pickup, int amount) {
-        int remainingCapacity = boardWidth * boardHeight / 4 - obstacles.size();
+        int remainingCapacity = boardWidth * boardHeight / 20 - obstacles.size();
         if (remainingCapacity <= 0 || amount <= 0) {
             return;
         }

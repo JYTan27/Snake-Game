@@ -55,7 +55,8 @@ public class MainMenuController {
 
     /**
      * Populates the mode selector after FXML injection, restores the session's
-     * selection, and configures display names and fullscreen-aware popup sizing.
+     * selection, plays button audio on later mode changes, and configures display
+     * names and fullscreen-aware popup sizing.
      */
     @FXML
     private void initialize() {
@@ -89,6 +90,12 @@ public class MainMenuController {
             }
         });
         modeSelector.setValue(viewManager.getSelectedMode());
+        // Register after restoration so loading the menu does not play a sound.
+        modeSelector.valueProperty().addListener((observable, previousMode, selectedMode) -> {
+            if (selectedMode != null) {
+                viewManager.getSoundService().play(SoundEffect.BUTTON);
+            }
+        });
         modeSelector.setCellFactory(list -> {
             ListCell<GameMode> cell = new ListCell<>() {
                 /**

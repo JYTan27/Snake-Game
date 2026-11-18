@@ -17,7 +17,7 @@ public enum SoundEffect {
     BOLT("bolt.mp3"),
     /** Blocks collection effect. */
     BLOCKS("blocks.mp3"),
-    /** Menu button activation effect. */
+    /** Menu button activation and game-mode selection effect. */
     BUTTON("button.mp3"),
     /** Fatal-collision effect requested when gameplay ends in death. */
     DEATH("death.mp3"),
