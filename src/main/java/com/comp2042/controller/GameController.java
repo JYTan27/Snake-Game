@@ -80,8 +80,7 @@ public class GameController {
         }
 
         if (!snake.getDead() && snake.atePickup(pickup)) {
-            applyPickupEffect();
-            game.incScore();
+            collectPickup();
             pickupSoundEffect.play();
             if (game.gameWon()) {
                 finishGame();
@@ -191,11 +190,8 @@ public class GameController {
         gameView.drawGrid(pickup, snake, obstacle, gameView.gc);
     }
 
-    private void applyPickupEffect() {
-        animation.setRate(game.getSpeed() + pickup.getSpeedBonus());
-        snake.ignoreBorders(game.isNoBorder());
-        pickup.applyEffect(game, snake, obstacle);
-        game.addPoints(pickup.getPoints());
+    private void collectPickup() {
+        animation.setRate(game.collectPickup(pickup, snake, obstacle));
     }
 
     private void spawnPickup() {

@@ -3,6 +3,7 @@ package com.comp2042.model;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
 
 import javafx.scene.image.Image;
@@ -108,12 +109,9 @@ public class Snake {
         return body.contains(head);
     }
 
-    public int getBodyDir(int bodyCount) {
-        if (bodyCount == 0) {
-            return 0;
-        }
-        ArrayList<GridPoint> bodyList = new ArrayList<>(body);
-        if (bodyList.get(bodyCount).getY() == bodyList.get(bodyCount - 1).getY()) {
+    /** Returns a straight segment's rotation from two adjacent body points. */
+    public int getBodyDir(GridPoint current, GridPoint previous) {
+        if (current.getY() == previous.getY()) {
             return DIR_LEFT;
         } else {
             return DIR_UP;
@@ -125,9 +123,9 @@ public class Snake {
             return snakeDir;
         }
 
-        List<GridPoint> bodyList = new ArrayList<>(body);
-        GridPoint tail = bodyList.get(0);
-        GridPoint next = bodyList.size() > 1 ? bodyList.get(1) : head;
+        Iterator<GridPoint> segments = body.iterator();
+        GridPoint tail = segments.next();
+        GridPoint next = segments.hasNext() ? segments.next() : head;
 
         int dx = next.getX() - tail.getX();
         int dy = next.getY() - tail.getY();

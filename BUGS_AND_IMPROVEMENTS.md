@@ -196,3 +196,13 @@
 51. **Made How to Play scrollable**:
    - Kept the heading and Back button fixed around a vertically scrollable content area, with wrapping descriptions and proportional table columns.
    - Supports mouse-wheel, scrollbar, and keyboard navigation; each visit starts at the top. Fullscreen scaling, Back/Esc navigation, and selected-difficulty memory are preserved.
+
+52. **Centralised pickup collection rules**:
+   - Added `Game.collectPickup(Pickup, Snake, Obstacle)`, called once after collection is detected. It calculates movement speed from the base speed and pickup bonus, restores the difficulty's default border behaviour, applies the pickup's effect, awards display points, and increments the collection count.
+   - Replaced `GameController.applyPickupEffect()` with a small `collectPickup()` helper that delegates to the model and applies the returned animation speed. Removed the controller's separate `game.incScore()` call to avoid counting collection twice.
+   - Pickup subclasses retain their individual points, speed bonuses, and special effects. Collection detection, sound, completion handling, replacement spawning, and rendering remain coordinated by the controller.
+
+53. **Simplified snake rendering and removed repeated body-list copies**:
+   - `GameView.drawGrid()` copies the body once per redraw and passes that list to `drawBody()`. Segment coordinates and turn-history lookups reuse the current point, and the tail's turn-history entry is cleared once before drawing body segments, with an empty-body guard.
+   - Replaced `Snake.getBodyDir(int)` with `getBodyDir(GridPoint current, GridPoint previous)` and updated its caller. `getTailDir()` reads the first two deque elements with an iterator, preserving its empty-body fallback, single-segment handling, and toroidal wrapping calculations without copying the body.
+   - Removed the redundant `GameView.tailRotation()` wrapper. Body rendering now takes O(n) work, with one body-list copy per redraw. No classes were added; movement, collision rules, pickup behaviour, and sprite storage are unchanged.

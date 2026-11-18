@@ -10,6 +10,7 @@ import com.comp2042.view.board.BoardRenderer;
 import com.comp2042.view.board.BoardTheme;
 import com.comp2042.view.board.CheckerboardBoardRenderer;
 
+import java.util.List;
 import java.util.Objects;
 
 import javafx.scene.Scene;
@@ -122,11 +123,14 @@ public class GameView {
             gc.restore();
         }
 
-        // Draw body segments
-        int bodyIndex = 0;
-        for (GridPoint point : snake.getBody()) {
-            drawBody(snake, point, bodyIndex, cellSize);
-            bodyIndex++;
+        // Reuse one body snapshot for the entire redraw.
+        List<GridPoint> body = snake.getBody();
+        if (!body.isEmpty()) {
+            GridPoint tail = body.getFirst();
+            turnArray[tail.getX()][tail.getY()] = 0;
+        }
+        for (int bodyIndex = 0; bodyIndex < body.size(); bodyIndex++) {
+            drawBody(snake, body, bodyIndex, cellSize);
         }
 
         // Draw head
@@ -155,29 +159,21 @@ public class GameView {
         gc.restore();
     }
 
-    private void drawBody(Snake snake, GridPoint point, int index, double cellSize) {
+    private void drawBody(Snake snake, List<GridPoint> body, int index, double cellSize) {
+        GridPoint point = body.get(index);
+        int turn = turnArray[point.getX()][point.getY()];
         Image img;
         double rotateDeg;
 
         if (index == 0) {
             img       = snake.getImageTail();
-            rotateDeg = tailRotation(snake);
-        } else if (index > 0 &&
-                   turnArray[snake.getBody().get(index).getX()]
-                             [snake.getBody().get(index).getY()] != 0) {
+            rotateDeg = snake.getTailDir();
+        } else if (turn != 0) {
             img       = snake.getImageTurn();
-            rotateDeg = 90.0 * turnArray[snake.getBody().get(index).getX()]
-                                         [snake.getBody().get(index).getY()];
+            rotateDeg = 90.0 * turn;
         } else {
             img       = snake.getImageBody();
-            rotateDeg = snake.getBodyDir(index);
-        }
-
-        // Clear stale turn entry when the tail segment leaves a turn cell
-        if (turnArray[snake.getBody().get(0).getX()]
-                      [snake.getBody().get(0).getY()] != 0) {
-            turnArray[snake.getBody().get(0).getX()]
-                      [snake.getBody().get(0).getY()] = 0;
+            rotateDeg = snake.getBodyDir(point, body.get(index - 1));
         }
 
         double x  = point.getX() * cellSize;
@@ -190,10 +186,6 @@ public class GameView {
         gc.rotate(rotateDeg);
         gc.drawImage(img, -cellSize / 2, -cellSize / 2, cellSize, cellSize);
         gc.restore();
-    }
-
-    private double tailRotation(Snake snake) {
-        return snake.getTailDir();
     }
 
     public void turnDir(Snake snake, KeyCode lastKey, KeyCode currentKey) {

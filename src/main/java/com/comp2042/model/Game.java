@@ -66,6 +66,24 @@ public class Game {
     }
 
     /**
+     * Applies a collected pickup's effects and updates both score counters.
+     * Call exactly once after the caller has detected collection.
+     *
+     * @param pickup the pickup that was collected
+     * @param snake the snake receiving the pickup's effect
+     * @param obstacle the current board's obstacles
+     * @return the movement speed in moves per second after collection
+     */
+    public double collectPickup(Pickup pickup, Snake snake, Obstacle obstacle) {
+        double movementSpeed = getSpeed() + pickup.getSpeedBonus();
+        snake.ignoreBorders(isNoBorder());
+        pickup.applyEffect(this, snake, obstacle);
+        addPoints(pickup.getPoints());
+        incScore();
+        return movementSpeed;
+    }
+
+    /**
      * Reduces maxScore by (num - 1) to account for the grid cells now occupied
      * by obstacles. The -1 accounts for the pickup cell that was just consumed.
      */
