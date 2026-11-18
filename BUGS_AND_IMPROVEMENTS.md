@@ -206,3 +206,13 @@
    - `GameView.drawGrid()` copies the body once per redraw and passes that list to `drawBody()`. Segment coordinates and turn-history lookups reuse the current point, and the tail's turn-history entry is cleared once before drawing body segments, with an empty-body guard.
    - Replaced `Snake.getBodyDir(int)` with `getBodyDir(GridPoint current, GridPoint previous)` and updated its caller. `getTailDir()` reads the first two deque elements with an iterator, preserving its empty-body fallback, single-segment handling, and toroidal wrapping calculations without copying the body.
    - Removed the redundant `GameView.tailRotation()` wrapper. Body rendering now takes O(n) work, with one body-list copy per redraw. No classes were added; movement, collision rules, pickup behaviour, and sprite storage are unchanged.
+
+54. **Simplified end-message visibility**:
+   - Removed the duplicate `gameOverVis` and `gameWonVis` flags from `GameView`. `gameOver(Snake)` now sets visibility directly from `snake.getDead()`, and `gameWon()` sets visibility directly from `game.gameWon()`.
+   - Preserved method signatures, initially hidden labels, and existing controller calls during play, completion, and reset. No new classes or gameplay changes were introduced.
+
+55. **Simplified full-board win and reset logic**:
+   - Made exhausted pickup placement the single win condition. After collection, the controller applies effects and display points, plays the sound, and attempts replacement spawning. An empty factory result triggers the existing `finishGame()` path to record completion, stop movement, clear queued input and the pickup, and refresh the final score and win message.
+   - `Game.gameWon()` now returns the completion flag. Removed `maxScore`, `pickupsCollected`, `incScore()`, `decMaxScore()`, and the controller's numeric win check before spawning. `BlocksPickup` still creates obstacles; placement already excludes those cells, so no numeric target adjustment is needed.
+   - `resetScore()` retains its name and clears display points and completion. The controller preserves its existing reset sequence, including clearing obstacles before recreating the snake and initial diamond and restoring speed, direction, and labels.
+   - This supersedes the numeric-target and dual-counter descriptions in earlier historical entries, including improvements #25, #38, and #52. Display points remain rewards rather than a victory threshold; no fixed-target override, game modes, classes, or automated tests were added.

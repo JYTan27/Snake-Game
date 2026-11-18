@@ -13,6 +13,5 @@ public class BlocksPickup extends Pickup {
     public void applyEffect(Game game, Snake snake, Obstacle obstacle) {
         int obstacleCount = RANDOM.nextInt(game.getWidth() * game.getHeight() / 20) + 3;
         obstacle.newObstacles(snake, this, obstacleCount);
-        game.decMaxScore(obstacle.getObstacles().size());
     }
 }

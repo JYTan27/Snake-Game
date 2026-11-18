@@ -82,10 +82,6 @@ public class GameController {
         if (!snake.getDead() && snake.atePickup(pickup)) {
             collectPickup();
             pickupSoundEffect.play();
-            if (game.gameWon()) {
-                finishGame();
-                return;
-            }
             spawnPickup();
             if (pickup == null) {
                 finishGame();

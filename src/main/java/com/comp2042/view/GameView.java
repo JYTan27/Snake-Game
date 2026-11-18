@@ -31,8 +31,6 @@ public class GameView {
     public Label gameOverLabel;
     public Label gameWonLabel;
     public Label scoreLabel;
-    private boolean gameOverVis = false;
-    private boolean gameWonVis  = false;
 
     private final Game game;
     private final BoardRenderer boardRenderer;
@@ -213,23 +211,11 @@ public class GameView {
     }
 
     public void gameOver(Snake snake) {
-        if (snake.getDead() && !gameOverVis) {
-            gameOverVis = true;
-            gameOverLabel.setVisible(true);
-        } else if (!snake.getDead() && gameOverVis) {
-            gameOverLabel.setVisible(false);
-            gameOverVis = false;
-        }
+        gameOverLabel.setVisible(snake.getDead());
     }
 
     public void gameWon() {
-        if (game.gameWon() && !gameWonVis) {
-            gameWonVis = true;
-            gameWonLabel.setVisible(true);
-        } else if (!game.gameWon() && gameWonVis) {
-            gameWonVis = false;
-            gameWonLabel.setVisible(false);
-        }
+        gameWonLabel.setVisible(game.gameWon());
     }
 
     public void updateScoreLabel() {

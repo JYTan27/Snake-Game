@@ -9,8 +9,6 @@ public class Game {
 
     private int width;
     private int height;
-    private int pickupsCollected;
-    private int maxScore;
     private double multiplier;
     private int displayScore;
     private double speed;
@@ -49,24 +47,20 @@ public class Game {
         this.powerUp = powerUp;
         width = x;
         height = y;
-        maxScore = x * y - 2;
         multiplier = (height > LARGE_BOARD_THRESHOLD) ? LARGE_BOARD_MULTIPLIER : SMALL_BOARD_MULTIPLIER;
     }
 
+    /** Reports whether full-board completion has been recorded. */
     public boolean gameWon() {
-        return completed || pickupsCollected == maxScore;
+        return completed;
     }
 
     public void markWon() {
         completed = true;
     }
 
-    public void incScore() {
-        pickupsCollected++;
-    }
-
     /**
-     * Applies a collected pickup's effects and updates both score counters.
+     * Applies a collected pickup's effects and awards display points.
      * Call exactly once after the caller has detected collection.
      *
      * @param pickup the pickup that was collected
@@ -79,18 +73,7 @@ public class Game {
         snake.ignoreBorders(isNoBorder());
         pickup.applyEffect(this, snake, obstacle);
         addPoints(pickup.getPoints());
-        incScore();
         return movementSpeed;
-    }
-
-    /**
-     * Reduces maxScore by (num - 1) to account for the grid cells now occupied
-     * by obstacles. The -1 accounts for the pickup cell that was just consumed.
-     */
-    public void decMaxScore(int num) {
-        if (maxScore - (num - 1) > 0) {
-            maxScore -= (num - 1);
-        }
     }
 
     public int getWidth() {
@@ -102,9 +85,7 @@ public class Game {
     }
 
     public void resetScore() {
-        pickupsCollected = 0;
         displayScore = 0;
-        maxScore = width * height - 2;
         completed = false;
     }
 
