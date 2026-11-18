@@ -44,13 +44,13 @@
     -fx-font-size: 40;
 }
 
-.difficultyLabel,
-.difficultySelector {
+.modeLabel,
+.modeSelector {
     -fx-font-family: "SF Pixelate";
     -fx-font-size: 18;
 }
 
-.difficultySelector {
+.modeSelector {
     /* Popup cells scale separately; their measured height must not resize the main control. */
     -fx-min-height: 36;
     -fx-max-height: 36;
@@ -63,23 +63,23 @@
     -fx-padding: 0;
 }
 
-.difficultySelector:focused,
-.difficultySelector:showing {
+.modeSelector:focused,
+.modeSelector:showing {
     -fx-border-color: #0078a8;
     -fx-border-width: 2;
 }
 
-.difficultySelector > .arrow-button {
+.modeSelector > .arrow-button {
     -fx-background-color: transparent;
     -fx-background-radius: 0;
     -fx-padding: 0 10;
 }
 
-.difficultySelector > .arrow-button > .arrow {
+.modeSelector > .arrow-button > .arrow {
     -fx-background-color: #33332e;
 }
 
-.difficultySelector .list-cell {
+.modeSelector .list-cell {
     -fx-font-family: "SF Pixelate";
     -fx-font-size: 18;
     -fx-background-color: #f5f5f2;
@@ -87,7 +87,7 @@
     -fx-padding: 5 10;
 }
 
-.difficultySelector .list-view {
+.modeSelector .list-view {
     -fx-background-color: #f5f5f2;
     -fx-background-insets: 0;
     -fx-background-radius: 0;
@@ -96,13 +96,13 @@
     -fx-padding: 0;
 }
 
-.difficultySelector .list-view .list-cell:filled:hover {
+.modeSelector .list-view .list-cell:filled:hover {
     -fx-background-color: #55554c;
     -fx-text-fill: white;
 }
 
-.difficultySelector .list-view .list-cell:filled:selected,
-.difficultySelector .list-view .list-cell:filled:pressed {
+.modeSelector .list-view .list-cell:filled:selected,
+.modeSelector .list-view .list-cell:filled:pressed {
     -fx-background-color: #fa4659;
     -fx-text-fill: #000000;
 }
@@ -132,6 +132,11 @@
 
 .helpPage .helpSection {
     -fx-font-size: 18;
+    -fx-text-fill: #20201c;
+}
+
+.helpPage .helpModeTitle {
+    -fx-font-size: 16;
     -fx-text-fill: #20201c;
 }
 

@@ -1,6 +1,6 @@
 package com.comp2042.view;
 
-import com.comp2042.model.Game;
+import com.comp2042.model.GameMode;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.Group;
@@ -20,7 +20,7 @@ public class ViewManager {
 
     private Stage primaryStage;
     private AnchorPane root;
-    private Game.Difficulty selectedDifficulty = Game.Difficulty.NORMAL;
+    private GameMode selectedMode = GameMode.CLASSIC;
 
     private Image snakeLogo = new Image(getClass().getResourceAsStream("/com/comp2042/images/ui/SnakeLogoWhite.png"));
 
@@ -59,12 +59,12 @@ public class ViewManager {
         return primaryStage;
     }
 
-    public Game.Difficulty getSelectedDifficulty() {
-        return selectedDifficulty;
+    public GameMode getSelectedMode() {
+        return selectedMode;
     }
 
-    public void setSelectedDifficulty(Game.Difficulty difficulty) {
-        selectedDifficulty = java.util.Objects.requireNonNull(difficulty);
+    public void setSelectedMode(GameMode mode) {
+        selectedMode = java.util.Objects.requireNonNull(mode);
     }
 
     public void showGameScene(Scene gameScene) {

@@ -38,7 +38,7 @@ public class PickupFactory {
 
         if (!game.allowsPickup(type)
                 || (type == PickupType.RING && game.isNoBorder())
-                || (type == PickupType.BLOCKS && !obstacle.getObstacles().isEmpty())) {
+                || (type == PickupType.BLOCKS && !obstacle.canAddObstacles())) {
             type = PickupType.DIAMOND;
         }
         return switch (type) {

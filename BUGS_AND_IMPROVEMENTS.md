@@ -216,3 +216,8 @@
    - `Game.gameWon()` now returns the completion flag. Removed `maxScore`, `pickupsCollected`, `incScore()`, `decMaxScore()`, and the controller's numeric win check before spawning. `BlocksPickup` still creates obstacles; placement already excludes those cells, so no numeric target adjustment is needed.
    - `resetScore()` retains its name and clears display points and completion. The controller preserves its existing reset sequence, including clearing obstacles before recreating the snake and initial diamond and restoring speed, direction, and labels.
    - This supersedes the numeric-target and dual-counter descriptions in earlier historical entries, including improvements #25, #38, and #52. Display points remain rewards rather than a victory threshold; no fixed-target override, game modes, classes, or automated tests were added.
+56. **Replaced difficulty with independent game modes**:
+   - Added `GameMode` configurations for Classic, Obstacles, Hyperspeed, Power-ups, and Wraparound. All use a base speed of 9 except fixed-speed Hyperspeed at 16; only Wraparound has default border wrapping.
+   - Mode-specific pickup sets separate diamond-only play, recurring obstacle creation, and power-ups. Blocks accumulate only in Obstacles mode, with a strict one-quarter-board cap and no overlapping placements.
+   - Replaced the menu's difficulty selector with Game Mode, defaulting to Classic and retaining the selection during the session. Scrollable help uses descriptions from the same mode definitions.
+   - Preserved full-board completion, reset, WASD, fullscreen, rendering refactors, board themes, and pickup probabilities. This supersedes historical Easy/Normal/Hard rules without altering those historical descriptions.

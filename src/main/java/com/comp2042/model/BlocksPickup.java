@@ -11,7 +11,7 @@ public class BlocksPickup extends Pickup {
 
     @Override
     public void applyEffect(Game game, Snake snake, Obstacle obstacle) {
-        int obstacleCount = RANDOM.nextInt(game.getWidth() * game.getHeight() / 20) + 3;
+        int obstacleCount = RANDOM.nextInt(Math.max(1, game.getWidth() * game.getHeight() / 20)) + 3;
         obstacle.newObstacles(snake, this, obstacleCount);
     }
 }

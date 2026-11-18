@@ -28,25 +28,11 @@
                 <VBox spacing="16.0" minHeight="-Infinity">
                     <padding><Insets top="16.0" right="24.0" bottom="16.0" left="24.0" /></padding>
                     <children>
-                        <VBox spacing="8.0">
+                        <VBox spacing="12.0">
                             <children>
-                                <Label styleClass="helpSection" text="Difficulty" />
-                                <GridPane vgap="8.0">
-                                    <columnConstraints>
-                                        <ColumnConstraints percentWidth="20.0" />
-                                        <ColumnConstraints percentWidth="80.0" />
-                                    </columnConstraints>
-                                    <children>
-                                        <Label text="Easy" GridPane.rowIndex="0" />
-                                        <Label text="7 moves/sec · Wraps borders · No rings" wrapText="true" minWidth="0.0" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                                        <Label text="Normal" GridPane.rowIndex="1" />
-                                        <Label text="9 moves/sec · Solid borders" wrapText="true" minWidth="0.0" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                        <Label text="Hard" GridPane.rowIndex="2" />
-                                        <Label text="12 moves/sec · Solid borders" wrapText="true" minWidth="0.0" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                    </children>
-                                </GridPane>
-                                <Label text="Rings on Normal/Hard: wrap until the next pickup." wrapText="true" minWidth="0.0" maxWidth="Infinity" />
-                                <Label text="Blocks: Hard-only obstacles. Avoid them and your body." wrapText="true" minWidth="0.0" maxWidth="Infinity" />
+                                <Label styleClass="helpSection" text="Game Modes" />
+                                <VBox fx:id="modeDescriptions" spacing="16.0" />
+                                <Label text="In every mode, hitting your own body ends the game. Fill the available board to win." wrapText="true" minWidth="0.0" maxWidth="Infinity" />
                             </children>
                         </VBox>
                         <Region prefHeight="1.0" minHeight="1.0" maxHeight="1.0" styleClass="helpDivider" />
@@ -64,7 +50,7 @@
                                         <Label text="P" GridPane.rowIndex="1" />
                                         <Label text="Pause" wrapText="true" minWidth="0.0" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                         <Label text="Tab" GridPane.rowIndex="2" />
-                                        <Label text="Restart with current difficulty" wrapText="true" minWidth="0.0" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                        <Label text="Restart with current mode" wrapText="true" minWidth="0.0" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                         <Label text="F" GridPane.rowIndex="3" />
                                         <Label text="Toggle fullscreen" wrapText="true" minWidth="0.0" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                                         <Label text="Esc" GridPane.rowIndex="4" />

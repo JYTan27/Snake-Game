@@ -20,14 +20,15 @@ public class Obstacle {
         this.boardHeight = boardHeight;
     }
 
-    public void newObstacles(Snake snek, Pickup pickup, int amount) {
-        if (obstacles.size() > boardWidth * boardHeight / 4) {
+    public void newObstacles(Snake snake, Pickup pickup, int amount) {
+        int remainingCapacity = boardWidth * boardHeight / 4 - obstacles.size();
+        if (remainingCapacity <= 0 || amount <= 0) {
             return;
         }
 
         List<GridPoint> occupied = new ArrayList<>();
-        occupied.add(snek.getHead());
-        occupied.addAll(snek.getBody());
+        occupied.add(snake.getHead());
+        occupied.addAll(snake.getBody());
         occupied.add(pickup.getPos());
         occupied.addAll(obstacles);
 
@@ -41,7 +42,8 @@ public class Obstacle {
             }
         }
 
-        for (int i = 0; i < amount && !freeCells.isEmpty(); i++) {
+        int additions = Math.min(amount, remainingCapacity);
+        for (int i = 0; i < additions && !freeCells.isEmpty(); i++) {
             int idx = RANDOM.nextInt(freeCells.size());
             obstacles.add(freeCells.remove(idx));
         }
@@ -49,6 +51,10 @@ public class Obstacle {
 
     public Color getColor() {
         return color;
+    }
+
+    public boolean canAddObstacles() {
+        return obstacles.size() < boardWidth * boardHeight / 4;
     }
 
     public List<GridPoint> getObstacles() {

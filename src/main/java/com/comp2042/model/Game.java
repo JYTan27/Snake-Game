@@ -1,6 +1,6 @@
 package com.comp2042.model;
 
-import java.util.Set;
+import java.util.Objects;
 
 public class Game {
     private static final double SMALL_BOARD_MULTIPLIER = 20.0;
@@ -15,35 +15,12 @@ public class Game {
     private boolean powerUp;
     private boolean noBorder;
     private boolean completed;
-    private final Difficulty difficulty;
+    private final GameMode mode;
 
-    public enum Difficulty {
-        EASY("Easy", 7.0, true, Set.of(PickupType.DIAMOND, PickupType.STAR, PickupType.BOLT)),
-        NORMAL("Normal", 9.0, false, Set.of(PickupType.DIAMOND, PickupType.STAR, PickupType.BOLT, PickupType.RING)),
-        HARD("Hard", 12.0, false, Set.of(PickupType.DIAMOND, PickupType.STAR, PickupType.BOLT, PickupType.RING, PickupType.BLOCKS));
-
-        private final String displayName;
-        private final double speed;
-        private final boolean noBorder;
-        private final Set<PickupType> allowedPickups;
-
-        Difficulty(String displayName, double speed, boolean noBorder, Set<PickupType> allowedPickups) {
-            this.displayName = displayName;
-            this.speed = speed;
-            this.noBorder = noBorder;
-            this.allowedPickups = Set.copyOf(allowedPickups);
-        }
-
-        public String getDisplayName() { return displayName; }
-        public double getSpeed() { return speed; }
-        public boolean isNoBorder() { return noBorder; }
-        public boolean allowsPickup(PickupType type) { return allowedPickups.contains(type); }
-    }
-
-    public Game(int x, int y, boolean powerUp, Difficulty difficulty) {
-        this.difficulty = difficulty;
-        this.speed = difficulty.getSpeed();
-        this.noBorder = difficulty.isNoBorder();
+    public Game(int x, int y, boolean powerUp, GameMode mode) {
+        this.mode = Objects.requireNonNull(mode);
+        this.speed = mode.getSpeed();
+        this.noBorder = mode.isNoBorder();
         this.powerUp = powerUp;
         width = x;
         height = y;
@@ -101,12 +78,16 @@ public class Game {
         return displayScore;
     }
 
+    public GameMode getMode() {
+        return mode;
+    }
+
     public boolean isPowerUp() {
         return powerUp;
     }
 
     public boolean allowsPickup(PickupType type) {
-        return difficulty.allowsPickup(type);
+        return mode.allowsPickup(type);
     }
 
     public double getSpeed() {

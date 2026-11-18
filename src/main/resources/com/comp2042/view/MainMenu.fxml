@@ -20,8 +20,8 @@
                         <Label id="title" alignment="CENTER" contentDisplay="CENTER" text="Snake Game" textAlignment="CENTER" />
                         <VBox alignment="CENTER" fillWidth="false" spacing="8.0">
                             <children>
-                                <Label alignment="CENTER" styleClass="difficultyLabel" text="Difficulty" labelFor="${difficultySelector}" />
-                                <ComboBox fx:id="difficultySelector" prefHeight="36.0" prefWidth="180.0" styleClass="difficultySelector" />
+                                <Label alignment="CENTER" styleClass="modeLabel" text="Game Mode" labelFor="${modeSelector}" />
+                                <ComboBox fx:id="modeSelector" prefHeight="36.0" prefWidth="180.0" styleClass="modeSelector" />
                             </children>
                         </VBox>
                         <VBox alignment="CENTER" fillWidth="false" spacing="12.0">

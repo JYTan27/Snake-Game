@@ -4,6 +4,7 @@ import com.comp2042.Main;
 import com.comp2042.model.Pickup;
 import com.comp2042.model.DiamondPickup;
 import com.comp2042.model.Game;
+import com.comp2042.model.GameMode;
 import com.comp2042.model.Obstacle;
 import com.comp2042.model.Snake;
 import com.comp2042.view.GameView;
@@ -30,7 +31,7 @@ public class MainMenuController {
     private static final int Y_VALUE = 20;
     private static final boolean POWER_UP = true;
     @FXML
-    private ComboBox<Game.Difficulty> difficultySelector;
+    private ComboBox<GameMode> modeSelector;
     private final DoubleProperty optionScale = new SimpleDoubleProperty(1);
 
     private Scene gameScene;
@@ -39,29 +40,29 @@ public class MainMenuController {
 
     @FXML
     private void initialize() {
-        difficultySelector.getItems().setAll(Game.Difficulty.values());
-        difficultySelector.setConverter(new StringConverter<>() {
+        modeSelector.getItems().setAll(GameMode.values());
+        modeSelector.setConverter(new StringConverter<>() {
             @Override
-            public String toString(Game.Difficulty difficulty) {
-                if (difficulty == null) return "";
-                return difficulty.getDisplayName();
+            public String toString(GameMode mode) {
+                if (mode == null) return "";
+                return mode.getDisplayName();
             }
 
             @Override
-            public Game.Difficulty fromString(String text) {
-                return java.util.Arrays.stream(Game.Difficulty.values())
-                        .filter(difficulty -> difficulty.getDisplayName().equalsIgnoreCase(text))
+            public GameMode fromString(String text) {
+                return java.util.Arrays.stream(GameMode.values())
+                        .filter(mode -> mode.getDisplayName().equalsIgnoreCase(text))
                         .findFirst()
-                        .orElseThrow(() -> new IllegalArgumentException("Unknown difficulty: " + text));
+                        .orElseThrow(() -> new IllegalArgumentException("Unknown game mode: " + text));
             }
         });
-        difficultySelector.setValue(viewManager.getSelectedDifficulty());
-        difficultySelector.setCellFactory(list -> {
-            ListCell<Game.Difficulty> cell = new ListCell<>() {
+        modeSelector.setValue(viewManager.getSelectedMode());
+        modeSelector.setCellFactory(list -> {
+            ListCell<GameMode> cell = new ListCell<>() {
                 @Override
-                protected void updateItem(Game.Difficulty difficulty, boolean empty) {
-                    super.updateItem(difficulty, empty);
-                    setText(empty || difficulty == null ? null : difficultySelector.getConverter().toString(difficulty));
+                protected void updateItem(GameMode mode, boolean empty) {
+                    super.updateItem(mode, empty);
+                    setText(empty || mode == null ? null : modeSelector.getConverter().toString(mode));
                 }
             };
             cell.styleProperty().bind(Bindings.concat("-fx-font-size: ", optionScale.multiply(18),
@@ -69,22 +70,22 @@ public class MainMenuController {
             return cell;
         });
         // The dropdown popup is a separate window and does not inherit the menu transform.
-        difficultySelector.setOnShowing(event -> {
-            difficultySelector.applyCss();
-            double scale = difficultySelector.localToScreen(difficultySelector.getBoundsInLocal()).getWidth()
-                    / difficultySelector.getWidth();
-            ListView<?> options = (ListView<?>) ((ComboBoxListViewSkin<?>) difficultySelector.getSkin()).getPopupContent();
+        modeSelector.setOnShowing(event -> {
+            modeSelector.applyCss();
+            double scale = modeSelector.localToScreen(modeSelector.getBoundsInLocal()).getWidth()
+                    / modeSelector.getWidth();
+            ListView<?> options = (ListView<?>) ((ComboBoxListViewSkin<?>) modeSelector.getSkin()).getPopupContent();
             optionScale.set(scale);
             options.setFixedCellSize(32 * scale);
-            options.setPrefWidth(difficultySelector.getWidth() * scale);
+            options.setPrefWidth(modeSelector.getWidth() * scale);
         });
     }
 
     public void handleStart() {
         boolean fullScreen = viewManager.getPrimaryStage().isFullScreen();
-        Game.Difficulty difficulty = difficultySelector.getValue();
-        viewManager.setSelectedDifficulty(difficulty);
-        GameController controller = buildGameScene(viewManager.getPrimaryStage(), difficulty);
+        GameMode mode = modeSelector.getValue();
+        viewManager.setSelectedMode(mode);
+        GameController controller = buildGameScene(viewManager.getPrimaryStage(), mode);
         viewManager.showGameScene(gameScene);
         if (fullScreen) {
             controller.setFullScreen(true);
@@ -92,7 +93,7 @@ public class MainMenuController {
     }
 
     public void handleHowToPlay() {
-        viewManager.setSelectedDifficulty(difficultySelector.getValue());
+        viewManager.setSelectedMode(modeSelector.getValue());
         viewManager.showHowToPlay();
     }
 
@@ -100,8 +101,8 @@ public class MainMenuController {
         Platform.exit();
     }
 
-    private GameController buildGameScene(Stage stage, Game.Difficulty difficulty) {
-        Game game = new Game(X_VALUE, Y_VALUE, POWER_UP, difficulty);
+    private GameController buildGameScene(Stage stage, GameMode mode) {
+        Game game = new Game(X_VALUE, Y_VALUE, POWER_UP, mode);
         Obstacle obstacle = new Obstacle(game.getWidth(), game.getHeight());
         Snake snake = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
         Pickup pickup = new DiamondPickup(game.getWidth(), game.getHeight(), snake, obstacle);
