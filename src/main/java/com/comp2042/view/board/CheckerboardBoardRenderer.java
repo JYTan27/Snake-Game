@@ -4,6 +4,21 @@ import javafx.scene.canvas.GraphicsContext;
 
 /** A low-contrast checkerboard with shared pixel boundaries and no grid outlines. */
 public final class CheckerboardBoardRenderer implements BoardRenderer {
+    /** Creates a checkerboard renderer that uses the palette supplied to each draw call. */
+    public CheckerboardBoardRenderer() {
+    }
+
+    /**
+     * Fills the canvas with the primary colour and draws alternating grid cells
+     * in the secondary colour. Rounds shared cell boundaries to avoid gaps at
+     * fractional display scales, restoring graphics state even if drawing fails.
+     *
+     * @param gc the canvas drawing context
+     * @param columns the number of grid columns
+     * @param rows the number of grid rows
+     * @param cellSize the scaled cell size in pixels
+     * @param theme the palette supplying the two checkerboard colours
+     */
     @Override
     public void draw(GraphicsContext gc, int columns, int rows, double cellSize, BoardTheme theme) {
         gc.save();
@@ -11,6 +26,7 @@ public final class CheckerboardBoardRenderer implements BoardRenderer {
             gc.setFill(theme.getPrimaryColor());
             gc.fillRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
             gc.setFill(theme.getSecondaryColor());
+            // Neighbouring tiles share the same rounded edge instead of rounding widths separately.
             for (int row = 0; row < rows; row++) {
                 double top = Math.round(row * cellSize);
                 double bottom = Math.round((row + 1) * cellSize);

@@ -6,13 +6,26 @@ import java.util.Map;
 import java.util.Objects;
 import javafx.scene.media.AudioClip;
 
-/** Caches short clips once; unavailable sounds never prevent gameplay. */
+/**
+ * JavaFX implementation that caches available short clips at construction.
+ * Resource-loading, playback, and stopping failures are logged and disable the
+ * affected clip without propagating those runtime failures to gameplay callers.
+ * Closing stops playback, clears the cache, and makes later play requests no-ops.
+ */
 public final class JavaFxSoundService implements SoundService {
+    /** Logger for missing resources and failed audio operations. */
     private static final System.Logger LOGGER = System.getLogger(JavaFxSoundService.class.getName());
+    /** Successfully loaded clips, excluding any subsequently disabled effects. */
     private final Map<SoundEffect, AudioClip> clips = new EnumMap<>(SoundEffect.class);
+    /** Volume supplied to future playback requests. */
     private double volume = SoundEffect.DEFAULT_VOLUME;
+    /** Whether the service has been permanently closed. */
     private boolean closed;
 
+    /**
+     * Attempts to cache every catalogued effect using the default volume.
+     * Logs unavailable resources individually so remaining sounds can still be used.
+     */
     public JavaFxSoundService() {
         for (SoundEffect effect : SoundEffect.values()) {
             try {
@@ -25,6 +38,12 @@ public final class JavaFxSoundService implements SoundService {
         }
     }
 
+    /**
+     * Plays a cached effect. Closed services and effects absent from the cache
+     * are ignored. A synchronous playback failure removes the clip and is logged.
+     *
+     * @param effect the catalogued effect to play
+     */
     @Override
     public void play(SoundEffect effect) {
         AudioClip clip = clips.get(effect);
@@ -37,6 +56,7 @@ public final class JavaFxSoundService implements SoundService {
         }
     }
 
+    /** Stops cached clips, removing and logging any clip whose stop operation fails. */
     @Override
     public void stopAll() {
         var iterator = clips.entrySet().iterator();
@@ -51,6 +71,12 @@ public final class JavaFxSoundService implements SoundService {
         }
     }
 
+    /**
+     * Sets the volume for subsequent plays without adjusting clips already playing.
+     *
+     * @param volume a finite value from zero to one, inclusive
+     * @throws IllegalArgumentException if the value is non-finite or outside that range
+     */
     @Override
     public void setVolume(double volume) {
         if (!Double.isFinite(volume) || volume < 0 || volume > 1) {
@@ -59,9 +85,15 @@ public final class JavaFxSoundService implements SoundService {
         this.volume = volume;
     }
 
+    /**
+     * Returns the configured volume for subsequent plays.
+     *
+     * @return the configured volume for subsequent plays
+     */
     @Override
     public double getVolume() { return volume; }
 
+    /** Stops all clips, clears cached references, and disables subsequent playback. */
     @Override
     public void close() {
         stopAll();
@@ -69,6 +101,12 @@ public final class JavaFxSoundService implements SoundService {
         closed = true;
     }
 
+    /**
+     * Records an audio failure together with its resource path.
+     *
+     * @param effect the effect whose resource or operation failed
+     * @param exception the runtime failure to include in the warning
+     */
     private static void logFailure(SoundEffect effect, RuntimeException exception) {
         LOGGER.log(System.Logger.Level.WARNING, "Sound disabled: " + effect.getResourcePath(), exception);
     }

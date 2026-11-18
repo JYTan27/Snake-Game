@@ -135,7 +135,6 @@ Exact tuning values are maintained in the source. See the [configuration sources
    - Prevents rapid sequential keystrokes (such as quick 90° double-turns around obstacles) from being dropped when pressed within a single tick window.
    - Synchronized `turnDir()` invocation with logic tick execution, ensuring corner elbow sprites (`snaketurnleft.png`) are placed on the exact tile where the turn executed.
    - Added `isValidNextDirection(newKey, referenceKey)` validation relative to the last queued direction, preventing 180° self-reversals and redundant keys.
-   - Tuned difficulty-specific speeds in `Game.Difficulty` for a responsive pace while preserving discrete pixel-art rendering. Current mode speeds are defined in `GameMode`.
 33. **Preserved Easy difficulty border wrapping after coin collection (Addresses Bug #43)**:
    - Replaced `snake.ignoreBorders(false)` in `GameController.powerCoin()` with `snake.ignoreBorders(game.isNoBorder())`.
    - Restores the difficulty's default border setting before `coin.applyEffect(...)`, so collecting any coin keeps wrapping enabled on Easy.

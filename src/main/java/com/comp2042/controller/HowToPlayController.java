@@ -7,11 +7,23 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 
-/** Handles navigation from the gameplay reference back to the menu. */
+/**
+ * Populates mode explanations on the FXML help screen and handles its Back button.
+ * Descriptions come from {@link GameMode} so help text shares gameplay configuration.
+ */
 public class HowToPlayController {
+    /** Container injected from FXML for the generated mode descriptions. */
     @FXML
     private VBox modeDescriptions;
 
+    /** Creates a help controller for FXML loading; descriptions are added after injection. */
+    public HowToPlayController() {
+    }
+
+    /**
+     * Adds a heading and wrapping description for every mode after FXML injection.
+     * Each heading includes the mode's base movement speed, displayed as an integer.
+     */
     @FXML
     private void initialize() {
         for (GameMode mode : GameMode.values()) {
@@ -27,6 +39,7 @@ public class HowToPlayController {
         }
     }
 
+    /** Plays button audio and returns to the menu, retaining the session's selected mode. */
     @FXML
     private void handleBack() {
         Main.getViewManager().getSoundService().play(SoundEffect.BUTTON);
