@@ -242,3 +242,8 @@ Exact tuning values are maintained in the source. See the [configuration sources
    - Added `PAUSE`, `UNPAUSE`, and `RESTART` sound identities using the existing `pause.mp3`, `unpause.mp3`, and `restart.mp3` resources and shared cached playback. Alternate restart audio remains unused; background music is deferred until tracks are selected.
    - Pause audio plays only when P stops running gameplay. Repeated P presses while stopped are silent. A player-pause marker triggers resume audio once when WASD resumes that pause; initial movement and movement after restart do not play resume audio.
    - Reset clears the pause marker and stops older effects before playing restart audio after the fresh board is ready. Death, victory, and menu return also clear the marker. Gameplay controls, mode selection, and immediate Exit behaviour are preserved.
+
+61. **Kept Windows audio output initialised between short effects**:
+   - Direct playback through the game's cached sound service reproduced the delay even on the menu. Opening an otherwise unplayed Java Sound output line made the effect sound prompt; closing it restored the delay, and reopening it restored prompt playback in repeated listening comparisons.
+   - `JavaFxSoundService` now retains an unplayed, silent PCM output line on Windows and releases it on shutdown. Reset and menu return stop effects while retaining that line. The existing MP3 resources, JavaFX playback, volume controls, and sound identities are preserved.
+   - Output-line initialisation failures are logged and retain ordinary JavaFX playback. This is a workaround for the observed output-device behaviour, not a guarantee of latency on every device or an identification of a particular driver fault.

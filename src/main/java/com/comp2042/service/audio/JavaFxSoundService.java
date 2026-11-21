@@ -5,18 +5,25 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
 import javafx.scene.media.AudioClip;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
 
 /**
  * JavaFX implementation that caches available short clips at construction.
  * Resource-loading, playback, and stopping failures are logged and disable the
  * affected clip without propagating those runtime failures to gameplay callers.
- * Closing stops playback, clears the cache, and makes later play requests no-ops.
+ * On Windows an unplayed Java Sound line keeps audio output initialised between effects.
+ * Closing releases that line, stops playback, and makes later play requests no-ops.
  */
 public final class JavaFxSoundService implements SoundService {
     /** Logger for missing resources and failed audio operations. */
     private static final System.Logger LOGGER = System.getLogger(JavaFxSoundService.class.getName());
     /** Successfully loaded clips, excluding any subsequently disabled effects. */
     private final Map<SoundEffect, AudioClip> clips = new EnumMap<>(SoundEffect.class);
+    /** Unplayed Windows output line retained until shutdown to avoid short-effect latency. */
+    private Clip outputLine;
     /** Volume supplied to future playback requests. */
     private double volume = SoundEffect.DEFAULT_VOLUME;
     /** Whether the service has been permanently closed. */
@@ -35,6 +42,35 @@ public final class JavaFxSoundService implements SoundService {
             } catch (RuntimeException exception) {
                 logFailure(effect, exception);
             }
+        }
+        initialiseWindowsOutput();
+    }
+
+    /**
+     * Keeps Windows output initialised without playing any sound. In the observed
+     * device setup, opening this line removed delay from JavaFX effects and closing
+     * it restored the delay. Failure leaves ordinary JavaFX playback available.
+     */
+    private void initialiseWindowsOutput() {
+        if (!System.getProperty("os.name", "").startsWith("Windows")) return;
+        Clip line = null;
+        try {
+            line = AudioSystem.getClip();
+            AudioFormat format = new AudioFormat(44_100, 16, 1, true, false);
+            // A quarter-second PCM buffer; the line is opened but never started.
+            byte[] silence = new byte[(int) (format.getFrameRate() * format.getFrameSize() / 4)];
+            line.open(format, silence, 0, silence.length);
+            outputLine = line;
+        } catch (LineUnavailableException | RuntimeException exception) {
+            if (line != null) {
+                try {
+                    line.close();
+                } catch (RuntimeException closeFailure) {
+                    exception.addSuppressed(closeFailure);
+                }
+            }
+            LOGGER.log(System.Logger.Level.WARNING,
+                    "Windows audio output could not be kept initialised; using standard playback", exception);
         }
     }
 
@@ -56,7 +92,7 @@ public final class JavaFxSoundService implements SoundService {
         }
     }
 
-    /** Stops cached clips, removing and logging any clip whose stop operation fails. */
+    /** Stops effects while retaining the output line; logs and removes failing clips. */
     @Override
     public void stopAll() {
         var iterator = clips.entrySet().iterator();
@@ -93,12 +129,22 @@ public final class JavaFxSoundService implements SoundService {
     @Override
     public double getVolume() { return volume; }
 
-    /** Stops all clips, clears cached references, and disables subsequent playback. */
+    /** Stops all clips, releases the Windows output line, and disables subsequent playback. */
     @Override
     public void close() {
+        if (closed) return;
+        closed = true;
         stopAll();
         clips.clear();
-        closed = true;
+        if (outputLine != null) {
+            try {
+                outputLine.close();
+            } catch (RuntimeException exception) {
+                LOGGER.log(System.Logger.Level.WARNING, "Audio output line could not be closed", exception);
+            } finally {
+                outputLine = null;
+            }
+        }
     }
 
     /**
