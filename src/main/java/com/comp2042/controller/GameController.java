@@ -52,6 +52,8 @@ public class GameController {
     private KeyCode key = KeyCode.LEFT;
     /** Direction saved immediately before the most recently consumed turn. */
     private KeyCode lastKey = KeyCode.LEFT;
+    /** Distinguishes a pause requested with P from initial, reset, or terminal stops. */
+    private boolean pausedByPlayer;
 
     /** FIFO queue of up to two valid turns; additional input is ignored while full. */
     private final Deque<KeyCode> inputQueue = new ArrayDeque<>();
@@ -153,7 +155,8 @@ public class GameController {
     /**
      * Handles WASD movement/start/resume, P to pause, Tab to restart, F to toggle
      * fullscreen, and Escape to return to the menu. Movement is disabled after
-     * death or victory; other shortcuts remain available.
+     * death or victory; other shortcuts remain available. Pause/resume sounds
+     * occur only when entering or leaving a player-requested pause.
      *
      * @param event the key-pressed event from the game scene
      */
@@ -168,6 +171,10 @@ public class GameController {
         };
 
         if (direction != null && !game.gameWon() && !snake.getDead()) {
+            if (pausedByPlayer) {
+                pausedByPlayer = false;
+                sounds.play(SoundEffect.UNPAUSE);
+            }
             animation.play();
 
             // Enqueue valid direction if buffer has room
@@ -180,8 +187,10 @@ public class GameController {
             }
         }
 
-        if (code.equals(KeyCode.P)) {
+        if (code.equals(KeyCode.P) && animation.getStatus() == Animation.Status.RUNNING) {
             animation.stop();
+            pausedByPlayer = true;
+            sounds.play(SoundEffect.PAUSE);
         }
 
         if (code.equals(KeyCode.TAB)) {
@@ -193,6 +202,7 @@ public class GameController {
         }
 
         if (code.equals(KeyCode.ESCAPE)) {
+            pausedByPlayer = false;
             animation.stop();
             sounds.stopAll();
             onReturnToMenu.run();
@@ -235,9 +245,11 @@ public class GameController {
      * Stops audio and animation and restores a fresh, paused game in the same mode.
      * Clears input, obstacles, points, completion, and sprite turn history; recreates
      * the snake and initial diamond; then restores base speed, leftward direction,
-     * and the displayed labels and board.
+     * and the displayed labels and board. Plays restart audio after reset completes;
+     * beginning movement afterward is not treated as resuming a player pause.
      */
     private void reset() {
+        pausedByPlayer = false;
         sounds.stopAll();
         animation.jumpTo(Duration.ZERO);
         animation.stop();
@@ -260,6 +272,7 @@ public class GameController {
         gameView.updateScoreLabel();
 
         gameView.drawGrid(pickup, snake, obstacle, gameView.gc);
+        sounds.play(SoundEffect.RESTART);
     }
 
     /** Delegates collection to the model, applies its returned speed, and plays the pickup sound. */
@@ -279,6 +292,7 @@ public class GameController {
      */
     private void finishGame() {
         if (game.gameWon()) return;
+        pausedByPlayer = false;
         game.markWon();
         animation.stop();
         inputQueue.clear();
@@ -295,6 +309,7 @@ public class GameController {
      * final pose and score, and replaces other audio with the death sound.
      */
     private void finishDeath() {
+        pausedByPlayer = false;
         animation.stop();
         inputQueue.clear();
         gameView.drawGrid(pickup, snake, obstacle, gameView.gc);

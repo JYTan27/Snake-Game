@@ -19,6 +19,12 @@ public enum SoundEffect {
     BLOCKS("blocks.mp3"),
     /** Menu button activation and game-mode selection effect. */
     BUTTON("button.mp3"),
+    /** Transition from running gameplay to a player-requested pause. */
+    PAUSE("pause.mp3"),
+    /** Resuming gameplay after a player-requested pause. */
+    UNPAUSE("unpause.mp3"),
+    /** Restarting the current game after reset has stopped older effects. */
+    RESTART("restart.mp3"),
     /** Fatal-collision effect requested when gameplay ends in death. */
     DEATH("death.mp3"),
     /** Full-board completion effect. */
