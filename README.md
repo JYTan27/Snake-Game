@@ -96,8 +96,8 @@
   * Encapsulation enforced via `Collections.unmodifiableList(obstacles)`.
   * Scalable obstacle cap proportional to board dimensions, defined in `Obstacle`.
 * **Modular Board Appearance:**
-  * The default board is a subtle Soft Cream checkerboard. Board patterns (`BoardRenderer`) and colour palettes (`BoardTheme`) are independent, ready for future menu choices.
-  * `GameView(Game, BoardRenderer, BoardTheme)` supports custom appearance; the existing constructor selects the default. Background tiles align with gameplay cells in windowed and fullscreen modes. No appearance menu controls are added yet.
+  * Open **Board Colours** from the main menu to preview Soft Cream, Mint, or Sky. **Apply** saves the palette across launches. Select **Soft Cream** to restore the default.
+  * `GameView(Game, BoardRenderer, BoardTheme)` takes the chosen palette. Background tiles align with gameplay cells in windowed and fullscreen modes.
 * **GameView Rendering Pipeline Rewrite:**
   * All `ImageView.snapshot()` calls replaced by `GraphicsContext.save()` / `gc.rotate()` / `gc.drawImage()` / `gc.restore()` — canvas rotation without allocating snapshot images per segment.
   * Snake rendering reuses one body-list copy per redraw. Straight-segment orientation uses adjacent points, tail orientation reads the deque directly, and the tail's turn-history entry is cleared once per redraw. Body rendering now takes O(n) work instead of repeatedly copying the entire body for each segment; it still allocates the shared body-list copy.

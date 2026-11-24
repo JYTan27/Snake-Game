@@ -10,6 +10,7 @@ import com.comp2042.model.Snake;
 import com.comp2042.view.GameView;
 import com.comp2042.view.GameModeSelector;
 import com.comp2042.view.ViewManager;
+import com.comp2042.view.board.CheckerboardBoardRenderer;
 import com.comp2042.service.audio.SoundEffect;
 import javafx.fxml.FXML;
 import javafx.application.Platform;
@@ -76,6 +77,13 @@ public class MainMenuController {
         viewManager.showLeaderboards();
     }
 
+    /** Opens the board colour editor while retaining the selected game mode. */
+    public void handleBoardColours() {
+        viewManager.getSoundService().play(SoundEffect.BUTTON);
+        viewManager.setSelectedMode(modeSelector.getValue());
+        viewManager.showBoardColours();
+    }
+
     /** Requests button audio and exits immediately without waiting for playback to finish. */
     public void handleExit() {
         viewManager.getSoundService().play(SoundEffect.BUTTON);
@@ -94,7 +102,7 @@ public class MainMenuController {
         // Initial games always begin with a diamond; later pickups use mode weights.
         Pickup pickup = new DiamondPickup(game.getWidth(), game.getHeight(), snake, obstacle);
 
-        GameView gameView = new GameView(game);
+        GameView gameView = new GameView(game, new CheckerboardBoardRenderer(), viewManager.getBoardTheme());
         GameController controller = new GameController(snake, pickup, game, gameView, obstacle,
                 viewManager.getSoundService(), viewManager.getLeaderboardService(), viewManager::showMainMenu);
 

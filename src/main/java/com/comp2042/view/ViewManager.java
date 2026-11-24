@@ -1,14 +1,18 @@
 package com.comp2042.view;
 
+import com.comp2042.controller.BoardColoursController;
+import com.comp2042.controller.LeaderboardController;
 import com.comp2042.model.GameMode;
 import com.comp2042.service.audio.SoundService;
 import com.comp2042.service.leaderboard.LeaderboardService;
-import com.comp2042.controller.LeaderboardController;
+import com.comp2042.view.board.BoardTheme;
+import com.comp2042.view.board.BoardThemePreferences;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.Group;
 import javafx.beans.binding.Bindings;
+import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -21,6 +25,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.prefs.BackingStoreException;
 import java.util.function.Consumer;
 
 /**
@@ -45,6 +50,8 @@ public class ViewManager implements AutoCloseable {
     /** Shared audio service owned and closed by the application. */
     private final SoundService soundService;
     private final LeaderboardService leaderboardService;
+    private final BoardThemePreferences boardThemePreferences = new BoardThemePreferences();
+    private BoardTheme boardTheme;
     private Runnable onLeaveGame;
     private Consumer<Boolean> updateGameFullscreen;
     /** Session selection restored whenever the main menu is loaded. */
@@ -68,6 +75,7 @@ public class ViewManager implements AutoCloseable {
         this.primaryStage = primaryStage;
         this.soundService = java.util.Objects.requireNonNull(soundService);
         this.leaderboardService = java.util.Objects.requireNonNull(leaderboardService);
+        this.boardTheme = boardThemePreferences.load();
         primaryStage.setFullScreenExitHint("");
         primaryStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
         primaryStage.fullScreenProperty().addListener((property, wasFullscreen, fullscreen) -> {
@@ -132,6 +140,22 @@ public class ViewManager implements AutoCloseable {
 
     /** Returns shared result history; the application alone owns its lifecycle. */
     public LeaderboardService getLeaderboardService() { return leaderboardService; }
+
+    /** Returns the applied board palette for new games and the colour editor. */
+    public BoardTheme getBoardTheme() { return boardTheme; }
+
+    /** Applies the palette for this session and saves it for future launches. */
+    public void applyBoardTheme(BoardTheme theme) {
+        boardTheme = Objects.requireNonNull(theme);
+        try {
+            boardThemePreferences.save(theme);
+        } catch (BackingStoreException | SecurityException exception) {
+            Alert alert = new Alert(Alert.AlertType.WARNING,
+                    "Could not save board colours. Your choice will be used for this session.");
+            alert.initOwner(primaryStage);
+            alert.showAndWait();
+        }
+    }
 
     /**
      * Returns the session's current mode selection, initially Classic.
@@ -231,7 +255,7 @@ public class ViewManager implements AutoCloseable {
         return container;
     }
 
-    private void showReferenceScreen(Region content, String scrollSelector) {
+    private void showMenuScreen(Region content, String focusSelector) {
         StackPane screen = createMenuContent(content);
         screen.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ESCAPE) {
@@ -240,7 +264,7 @@ public class ViewManager implements AutoCloseable {
             }
         });
         showScreen(screen);
-        screen.lookup(scrollSelector).requestFocus();
+        screen.lookup(focusSelector).requestFocus();
     }
 
     /**
@@ -251,7 +275,7 @@ public class ViewManager implements AutoCloseable {
     public void showHowToPlay() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/comp2042/view/HowToPlay.fxml"));
-            showReferenceScreen(loader.load(), "#helpScroll");
+            showMenuScreen(loader.load(), "#helpScroll");
         } catch (IOException exception) {
             exception.printStackTrace();
             javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
@@ -267,10 +291,21 @@ public class ViewManager implements AutoCloseable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/comp2042/view/Leaderboards.fxml"));
             loader.setControllerFactory(type -> new LeaderboardController(leaderboardService, soundService, selectedMode, this::showMainMenu));
-            showReferenceScreen(loader.load(), "#leaderboardScroll");
+            showMenuScreen(loader.load(), "#leaderboardScroll");
         } catch (IOException exception) {
             new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR,
                     "Failed to load leaderboards: " + exception.getMessage()).showAndWait();
+        }
+    }
+
+    /** Opens an editor with a draft of the currently applied board colours. */
+    public void showBoardColours() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/comp2042/view/BoardColours.fxml"));
+            loader.setControllerFactory(type -> new BoardColoursController(this));
+            showMenuScreen(loader.load(), ".radio-button");
+        } catch (IOException exception) {
+            new Alert(Alert.AlertType.ERROR, "Failed to load Board Colours: " + exception.getMessage()).showAndWait();
         }
     }
 

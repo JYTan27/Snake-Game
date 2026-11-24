@@ -203,3 +203,15 @@
 .helpPage .leaderboardWarning {
     -fx-text-fill: #a32323;
 }
+
+.boardColoursPage .label,
+.boardColoursPage .radio-button {
+    -fx-font-family: "SF Pixelate";
+    -fx-font-size: 16;
+    -fx-text-fill: #44443d;
+}
+
+.boardColoursPage .boardColoursTitle {
+    -fx-font-family: "SF Pixelate Shaded";
+    -fx-font-size: 28;
+}
