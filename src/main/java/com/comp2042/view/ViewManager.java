@@ -19,6 +19,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -28,6 +29,15 @@ import java.util.function.Consumer;
  * active gameplay when leaving its screen. Scene operations run on the JavaFX thread.
  */
 public class ViewManager implements AutoCloseable {
+
+    private static final List<String> MENU_TIPS = List.of(
+            "A diamond a day!",
+            "Plan your turns!",
+            "Impossible to win?",
+            "No snakes were harmed!",
+            "Certified noodle",
+            "Fill every square!"
+    );
 
     /** Single stage reused for every screen. */
     private final Stage primaryStage;
@@ -39,6 +49,7 @@ public class ViewManager implements AutoCloseable {
     private Consumer<Boolean> updateGameFullscreen;
     /** Session selection restored whenever the main menu is loaded. */
     private GameMode selectedMode = GameMode.CLASSIC;
+    private int nextMenuSplashIndex;
 
     /** Application icon loaded from the packaged image resources. */
     private final Image snakeLogo = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/comp2042/images/ui/SnakeLogoWhite.png")));
@@ -139,6 +150,13 @@ public class ViewManager implements AutoCloseable {
      */
     public void setSelectedMode(GameMode mode) {
         selectedMode = java.util.Objects.requireNonNull(mode);
+    }
+
+    /** Returns the tip for a new menu visit and advances the session's rotation. */
+    public String nextMenuSplash() {
+        String tip = MENU_TIPS.get(nextMenuSplashIndex);
+        nextMenuSplashIndex = (nextMenuSplashIndex + 1) % MENU_TIPS.size();
+        return tip;
     }
 
     /**

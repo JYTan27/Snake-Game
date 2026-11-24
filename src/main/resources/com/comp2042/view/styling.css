@@ -49,6 +49,12 @@
     -fx-font-size: 40;
 }
 
+#menuSplash {
+    -fx-font-size: 14;
+    -fx-text-fill: #ffd52a;
+    -fx-effect: dropshadow(gaussian, #594100, 2, 0.85, 0, 1);
+}
+
 .modeLabel,
 .modeSelector {
     -fx-font-family: "SF Pixelate";

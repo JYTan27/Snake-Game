@@ -16,6 +16,7 @@ import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 
 /**
@@ -32,6 +33,8 @@ public class MainMenuController {
     /** Mode selector injected from the main-menu FXML. */
     @FXML
     private ComboBox<GameMode> modeSelector;
+    @FXML
+    private Label menuSplash;
 
     /** Application-wide navigation, session selection, and audio access. */
     private ViewManager viewManager = Main.getViewManager();
@@ -43,11 +46,12 @@ public class MainMenuController {
     /**
      * Populates the mode selector after FXML injection, restores the session's
      * selection, plays button audio on later mode changes, and configures display
-     * names and fullscreen-aware popup sizing.
+     * names and fullscreen-aware popup sizing. Sets the splash message for this visit.
      */
     @FXML
     private void initialize() {
         GameModeSelector.configure(modeSelector, viewManager.getSelectedMode(), viewManager.getSoundService());
+        menuSplash.setText(viewManager.nextMenuSplash());
     }
 
     /** Remembers the chosen mode and opens a fresh game. */
