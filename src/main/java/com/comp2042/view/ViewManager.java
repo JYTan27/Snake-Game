@@ -2,6 +2,8 @@ package com.comp2042.view;
 
 import com.comp2042.model.GameMode;
 import com.comp2042.service.audio.SoundService;
+import com.comp2042.service.leaderboard.LeaderboardService;
+import com.comp2042.controller.LeaderboardController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.Group;
@@ -18,17 +20,18 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 /**
- * Navigates between menu, help, and gameplay scenes on a single application stage.
- * Retains the selected mode for the session and exposes the application-owned
- * sound service. Scene operations run on the JavaFX application thread; callers
- * remain responsible for stopping gameplay animation and audio when leaving a game.
+ * Navigates between menu, reference, and gameplay scenes on a single stage.
+ * Retains the selected mode, exposes application-owned services, and finalises
+ * active gameplay when leaving its scene. Scene operations run on the JavaFX thread.
  */
-public class ViewManager {
+public class ViewManager implements AutoCloseable {
 
     /** Single stage reused for every screen. */
     private Stage primaryStage;
     /** Shared audio service owned and closed by the application. */
     private final SoundService soundService;
+    private final LeaderboardService leaderboardService;
+    private Runnable onLeaveGame;
     /** Root loaded for the most recently created main-menu scene. */
     private AnchorPane root;
     /** Session selection restored whenever the main menu is loaded. */
@@ -44,11 +47,13 @@ public class ViewManager {
      *
      * @param primaryStage the single stage used to display all scenes
      * @param soundService the application-owned audio service
-     * @throws NullPointerException if either argument is null
+     * @param leaderboardService application-owned result history
+     * @throws NullPointerException if a service argument is null
      */
-    public ViewManager(Stage primaryStage, SoundService soundService) {
+    public ViewManager(Stage primaryStage, SoundService soundService, LeaderboardService leaderboardService) {
         this.primaryStage = primaryStage;
         this.soundService = java.util.Objects.requireNonNull(soundService);
+        this.leaderboardService = java.util.Objects.requireNonNull(leaderboardService);
         primaryStage.setFullScreenExitHint("");
         primaryStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
     }
@@ -99,6 +104,9 @@ public class ViewManager {
      */
     public SoundService getSoundService() { return soundService; }
 
+    /** Returns shared result history; the application alone owns its lifecycle. */
+    public LeaderboardService getLeaderboardService() { return leaderboardService; }
+
     /**
      * Returns the session's current mode selection, initially Classic.
      *
@@ -123,9 +131,11 @@ public class ViewManager {
      * Gameplay layout and fullscreen board scaling are configured by its callers.
      *
      * @param gameScene the prepared gameplay scene
+     * @param onLeave clean-up that finalises the active run when navigation or shutdown occurs
      */
-    public void showGameScene(Scene gameScene) {
+    public void showGameScene(Scene gameScene, Runnable onLeave) {
         showScene(gameScene);
+        onLeaveGame = java.util.Objects.requireNonNull(onLeave);
     }
 
     /**
@@ -135,6 +145,7 @@ public class ViewManager {
      * @param scene the scene to display
      */
     private void showScene(Scene scene) {
+        close();
         boolean fullScreen = primaryStage.isFullScreen();
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
@@ -150,7 +161,7 @@ public class ViewManager {
     }
 
     /**
-     * Wraps menu or help content in a centred, uniformly scaled 550-by-400 scene.
+     * Wraps menu or reference content in a centred, uniformly scaled 550-by-400 scene.
      * Applies shared styling and installs F as the fullscreen toggle.
      *
      * @param content the FXML root whose preferred size defines its layout
@@ -161,7 +172,7 @@ public class ViewManager {
         content.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         Group scaledContent = new Group(content);
         StackPane container = new StackPane(scaledContent);
-        // Fit both scene dimensions using one scale to preserve the content's proportions.
+        // Fit both scenes dimensions using one scale to preserve the content's proportions.
         var scale = Bindings.min(container.widthProperty().divide(550), container.heightProperty().divide(400));
         content.scaleXProperty().bind(scale);
         content.scaleYProperty().bind(scale);
@@ -201,5 +212,33 @@ public class ViewManager {
             );
             alert.showAndWait();
         }
+    }
+
+    /** Opens the mode-filtered leaderboard at the menu's selected mode. */
+    public void showLeaderboards() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/comp2042/view/Leaderboards.fxml"));
+            loader.setControllerFactory(type -> new LeaderboardController(leaderboardService, soundService, selectedMode, this::showMainMenu));
+            Scene scene = createMenuScene(loader.load());
+            scene.setOnKeyPressed(event -> {
+                if (event.getCode() == KeyCode.ESCAPE) {
+                    showMainMenu();
+                    event.consume();
+                }
+            });
+            showScene(scene);
+            scene.lookup("#leaderboardScroll").requestFocus();
+        } catch (IOException exception) {
+            new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR,
+                    "Failed to load leaderboards: " + exception.getMessage()).showAndWait();
+        }
+    }
+
+    /** Detaches before invoking clean-up so reentrant or repeated navigation is safe. */
+    @Override
+    public void close() {
+        Runnable cleanup = onLeaveGame;
+        onLeaveGame = null;
+        if (cleanup != null) cleanup.run();
     }
 }

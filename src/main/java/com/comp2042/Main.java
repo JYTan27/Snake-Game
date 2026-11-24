@@ -3,13 +3,15 @@ package com.comp2042;
 import com.comp2042.view.ViewManager;
 import com.comp2042.service.audio.JavaFxSoundService;
 import com.comp2042.service.audio.SoundService;
+import com.comp2042.service.leaderboard.LeaderboardService;
+import com.comp2042.service.leaderboard.XmlLeaderboardRepository;
 import javafx.application.Application;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 /**
- * JavaFX application entry point. Loads fonts, creates shared audio and navigation
- * services, opens the main menu, and releases audio resources on shutdown.
+ * JavaFX entry point. Owns shared audio, leaderboard, and navigation services;
+ * opens the menu and finalises gameplay and storage during orderly shutdown.
  */
 public class Main extends Application {
 
@@ -19,8 +21,7 @@ public class Main extends Application {
     private SoundService sounds;
 
     /** Creates the application instance; shared services are initialised by JavaFX startup. */
-    public Main() {
-    }
+    public Main() {}
 
     /**
      * Initialises application resources and shows the menu on the JavaFX application thread.
@@ -34,7 +35,8 @@ public class Main extends Application {
         Font.loadFont(getClass().getResourceAsStream("/com/comp2042/fonts/SFPixelateShaded-Bold.ttf"), 14);
 
         sounds = new JavaFxSoundService();
-        viewManager = new ViewManager(primaryStage, sounds);
+        LeaderboardService leaderboards = new LeaderboardService(new XmlLeaderboardRepository(XmlLeaderboardRepository.defaultPath()));
+        viewManager = new ViewManager(primaryStage, sounds, leaderboards);
         viewManager.initializeMainMenu();
     }
 
@@ -47,9 +49,10 @@ public class Main extends Application {
         launch(args);
     }
 
-    /** Closes shared audio resources if startup created the service. */
+    /** Finalises a started game before releasing audio. */
     @Override
     public void stop() {
+        if (viewManager != null) viewManager.close();
         if (sounds != null) sounds.close();
     }
 

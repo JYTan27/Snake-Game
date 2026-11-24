@@ -24,6 +24,11 @@
     -fx-border-image-source: url("../images/ui/btn_hover.png");
 }
 
+#backgroundPane .menuButton {
+    -fx-min-width: 220;
+    -fx-max-width: 220;
+}
+
 .menuButton:pressed {
     -fx-text-fill: #000000;
     -fx-border-image-source: url("../images/ui/btn_pressed.png");
@@ -130,6 +135,10 @@
     -fx-font-size: 28;
 }
 
+.helpPage .modeLabel {
+    -fx-font-size: 18;
+}
+
 .helpPage .helpSection {
     -fx-font-size: 18;
     -fx-text-fill: #20201c;
@@ -163,4 +172,28 @@
 .helpPage .helpScroll .scroll-bar:vertical .thumb {
     -fx-background-color: #b4b4a8;
     -fx-background-radius: 0;
+}
+
+.leaderboardSection {
+    -fx-border-color: transparent transparent #d6d6ce transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 0 0 16 0;
+}
+
+.helpPage .leaderboardCell,
+.helpPage .leaderboardColumn,
+.helpPage .leaderboardCaption {
+    -fx-font-size: 12;
+}
+
+.helpPage .leaderboardColumn {
+    -fx-font-weight: bold;
+}
+
+.helpPage .leaderboardEmpty {
+    -fx-text-fill: #66665e;
+}
+
+.helpPage .leaderboardWarning {
+    -fx-text-fill: #a32323;
 }

@@ -60,15 +60,18 @@
   * [Obstacle](src/main/java/com/comp2042/model/Obstacle.java): obstacle capacity; [BlocksPickup](src/main/java/com/comp2042/model/BlocksPickup.java): obstacle additions per collection.
   * [GameController](src/main/java/com/comp2042/controller/GameController.java): input-buffer capacity.
   * [SoundEffect](src/main/java/com/comp2042/service/audio/SoundEffect.java): default audio volume.
+  * [LeaderboardController](src/main/java/com/comp2042/controller/LeaderboardController.java): displayed ranking limit; all run history is retained for summaries.
   * [Game](src/main/java/com/comp2042/model/Game.java): board scaling; [MainMenuController](src/main/java/com/comp2042/controller/MainMenuController.java): initial board dimensions.
 * **MVC (Model-View-Controller) Architectural Refactoring:**
   * Clean separation of concerns into distinct packages:
     * `com.comp2042.model`: Pure gameplay rules, coordinates, state, and entities (`Game`, `GameMode`, `Snake`, `Obstacle`, `Pickup`, `DiamondPickup`, `PickupFactory`, `WeightedPickupSelector`, `PickupType`, `RingPickup`, `StarPickup`, `BlocksPickup`, `BoltPickup`, `GridPoint`).
     * `com.comp2042.view`: Display and scene orchestration (`GameView`, `ViewManager`).
-    * `com.comp2042.controller`: Input handling, keyboard controls, and animation loop (`GameController`, `MainMenuController`, `HowToPlayController`).
+    * `com.comp2042.model.stats`: Immutable run results, outcomes, summaries, and active-time tracking without JavaFX dependencies.
+    * `com.comp2042.service.leaderboard`: Ranking, summary calculation, and replaceable local persistence.
+    * `com.comp2042.controller`: Input handling, keyboard controls, animation loop, and reference screens (`GameController`, `MainMenuController`, `HowToPlayController`, `LeaderboardController`).
 * **Standard Maven Resource Packaging:**
   * Project resources, including the new help layout, are packaged in structured directories:
-    * `src/main/resources/com/comp2042/view/` (`MainMenu.fxml`, `HowToPlay.fxml`, `styling.css`)
+    * `src/main/resources/com/comp2042/view/` (`MainMenu.fxml`, `HowToPlay.fxml`, `Leaderboards.fxml`, `styling.css`)
     * `src/main/resources/com/comp2042/images/` (`coins/`, `snake/`, `ui/`)
     * `src/main/resources/com/comp2042/audio/` (pickup, button, death, and win MP3s; unused experimental variants retained)
     * `src/main/resources/com/comp2042/fonts/` (`SFPixelate.ttf`, `SFPixelateShaded-Bold.ttf`, `kenvector_future.ttf`)
@@ -111,8 +114,12 @@
   * **Responsive FIFO Input Buffer:** Bounded input queue (`Deque<KeyCode>`) in `GameController` that buffers rapid sequential keystrokes up to its configured capacity. Buffered turns (e.g. `UP` then `RIGHT`) are applied on successive logic ticks, synchronizing corner elbow sprite (`snaketurnleft.png`) placement with movement.
   * **Game Mode Selection:** Choose Classic, Obstacles, Hyperspeed, Power-ups, or Wraparound before starting. New sessions default to Classic. The choice is remembered during the current session, including after visiting How to Play or returning from a game.
   * **How to Play Screen:** Explains game-mode rules and keyboard controls in a vertically scrollable area, with the heading and Back button always visible. Scroll using the mouse wheel, scrollbar, or keyboard; use Back or Esc to return to the menu.
+  * **Local Leaderboards:** Open Leaderboards from the menu and choose a mode using the fixed Game Mode dropdown beneath the heading. Only the selected mode's ranked runs and summary are displayed; its results can scroll while the heading, selector, and Back button remain visible. The screen initially uses the main menu's selected mode. Browsing other leaderboards leaves the menu selection unchanged; switching modes resets scrolling to the top. Rankings sort by score descending; equal scores retain recording order. Each row shows score, outcome, active time, snake length including the head, and local date. Summaries use all recorded history, including runs beyond the displayed ranking limit.
+  * **Shared Mode Selector:** Main-menu and leaderboard dropdowns share `GameModeSelector` configuration for mode names, selection audio, and fullscreen popup scaling. Available modes follow `GameMode.values()`. Initial selection is silent; changing modes plays the button effect. Leaderboard browsing is local to the current screen and is not stored as an additional preference.
+  * **Run Recording:** Wins, losses, and abandoned runs count toward rankings, run counts, average score, and total active time. Restarting, returning to the menu, or closing the application normally abandons a started run. Boards never started with movement input are ignored; pauses and initial waiting time are excluded. Terminal runs are recorded once, including after later reset, menu navigation, or shutdown. Fatal self-collision records the last settled snake length; a win includes the final pickup's points and growth.
+  * **Persistent Results:** The application loads local XML history once and keeps queries in memory. Recording a new run saves the full history using a temporary file and atomic replacement where supported. Windows storage is `%LOCALAPPDATA%/AdvancedSnake/leaderboard.xml`, with `${user.home}/.advanced-snake/leaderboard.xml` as a fallback. Missing history starts empty. Corrupt or unsupported history is preserved and disables writes for that session. Save failures retain results in memory and retry when the next new run is recorded. Leaderboards displays storage warnings when opened.
   * **Menu Design:** The title and controls are centred, with consistent button states and clear mode-selection highlights. Exit closes the application.
-  * **Menu Fullscreen:** F toggles fullscreen on menu, help, and gameplay screens. Menu elements and dropdown options scale proportionally, and fullscreen is preserved between screens. Esc handles in-app navigation without JavaFX's default fullscreen exit message.
+  * **Menu Fullscreen:** F toggles fullscreen on menu, help, leaderboard, and gameplay screens. Menu elements and dropdown options scale proportionally, and fullscreen is preserved between screens. Esc handles in-app navigation without JavaFX's default fullscreen exit message.
   * **Game Modes:** A standalone `GameMode` enum defines names, help descriptions, base speeds, border rules, and immutable pickup weights. Select one mode at a time:
 
     | Mode | Borders | Pickups |
@@ -157,6 +164,14 @@
 
 ---
 
+### Automated Validation
+
+Run `./mvnw compile` (Windows: `.\mvnw.cmd compile`) to check the build. To check leaderboard persistence, finish a run, then relaunch the application and open Leaderboards for the same mode.
+
+The earlier redundancy cleanup was verified with temporary smoke checks covering gameplay configuration, pickup effects, wrapping, buffered movement, and reset; those earlier checks were not retained as permanent tests.
+
+---
+
 ## 4. Implemented but Not Working Properly
 
 *(None currently recorded. All 49 entries in `BUGS_AND_IMPROVEMENTS.md` are marked as fixed.)*
@@ -171,13 +186,8 @@
 
 ## 6. Features Not Implemented
 
-* **Persistent High Score Table:**
-  * *Reason:* Local disk/file‑based leaderboard was not present in the original codebase; left out to prioritize core architectural refactoring and stability.
 * **Settings & Volume Control Slider:**
   * *Reason:* Focused on core gameplay mechanics and architectural decoupling before adding secondary audio settings.
-* **Automated Unit Testing Suite:**
-  * *Reason:* With pure POJO models (`GridPoint`, `Snake`, `Obstacle`, `Game`) now decoupled from UI nodes and legacy AWT, headless JUnit tests can be readily added in a future milestone.
-  * *Validation completed:* The redundancy cleanup was verified with `mvnw.cmd compile` and 72 temporary programmatic smoke checks covering mode weights, obstacle-cap fallback, temporary effects, wrapping after collection, WASD movement, buffered turns, reverse-direction rejection, and Tab reset. The temporary harness was removed; no permanent automated test suite was added.
 
 ---
 
@@ -185,6 +195,10 @@
 
 | Class | Package | Purpose & Description |
 | :--- | :--- | :--- |
+| **`RunResult.java`**, **`RunOutcome.java`**, **`ModeStatistics.java`**, **`RunSession.java`** | `com.comp2042.model.stats` | Pure Java result and summary types, plus idempotent run finalisation and monotonic active-time tracking with injectable clocks. |
+| **`LeaderboardRepository.java`**, **`XmlLeaderboardRepository.java`**, **`LeaderboardService.java`** | `com.comp2042.service.leaderboard` | Replaceable persistence, versioned XML, per-mode queries, stable rankings, and storage warnings. |
+| **`LeaderboardController.java`** | `com.comp2042.controller` | Renders the selected mode's summary and rankings from shared service data. Receives its initial mode from `ViewManager`; dropdown changes refresh results and storage warnings and reset scrolling. Handles Back navigation without changing the menu mode. |
+| **`GameModeSelector.java`** | `com.comp2042.view` | Shared dropdown configuration for mode display names, silent initial selection, later selection audio, and fullscreen popup scaling. |
 | **`HowToPlayController.java`** | `com.comp2042.controller` | Handles the help screen Back button, returning to the main menu through `ViewManager`. |
 | **`BoardRenderer.java`**, **`CheckerboardBoardRenderer.java`**, **`BoardTheme.java`** | `com.comp2042.view.board` | Separate board patterns from colour themes; provide the default Soft Cream checkerboard. |
 | **`SoundEffect.java`**, **`SoundService.java`**, **`JavaFxSoundService.java`** | `com.comp2042.service.audio` | Shared cached audio, central resource mapping and volume, replaceable playback for testing. |
@@ -201,9 +215,9 @@
 
 | Class | Original Package | New Package | Changes Made & Rationale |
 | :--- | :--- | :--- | :--- |
-| **`Main.java`** | `com.comp2042` | `com.comp2042` | Added explicit `ViewManager` import and programmatic font loading. Creates the shared sound service, passes it with the stage to `new ViewManager(primaryStage, sounds)`, calls `viewManager.initializeMainMenu()`, and closes the sound service on shutdown. |
-| **`ViewManager.java`** | `com.comp2042` | `com.comp2042.view` | Moved to `view` package. Implemented single-stage scene swapping (`showGameScene`, `showMainMenu`), eliminated multiple `Stage` anti-pattern, added safe `IOException` error dialog, corrected method typo `initializeMainMenu()`, loads the How to Play scene through `showHowToPlay()` with Esc navigation and error handling, and stores the session mode through `getSelectedMode()` / `setSelectedMode(...)` (default Classic). |
-| **`MainMenuController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Populates a typed game-mode dropdown from `GameMode.values()`, uses mode-owned display names, restores the session selection, and saves it before opening How to Play. Creates `Game(width, height, mode)` without the former always-true `POWER_UP` constant; refactored `launchSnake` into `buildGameScene` with proper static `StackPane` alignment, and wired escape key to clean return-to-menu callback. |
+| **`Main.java`** | `com.comp2042` | `com.comp2042` | Added explicit `ViewManager` import and programmatic font loading. Creates shared audio and leaderboard services and passes them to `ViewManager`. Normal shutdown finalizes active gameplay and then closes audio. |
+| **`ViewManager.java`** | `com.comp2042` | `com.comp2042.view` | Moved to `view` package. Reuses one stage for gameplay, menu, help, and leaderboards, with fullscreen-aware scaling and safe FXML error handling. Retains the selected mode, supplies application-owned services, and detaches/invokes game cleanup on navigation and shutdown. |
+| **`MainMenuController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Populates the typed mode selector from `GameMode.values()`, restores its session selection, and remembers it before opening reference screens or gameplay. Builds a mode-configured game scene, injects shared audio and leaderboard services, and registers cleanup with `ViewManager`. Opens Leaderboards with button audio. |
 | **`GameController.java`** | `com.comp2042` | `com.comp2042.controller` | Moved to `controller` package. Implemented a bounded FIFO input queue (`inputQueue`) for rapid sequential turns; synchronized `turnDir` calls with logic ticks; replaced plus/minus size shortcuts with an F fullscreen toggle (Bug #46); encapsulated static `key`/`lastKey` as private fields with getters; corrected `valKey` DOWN anti-reverse logic (Bug #40); removed dead code (`calculateBonusScore`, `legacyScoreMultiplier`, `unusedObstacleCount`); delegated replacement pickup creation to `PickupFactory`, which uses `WeightedPickupSelector` for random type selection; delegated pickup effects and display-point updates to `Game.collectPickup(...)`, applying its returned animation speed; removed the numeric win check before spawning and retained `finishGame()` for exhausted pickup placement; reset turn array on restart; and hooked return-to-menu callback to stop animation and swap scenes. Removed the repeated score-label update after `reset()` and the arrow-key check already guaranteed by the WASD mapping, preserving duplicate-direction and reverse-direction rejection. |
 | **`GameView.java`** | `com.comp2042` | `com.comp2042.view` | Moved to `view` package. delegated background rendering to configurable `BoardRenderer` / `BoardTheme`; removed unused `a`/`b` parameters from `drawGrid`, leaving only pickup, snake, obstacle, and graphics context; eliminated snapshots in favor of `GraphicsContext` rotation; fixed double-scaling bug; eliminated per-frame `SnapshotParameters`; added `resetTurnArray()`; migrated from `Point` to `GridPoint`; decoupled `turnDir` from controller static state; unified tail rendering in `drawBody` under `index == 0`; reused one body-list copy throughout each redraw; cleared the tail's turn-history entry once; and called `Snake.getTailDir()` directly after removing the redundant `tailRotation()` wrapper. |
 | **`Game.java`** | `com.comp2042` | `com.comp2042.model` | Moved to `model` package. Removed UI `Color` coupling; accepts `Game(width, height, mode)` and delegates `getSpeed()` / `isNoBorder()` to `GameMode`, removing copied rule fields, the unused `powerUp` flag/getter, and the unused `allowsPickup()` wrapper. Added `collectPickup(Pickup, Snake, Obstacle)` to restore default border behaviour, apply pickup effects, award display points, and return movement speed; replaced magic scaling numbers with named constants; made `gameWon()` report recorded completion; and removed numeric win targets, the collection counter, and target-adjustment methods. `resetScore()` clears display points and completion. |

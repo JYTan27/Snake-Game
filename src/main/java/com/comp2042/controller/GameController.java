@@ -12,6 +12,9 @@ import com.comp2042.model.Snake;
 import com.comp2042.view.GameView;
 import com.comp2042.service.audio.SoundEffect;
 import com.comp2042.service.audio.SoundService;
+import com.comp2042.model.stats.RunOutcome;
+import com.comp2042.model.stats.RunSession;
+import com.comp2042.service.leaderboard.LeaderboardService;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -27,7 +30,7 @@ import javafx.util.Duration;
  * Starts or resumes on movement input and stops on pause, reset, death, victory,
  * or menu return. Event handling and animation callbacks run on the JavaFX application thread.
  */
-public class GameController {
+public class GameController implements AutoCloseable {
     /** Maximum number of pending turns accepted between movement ticks. */
     private static final int MAX_BUFFERED_INPUTS = 2;
 
@@ -43,6 +46,10 @@ public class GameController {
     private Stage stage;
     /** Application-owned audio service; this controller stops but does not close it. */
     private final SoundService sounds;
+    private final LeaderboardService leaderboards;
+    private RunSession runSession;
+    /** Length at the last settled board state, excluding a fatal move's temporary segment. */
+    private int settledSnakeLength;
     /** Board obstacles cleared on reset. */
     private Obstacle obstacle;
     /** Navigation callback invoked after stopping gameplay and sound. */
@@ -85,10 +92,11 @@ public class GameController {
      * @param obstacle the board's obstacle collection
      * @param stage the application stage
      * @param sounds the application-owned sound service
+     * @param leaderboards application-owned result recording service
      * @param onReturnToMenu the callback used to navigate back to the menu
-     * @throws NullPointerException if {@code sounds} is null
+     * @throws NullPointerException if either shared service is null
      */
-    public GameController(Snake snake, Pickup pickup, Game game, GameView gameView, Obstacle obstacle, Stage stage, SoundService sounds, Runnable onReturnToMenu) {
+    public GameController(Snake snake, Pickup pickup, Game game, GameView gameView, Obstacle obstacle, Stage stage, SoundService sounds, LeaderboardService leaderboards, Runnable onReturnToMenu) {
         this.snake = snake;
         this.pickup = pickup;
         this.gameView = gameView;
@@ -97,6 +105,9 @@ public class GameController {
         this.onReturnToMenu = onReturnToMenu;
         this.obstacle = obstacle;
         this.sounds = java.util.Objects.requireNonNull(sounds);
+        this.leaderboards = java.util.Objects.requireNonNull(leaderboards);
+        this.runSession = new RunSession(game.getMode());
+        this.settledSnakeLength = snake.getBody().size() + 1;
 
         animation.setCycleCount(Animation.INDEFINITE);
         animation.setRate(game.getSpeed());
@@ -120,6 +131,7 @@ public class GameController {
             gameView.turnDir(snake, lastKey, key);
         }
 
+        settledSnakeLength = snake.getBody().size() + 1;
         if (key.equals(KeyCode.LEFT)) {
             snake.move('L');
         } else if (key.equals(KeyCode.RIGHT)) {
@@ -137,6 +149,7 @@ public class GameController {
         }
 
         if (snake.atePickup(pickup)) {
+            settledSnakeLength = snake.getBody().size() + 1;
             collectPickup();
             spawnPickup();
             if (pickup == null) {
@@ -145,6 +158,7 @@ public class GameController {
             }
         }
 
+        settledSnakeLength = snake.getBody().size() + 1;
         gameView.drawGrid(pickup, snake, obstacle, gameView.gc);
 
         gameView.gameWon();
@@ -171,6 +185,7 @@ public class GameController {
         };
 
         if (direction != null && !game.gameWon() && !snake.getDead()) {
+            runSession.startOrResume();
             if (pausedByPlayer) {
                 pausedByPlayer = false;
                 sounds.play(SoundEffect.UNPAUSE);
@@ -188,6 +203,7 @@ public class GameController {
         }
 
         if (code.equals(KeyCode.P) && animation.getStatus() == Animation.Status.RUNNING) {
+            runSession.pause();
             animation.stop();
             pausedByPlayer = true;
             sounds.play(SoundEffect.PAUSE);
@@ -202,9 +218,7 @@ public class GameController {
         }
 
         if (code.equals(KeyCode.ESCAPE)) {
-            pausedByPlayer = false;
-            animation.stop();
-            sounds.stopAll();
+            close();
             onReturnToMenu.run();
         }
     }
@@ -249,6 +263,7 @@ public class GameController {
      * beginning movement afterward is not treated as resuming a player pause.
      */
     private void reset() {
+        recordRun(RunOutcome.ABANDONED);
         pausedByPlayer = false;
         sounds.stopAll();
         animation.jumpTo(Duration.ZERO);
@@ -260,6 +275,8 @@ public class GameController {
         game.resetScore();
         snake = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
         pickup  = new DiamondPickup(game.getWidth(), game.getHeight(), snake, obstacle);
+        runSession = new RunSession(game.getMode());
+        settledSnakeLength = snake.getBody().size() + 1;
 
         animation.setRate(game.getSpeed());
         key = KeyCode.LEFT;
@@ -292,6 +309,7 @@ public class GameController {
      */
     private void finishGame() {
         if (game.gameWon()) return;
+        recordRun(RunOutcome.WIN);
         pausedByPlayer = false;
         game.markWon();
         animation.stop();
@@ -309,6 +327,7 @@ public class GameController {
      * final pose and score, and replaces other audio with the death sound.
      */
     private void finishDeath() {
+        recordRun(RunOutcome.LOSS);
         pausedByPlayer = false;
         animation.stop();
         inputQueue.clear();
@@ -317,5 +336,20 @@ public class GameController {
         gameView.updateScoreLabel();
         sounds.stopAll();
         sounds.play(SoundEffect.DEATH);
+    }
+
+    /** Finalises only started, unfinished runs; repeat lifecycle callbacks are safe. */
+    private void recordRun(RunOutcome outcome) {
+        runSession.finish(outcome, game.getDisplayScore(), settledSnakeLength).ifPresent(leaderboards::recordResult);
+    }
+
+    /** Records an abandoned run and stops gameplay during navigation or shutdown. */
+    @Override
+    public void close() {
+        recordRun(RunOutcome.ABANDONED);
+        pausedByPlayer = false;
+        animation.stop();
+        inputQueue.clear();
+        sounds.stopAll();
     }
 }

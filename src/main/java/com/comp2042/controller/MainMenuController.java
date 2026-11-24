@@ -8,23 +8,17 @@ import com.comp2042.model.GameMode;
 import com.comp2042.model.Obstacle;
 import com.comp2042.model.Snake;
 import com.comp2042.view.GameView;
+import com.comp2042.view.GameModeSelector;
 import com.comp2042.view.ViewManager;
 import com.comp2042.service.audio.SoundEffect;
 import javafx.fxml.FXML;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListView;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.skin.ComboBoxListViewSkin;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-import javafx.util.StringConverter;
 
 /**
  * Handles the FXML main menu, session mode selection, and game-scene construction.
@@ -40,8 +34,6 @@ public class MainMenuController {
     /** Mode selector injected from the main-menu FXML. */
     @FXML
     private ComboBox<GameMode> modeSelector;
-    /** Scale applied to popup cells, which do not inherit the menu's transform. */
-    private final DoubleProperty optionScale = new SimpleDoubleProperty(1);
 
     /** Most recently constructed game scene, ready to be shown by the view manager. */
     private Scene gameScene;
@@ -60,70 +52,7 @@ public class MainMenuController {
      */
     @FXML
     private void initialize() {
-        modeSelector.getItems().setAll(GameMode.values());
-        modeSelector.setConverter(new StringConverter<>() {
-            /**
-             * Converts a mode to its menu label.
-             *
-             * @param mode the mode, or {@code null} for an empty label
-             * @return the display name or an empty string
-             */
-            @Override
-            public String toString(GameMode mode) {
-                if (mode == null) return "";
-                return mode.getDisplayName();
-            }
-
-            /**
-             * Resolves a display name without case sensitivity.
-             *
-             * @param text the mode's display name
-             * @return the matching mode
-             * @throws IllegalArgumentException if the text matches no mode
-             */
-            @Override
-            public GameMode fromString(String text) {
-                return java.util.Arrays.stream(GameMode.values())
-                        .filter(mode -> mode.getDisplayName().equalsIgnoreCase(text))
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalArgumentException("Unknown game mode: " + text));
-            }
-        });
-        modeSelector.setValue(viewManager.getSelectedMode());
-        // Register after restoration so loading the menu does not play a sound.
-        modeSelector.valueProperty().addListener((observable, previousMode, selectedMode) -> {
-            if (selectedMode != null) {
-                viewManager.getSoundService().play(SoundEffect.BUTTON);
-            }
-        });
-        modeSelector.setCellFactory(list -> {
-            ListCell<GameMode> cell = new ListCell<>() {
-                /**
-                 * Refreshes the popup cell, clearing text for empty entries.
-                 *
-                 * @param mode the mode assigned to this cell, possibly {@code null}
-                 * @param empty whether the cell has no item to display
-                 */
-                @Override
-                protected void updateItem(GameMode mode, boolean empty) {
-                    super.updateItem(mode, empty);
-                    setText(empty || mode == null ? null : modeSelector.getConverter().toString(mode));
-                }
-            };
-            cell.styleProperty().bind(Bindings.concat("-fx-font-size: ", optionScale.multiply(18),
-                    "px; -fx-padding: ", optionScale.multiply(5), " ", optionScale.multiply(10), ";"));
-            return cell;
-        });
-        // The dropdown popup is a separate window and does not inherit the menu transform.
-        modeSelector.setOnShowing(event -> {
-            modeSelector.applyCss();
-            double scale = modeSelector.localToScreen(modeSelector.getBoundsInLocal()).getWidth()
-                    / modeSelector.getWidth();
-            ListView<?> options = (ListView<?>) ((ComboBoxListViewSkin<?>) modeSelector.getSkin()).getPopupContent();
-            optionScale.set(scale);
-            options.setFixedCellSize(32 * scale);
-            options.setPrefWidth(modeSelector.getWidth() * scale);
-        });
+        GameModeSelector.configure(modeSelector, viewManager.getSelectedMode(), viewManager.getSoundService());
     }
 
     /**
@@ -136,7 +65,7 @@ public class MainMenuController {
         GameMode mode = modeSelector.getValue();
         viewManager.setSelectedMode(mode);
         GameController controller = buildGameScene(viewManager.getPrimaryStage(), mode);
-        viewManager.showGameScene(gameScene);
+        viewManager.showGameScene(gameScene, controller::close);
         if (fullScreen) {
             controller.setFullScreen(true);
         }
@@ -147,6 +76,13 @@ public class MainMenuController {
         viewManager.getSoundService().play(SoundEffect.BUTTON);
         viewManager.setSelectedMode(modeSelector.getValue());
         viewManager.showHowToPlay();
+    }
+
+    /** Opens the shared leaderboard screen while retaining the selected game mode. */
+    public void handleLeaderboards() {
+        viewManager.getSoundService().play(SoundEffect.BUTTON);
+        viewManager.setSelectedMode(modeSelector.getValue());
+        viewManager.showLeaderboards();
     }
 
     /** Requests button audio and exits immediately without waiting for playback to finish. */
@@ -171,7 +107,8 @@ public class MainMenuController {
         Pickup pickup = new DiamondPickup(game.getWidth(), game.getHeight(), snake, obstacle);
 
         GameView gameView = new GameView(game);
-        GameController controller = new GameController(snake, pickup, game, gameView, obstacle, stage, viewManager.getSoundService(), () -> viewManager.showMainMenu());
+        GameController controller = new GameController(snake, pickup, game, gameView, obstacle, stage,
+                viewManager.getSoundService(), viewManager.getLeaderboardService(), viewManager::showMainMenu);
 
         StackPane gamePane = new StackPane();
         gameScene = new Scene(gamePane, game.getWidth() * game.getMultiplier(), game.getHeight() * game.getMultiplier());

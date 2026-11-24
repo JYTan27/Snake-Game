@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane prefWidth="550.0" prefHeight="400.0" styleClass="helpPage"
+            xmlns="http://javafx.com/javafx/25.0.1" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.comp2042.controller.LeaderboardController">
+    <stylesheets><URL value="@styling.css" /></stylesheets>
+    <top>
+        <VBox alignment="CENTER" spacing="10.0">
+            <padding><Insets top="12.0" right="24.0" bottom="12.0" left="24.0" /></padding>
+            <children>
+                <Label styleClass="helpTitle" text="Leaderboards" />
+                <Label text="Highest scores first; ties keep recording order. Time excludes pauses. Started games left or restarted count as abandoned and stay in rankings and averages."
+                       wrapText="true" minWidth="0.0" maxWidth="Infinity" />
+                <HBox alignment="CENTER" spacing="12.0">
+                    <children>
+                        <Label text="Game Mode" styleClass="modeLabel" labelFor="${modeSelector}" />
+                        <ComboBox fx:id="modeSelector" prefWidth="220.0" prefHeight="36.0" styleClass="modeSelector" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </top>
+    <center>
+        <ScrollPane fx:id="leaderboardScroll" fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+                    pannable="true" focusTraversable="true" styleClass="helpScroll">
+            <content>
+                <VBox spacing="16.0" minHeight="-Infinity">
+                    <padding><Insets top="16.0" right="24.0" bottom="16.0" left="24.0" /></padding>
+                    <children>
+                        <Label fx:id="storageWarning" wrapText="true" minWidth="0.0" maxWidth="Infinity" styleClass="leaderboardWarning" />
+                        <VBox fx:id="modeContent" />
+                    </children>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+    <bottom>
+        <StackPane>
+            <padding><Insets top="12.0" right="24.0" bottom="12.0" left="24.0" /></padding>
+            <children><Button fx:id="btn_back" prefWidth="180.0" prefHeight="40.0" styleClass="menuButton"
+                              text="Back" onAction="#handleBack" mnemonicParsing="false" /></children>
+        </StackPane>
+    </bottom>
+</BorderPane>

@@ -15,19 +15,20 @@
     <children>
         <StackPane AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
             <children>
-                <VBox fx:id="menuContent" alignment="CENTER" fillWidth="false" spacing="24.0" maxHeight="-Infinity">
+                <VBox fx:id="menuContent" alignment="CENTER" fillWidth="false" spacing="16.0" maxHeight="-Infinity">
                     <children>
                         <Label id="title" alignment="CENTER" contentDisplay="CENTER" text="Snake Game" textAlignment="CENTER" />
                         <VBox alignment="CENTER" fillWidth="false" spacing="8.0">
                             <children>
                                 <Label alignment="CENTER" styleClass="modeLabel" text="Game Mode" labelFor="${modeSelector}" />
-                                <ComboBox fx:id="modeSelector" prefHeight="36.0" prefWidth="180.0" styleClass="modeSelector" />
+                                <ComboBox fx:id="modeSelector" prefHeight="36.0" prefWidth="220.0" styleClass="modeSelector" />
                             </children>
                         </VBox>
                         <VBox alignment="CENTER" fillWidth="false" spacing="12.0">
                             <children>
                                 <Button fx:id="btn_start" prefHeight="40.0" prefWidth="180.0" mnemonicParsing="false" onAction="#handleStart" styleClass="menuButton" text="Start" />
                                 <Button fx:id="btn_help" prefHeight="40.0" prefWidth="180.0" mnemonicParsing="false" onAction="#handleHowToPlay" styleClass="menuButton" text="How to Play" />
+                                <Button fx:id="btn_leaderboards" prefHeight="40.0" prefWidth="180.0" mnemonicParsing="false" onAction="#handleLeaderboards" styleClass="menuButton" text="Leaderboards" />
                                 <Button fx:id="btn_exit" prefHeight="40.0" prefWidth="180.0" mnemonicParsing="false" onAction="#handleExit" styleClass="menuButton" text="Exit" />
                             </children>
                         </VBox>
