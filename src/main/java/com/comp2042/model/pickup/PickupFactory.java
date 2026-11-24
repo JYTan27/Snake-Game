@@ -1,4 +1,8 @@
-package com.comp2042.model;
+package com.comp2042.model.pickup;
+
+import com.comp2042.model.Game;
+import com.comp2042.model.Obstacle;
+import com.comp2042.model.Snake;
 
 import java.util.Optional;
 import java.util.Random;

@@ -1,5 +1,7 @@
-package com.comp2042.model;
+package com.comp2042.model.pickup;
 
+import com.comp2042.model.Obstacle;
+import com.comp2042.model.Snake;
 import javafx.scene.image.Image;
 
 /** Pickup worth fifteen display points, with no speed bonus or special effect. */

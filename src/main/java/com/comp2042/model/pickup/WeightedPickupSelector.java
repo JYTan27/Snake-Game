@@ -1,4 +1,4 @@
-package com.comp2042.model;
+package com.comp2042.model.pickup;
 
 import java.util.Map;
 import java.util.Objects;

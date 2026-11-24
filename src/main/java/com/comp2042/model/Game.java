@@ -1,5 +1,7 @@
 package com.comp2042.model;
 
+import com.comp2042.model.pickup.Pickup;
+
 import java.util.Objects;
 
 /**

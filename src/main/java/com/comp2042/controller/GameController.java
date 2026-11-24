@@ -3,9 +3,9 @@ package com.comp2042.controller;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-import com.comp2042.model.Pickup;
-import com.comp2042.model.DiamondPickup;
-import com.comp2042.model.PickupFactory;
+import com.comp2042.model.pickup.Pickup;
+import com.comp2042.model.pickup.DiamondPickup;
+import com.comp2042.model.pickup.PickupFactory;
 import com.comp2042.model.Game;
 import com.comp2042.model.Obstacle;
 import com.comp2042.model.Snake;
@@ -21,12 +21,11 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 
 /**
  * Coordinates keyboard input, timed movement, model updates, rendering, and audio
- * for one game scene. Uses internal arrow-key directions translated from WASD.
+ * for one game screen. Uses internal arrow-key directions translated from WASD.
  * Starts or resumes on movement input and stops on pause, reset, death, victory,
  * or menu return. Event handling and animation callbacks run on the JavaFX application thread.
  */
@@ -42,8 +41,6 @@ public class GameController implements AutoCloseable {
     private GameView gameView;
     /** Shared game state, points, and mode configuration. */
     private Game game;
-    /** Application stage used for fullscreen changes. */
-    private Stage stage;
     /** Application-owned audio service; this controller stops but does not close it. */
     private final SoundService sounds;
     private final LeaderboardService leaderboards;
@@ -82,7 +79,7 @@ public class GameController implements AutoCloseable {
     public KeyCode getLastKey() { return lastKey; }
 
     /**
-     * Connects the game entities, view, stage, and shared sound service.
+     * Connects the game entities, view, and shared services.
      * Configures animation at the mode's base speed without starting playback.
      *
      * @param snake the initial snake
@@ -90,18 +87,17 @@ public class GameController implements AutoCloseable {
      * @param game the game state and mode settings
      * @param gameView the view whose canvas and labels are initialised before use
      * @param obstacle the board's obstacle collection
-     * @param stage the application stage
      * @param sounds the application-owned sound service
      * @param leaderboards application-owned result recording service
      * @param onReturnToMenu the callback used to navigate back to the menu
      * @throws NullPointerException if either shared service is null
      */
-    public GameController(Snake snake, Pickup pickup, Game game, GameView gameView, Obstacle obstacle, Stage stage, SoundService sounds, LeaderboardService leaderboards, Runnable onReturnToMenu) {
+    public GameController(Snake snake, Pickup pickup, Game game, GameView gameView, Obstacle obstacle,
+                          SoundService sounds, LeaderboardService leaderboards, Runnable onReturnToMenu) {
         this.snake = snake;
         this.pickup = pickup;
         this.gameView = gameView;
         this.game = game;
-        this.stage = stage;
         this.onReturnToMenu = onReturnToMenu;
         this.obstacle = obstacle;
         this.sounds = java.util.Objects.requireNonNull(sounds);
@@ -167,12 +163,12 @@ public class GameController implements AutoCloseable {
     }));
 
     /**
-     * Handles WASD movement/start/resume, P to pause, Tab to restart, F to toggle
-     * fullscreen, and Escape to return to the menu. Movement is disabled after
+     * Handles WASD movement/start/resume, P to pause, Tab to restart, and Escape
+     * to return to the menu. Movement is disabled after
      * death or victory; other shortcuts remain available. Pause/resume sounds
      * occur only when entering or leaving a player-requested pause.
      *
-     * @param event the key-pressed event from the game scene
+     * @param event the key-pressed event from the game screen
      */
     public void handle(KeyEvent event) {
         KeyCode code = event.getCode();
@@ -213,10 +209,6 @@ public class GameController implements AutoCloseable {
             reset();
         }
 
-        if (code.equals(KeyCode.F)) {
-            setFullScreen(!stage.isFullScreen());
-        }
-
         if (code.equals(KeyCode.ESCAPE)) {
             close();
             onReturnToMenu.run();
@@ -224,13 +216,13 @@ public class GameController implements AutoCloseable {
     }
 
     /**
-     * Applies fullscreen state, redraws the board, and adjusts status-label styles.
+     * Resizes the board and status labels for the stage's current fullscreen state.
      * Requires the view's canvas and labels to have been initialised.
      *
-     * @param fullScreen whether to enter fullscreen or restore windowed display
+     * @param fullScreen whether the stage is fullscreen
      */
-    public void setFullScreen(boolean fullScreen) {
-        gameView.scaleToFullscreen(fullScreen, stage, obstacle, snake, pickup);
+    public void updateFullscreenLayout(boolean fullScreen) {
+        gameView.scaleToFullscreen(fullScreen, obstacle, snake, pickup);
         String endLabelStyle = fullScreen ? "-fx-font-size: 50;" : "-fx-font-size: 15;";
         gameView.gameOverLabel.setStyle(endLabelStyle);
         gameView.gameWonLabel.setStyle(endLabelStyle);

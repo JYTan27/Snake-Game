@@ -4,6 +4,7 @@ import com.comp2042.model.GameMode;
 import com.comp2042.service.audio.SoundService;
 import com.comp2042.service.leaderboard.LeaderboardService;
 import com.comp2042.controller.LeaderboardController;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.Group;
@@ -18,34 +19,36 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
- * Navigates between menu, reference, and gameplay scenes on a single stage.
+ * Navigates between menu, reference, and gameplay screens in a shared scene.
  * Retains the selected mode, exposes application-owned services, and finalises
- * active gameplay when leaving its scene. Scene operations run on the JavaFX thread.
+ * active gameplay when leaving its screen. Scene operations run on the JavaFX thread.
  */
 public class ViewManager implements AutoCloseable {
 
     /** Single stage reused for every screen. */
-    private Stage primaryStage;
+    private final Stage primaryStage;
+    private Scene scene;
     /** Shared audio service owned and closed by the application. */
     private final SoundService soundService;
     private final LeaderboardService leaderboardService;
     private Runnable onLeaveGame;
-    /** Root loaded for the most recently created main-menu scene. */
-    private AnchorPane root;
+    private Consumer<Boolean> updateGameFullscreen;
     /** Session selection restored whenever the main menu is loaded. */
     private GameMode selectedMode = GameMode.CLASSIC;
 
     /** Application icon loaded from the packaged image resources. */
-    private Image snakeLogo = new Image(getClass().getResourceAsStream("/com/comp2042/images/ui/SnakeLogoWhite.png"));
+    private final Image snakeLogo = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/comp2042/images/ui/SnakeLogoWhite.png")));
 
     /**
      * Connects navigation to the application stage and shared audio service.
      * Disables JavaFX's default fullscreen hint and exit key so screens can
      * assign their own fullscreen and navigation shortcuts.
      *
-     * @param primaryStage the single stage used to display all scenes
+     * @param primaryStage the single stage used to display all screens
      * @param soundService the application-owned audio service
      * @param leaderboardService application-owned result history
      * @throws NullPointerException if a service argument is null
@@ -56,6 +59,19 @@ public class ViewManager implements AutoCloseable {
         this.leaderboardService = java.util.Objects.requireNonNull(leaderboardService);
         primaryStage.setFullScreenExitHint("");
         primaryStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
+        primaryStage.fullScreenProperty().addListener((property, wasFullscreen, fullscreen) -> {
+            if (updateGameFullscreen != null) {
+                updateGameFullscreen.accept(fullscreen);
+            }
+            if (!fullscreen) {
+                // Resize after JavaFX has told the native window to leave fullscreen.
+                Platform.runLater(() -> {
+                    if (primaryStage.isShowing() && !primaryStage.isFullScreen()) {
+                        primaryStage.sizeToScene();
+                    }
+                });
+            }
+        });
     }
 
     /**
@@ -64,6 +80,7 @@ public class ViewManager implements AutoCloseable {
      * alert, and returns without showing a new menu when loading fails.
      */
     public void initializeMainMenu() {
+        AnchorPane root;
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(getClass().getResource("/com/comp2042/view/MainMenu.fxml"));
@@ -79,13 +96,11 @@ public class ViewManager implements AutoCloseable {
             return;
         }
 
-        Scene mainScene = createMenuScene(root);
-
         if (primaryStage.getIcons().isEmpty()) {
             primaryStage.getIcons().add(snakeLogo);
         }
         primaryStage.setTitle("Snake Game");
-        showScene(mainScene);
+        showScreen(createMenuContent(root));
     }
 
     /**
@@ -127,31 +142,49 @@ public class ViewManager implements AutoCloseable {
     }
 
     /**
-     * Displays an already constructed game scene on the shared stage.
-     * Gameplay layout and fullscreen board scaling are configured by its callers.
+     * Displays a prepared game screen and focuses it for keyboard input.
      *
-     * @param gameScene the prepared gameplay scene
+     * @param gamePane the prepared gameplay layout
      * @param onLeave clean-up that finalises the active run when navigation or shutdown occurs
+     * @param updateFullscreen applies the stage's fullscreen state to the gameplay layout
      */
-    public void showGameScene(Scene gameScene, Runnable onLeave) {
-        showScene(gameScene);
-        onLeaveGame = java.util.Objects.requireNonNull(onLeave);
+    public void showGameScreen(Region gamePane, Runnable onLeave, Consumer<Boolean> updateFullscreen) {
+        java.util.Objects.requireNonNull(onLeave);
+        java.util.Objects.requireNonNull(updateFullscreen);
+        if (primaryStage.isFullScreen()) {
+            updateFullscreen.accept(true);
+        }
+        showScreen(gamePane);
+        onLeaveGame = onLeave;
+        updateGameFullscreen = updateFullscreen;
+        gamePane.requestFocus();
     }
 
     /**
-     * Replaces the stage's scene, disables manual window resizing, and shows it.
-     * Reapplies fullscreen if it was active before the scene switch.
+     * Mounts the screen in the shared scene so navigation preserves native fullscreen.
      *
-     * @param scene the scene to display
+     * @param content the root of the screen to display
      */
-    private void showScene(Scene scene) {
+    private void showScreen(Region content) {
         close();
-        boolean fullScreen = primaryStage.isFullScreen();
-        primaryStage.setScene(scene);
-        primaryStage.setResizable(false);
-        primaryStage.show();
-        if (fullScreen) {
-            primaryStage.setFullScreen(true);
+        if (scene == null) {
+            scene = new Scene(content);
+            scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+                if (event.getCode() == KeyCode.F) {
+                    primaryStage.setFullScreen(!primaryStage.isFullScreen());
+                    event.consume();
+                }
+            });
+            primaryStage.setScene(scene);
+            primaryStage.setResizable(false);
+        } else {
+            scene.setRoot(content);
+        }
+        if (!primaryStage.isFullScreen()) {
+            primaryStage.sizeToScene();
+        }
+        if (!primaryStage.isShowing()) {
+            primaryStage.show();
         }
     }
 
@@ -161,30 +194,35 @@ public class ViewManager implements AutoCloseable {
     }
 
     /**
-     * Wraps menu or reference content in a centred, uniformly scaled 550-by-400 scene.
-     * Applies shared styling and installs F as the fullscreen toggle.
+     * Wraps menu or reference content in a centred, uniformly scaled layout.
      *
      * @param content the FXML root whose preferred size defines its layout
-     * @return a scene with proportional content scaling and fullscreen handling
+     * @return a styled layout with a preferred windowed size of 550 by 400 pixels
      */
-    private Scene createMenuScene(Region content) {
+    private StackPane createMenuContent(Region content) {
         content.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         content.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         Group scaledContent = new Group(content);
         StackPane container = new StackPane(scaledContent);
-        // Fit both scenes dimensions using one scale to preserve the content's proportions.
+        container.setPrefSize(550, 400);
+        // Fit both dimensions with one scale to preserve the content's proportions.
         var scale = Bindings.min(container.widthProperty().divide(550), container.heightProperty().divide(400));
         content.scaleXProperty().bind(scale);
         content.scaleYProperty().bind(scale);
         container.getStylesheets().add(getClass().getResource("/com/comp2042/view/styling.css").toExternalForm());
-        Scene scene = new Scene(container, 550, 400);
-        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            if (event.getCode() == KeyCode.F) {
-                primaryStage.setFullScreen(!primaryStage.isFullScreen());
+        return container;
+    }
+
+    private void showReferenceScreen(Region content, String scrollSelector) {
+        StackPane screen = createMenuContent(content);
+        screen.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ESCAPE) {
+                showMainMenu();
                 event.consume();
             }
         });
-        return scene;
+        showScreen(screen);
+        screen.lookup(scrollSelector).requestFocus();
     }
 
     /**
@@ -195,15 +233,7 @@ public class ViewManager implements AutoCloseable {
     public void showHowToPlay() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/comp2042/view/HowToPlay.fxml"));
-            Scene helpScene = createMenuScene(loader.load());
-            helpScene.setOnKeyPressed(event -> {
-                if (event.getCode() == KeyCode.ESCAPE) {
-                    showMainMenu();
-                    event.consume();
-                }
-            });
-            showScene(helpScene);
-            helpScene.lookup("#helpScroll").requestFocus();
+            showReferenceScreen(loader.load(), "#helpScroll");
         } catch (IOException exception) {
             exception.printStackTrace();
             javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
@@ -219,15 +249,7 @@ public class ViewManager implements AutoCloseable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/comp2042/view/Leaderboards.fxml"));
             loader.setControllerFactory(type -> new LeaderboardController(leaderboardService, soundService, selectedMode, this::showMainMenu));
-            Scene scene = createMenuScene(loader.load());
-            scene.setOnKeyPressed(event -> {
-                if (event.getCode() == KeyCode.ESCAPE) {
-                    showMainMenu();
-                    event.consume();
-                }
-            });
-            showScene(scene);
-            scene.lookup("#leaderboardScroll").requestFocus();
+            showReferenceScreen(loader.load(), "#leaderboardScroll");
         } catch (IOException exception) {
             new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR,
                     "Failed to load leaderboards: " + exception.getMessage()).showAndWait();
@@ -239,6 +261,7 @@ public class ViewManager implements AutoCloseable {
     public void close() {
         Runnable cleanup = onLeaveGame;
         onLeaveGame = null;
+        updateGameFullscreen = null;
         if (cleanup != null) cleanup.run();
     }
 }

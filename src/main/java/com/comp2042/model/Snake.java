@@ -6,6 +6,7 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 
+import com.comp2042.model.pickup.Pickup;
 import javafx.scene.image.Image;
 
 /**

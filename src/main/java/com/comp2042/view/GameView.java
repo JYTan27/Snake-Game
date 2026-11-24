@@ -1,7 +1,7 @@
 package com.comp2042.view;
 
 import com.comp2042.controller.MainMenuController;
-import com.comp2042.model.Pickup;
+import com.comp2042.model.pickup.Pickup;
 import com.comp2042.model.Game;
 import com.comp2042.model.GridPoint;
 import com.comp2042.model.Obstacle;
@@ -13,7 +13,7 @@ import com.comp2042.view.board.CheckerboardBoardRenderer;
 import java.util.List;
 import java.util.Objects;
 
-import javafx.scene.Scene;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
@@ -21,19 +21,18 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.text.Font;
 import javafx.stage.Screen;
-import javafx.stage.Stage;
 
 /**
  * Renders the board, snake, pickups, obstacles, score, and end-game messages.
  * Maintains sprite turn history and scales the canvas for fullscreen display.
- * Call {@link #makeScene(Scene, Snake, Pickup)} before using methods that draw
+ * Call {@link #initialize(Snake, Pickup)} before using methods that draw
  * on the canvas or update labels. UI updates must run on the JavaFX application thread.
  */
 public class GameView {
 
-    /** Canvas containing the board and gameplay sprites, created by {@code makeScene}. */
+    /** Canvas containing the board and gameplay sprites, created by {@code initialize}. */
     public Canvas gridCanvas;
-    /** Drawing context for {@link #gridCanvas}, initialised by {@code makeScene}. */
+    /** Drawing context for {@link #gridCanvas}, initialised by {@code initialize}. */
     public GraphicsContext gc;
 
     /** Message whose visibility reflects the snake's death state. */
@@ -50,13 +49,11 @@ public class GameView {
     /** Colour palette supplied to the board renderer. */
     private final BoardTheme boardTheme;
     /** Original canvas width in pixels, used when restoring windowed display. */
-    private double initX;
+    private final double baseWidth;
     /** Original canvas height in pixels, used when restoring windowed display. */
-    private double initY;
+    private final double baseHeight;
     /** Scale applied to the base cell size; {@code 1} represents windowed display. */
     private double fullScale = 1;
-    /** Whether the canvas dimensions have been scaled for fullscreen display. */
-    private boolean fullsize = false;
     /**
      * Corner sprite rotations indexed by grid column and row. Zero means no
      * recorded corner; values one through four represent multiples of 90 degrees.
@@ -75,7 +72,7 @@ public class GameView {
 
     /**
      * Creates a view with the supplied board appearance. Canvas and label
-     * creation is deferred until {@code makeScene} is called.
+     * creation is deferred until {@code initialize} is called.
      *
      * @param game the game whose state and dimensions will be displayed
      * @param boardRenderer the board background renderer
@@ -86,25 +83,24 @@ public class GameView {
         this.game = game;
         this.boardRenderer = Objects.requireNonNull(boardRenderer);
         this.boardTheme = Objects.requireNonNull(boardTheme);
+        baseWidth = game.getWidth() * game.getMultiplier();
+        baseHeight = game.getHeight() * game.getMultiplier();
     }
 
     /**
      * Creates the canvas and labels and draws the initial board without obstacles.
-     * Records the scene dimensions for later restoration from fullscreen.
-     * The caller adds the created canvas and labels to the scene's layout.
+     * Uses the game's board dimensions for the initial canvas size.
+     * The caller adds the created canvas and labels to the gameplay layout.
      *
-     * @param scene the scene providing the initial canvas dimensions in pixels
      * @param snake the snake to draw in its initial pose
      * @param pickup the initial pickup, or {@code null} to omit it
      */
-    public void makeScene(Scene scene, Snake snake, Pickup pickup) {
-        gridCanvas = new Canvas(scene.getWidth(), scene.getHeight());
-        initX = scene.getWidth();
-        initY = scene.getHeight();
+    public void initialize(Snake snake, Pickup pickup) {
+        gridCanvas = new Canvas(baseWidth, baseHeight);
         gc = gridCanvas.getGraphicsContext2D();
         drawGrid(pickup, snake, null, gc);
 
-        String css = getClass().getResource("/com/comp2042/view/styling.css").toExternalForm();
+        String css = Objects.requireNonNull(getClass().getResource("/com/comp2042/view/styling.css")).toExternalForm();
 
         gameOverLabel = new Label("GAME OVER");
         gameOverLabel.setId("gameOverLabel");
@@ -124,33 +120,23 @@ public class GameView {
     }
 
     /**
-     * Changes the stage's fullscreen state, adjusts canvas and end-message sizes,
-     * and redraws the board. Requires an initialised canvas and labels.
+     * Adjusts the canvas and end-message sizes and redraws the board.
+     * Requires an initialised canvas and labels.
      *
      * @param fullScreen whether to enter fullscreen or restore windowed display
-     * @param primaryStage the stage displaying the game
      * @param obstacle the obstacles to draw, or {@code null} to omit them
      * @param snake the snake in its current pose
      * @param pickup the current pickup, or {@code null} after completion
      */
-    public void scaleToFullscreen(boolean fullScreen, Stage primaryStage, Obstacle obstacle, Snake snake, Pickup pickup) {
-        primaryStage.setFullScreen(fullScreen);
-
-        double xScaling = Screen.getPrimary().getVisualBounds().getHeight() / initY;
-        double yScaling = Screen.getPrimary().getVisualBounds().getWidth()  / initX;
-
-        if (fullScreen && !fullsize) {
+    public void scaleToFullscreen(boolean fullScreen, Obstacle obstacle, Snake snake, Pickup pickup) {
+        fullScale = 1;
+        if (fullScreen) {
+            Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
             // Use the smaller ratio to fit both dimensions without stretching cells.
-            fullScale = Math.min(xScaling, yScaling);
-            gridCanvas.setWidth(gridCanvas.getWidth()   * fullScale);
-            gridCanvas.setHeight(gridCanvas.getHeight() * fullScale);
-            fullsize = true;
-        } else if (!fullScreen) {
-            fullScale = 1;
-            gridCanvas.setWidth(initX);
-            gridCanvas.setHeight(initY);
-            fullsize = false;
+            fullScale = Math.min(bounds.getWidth() / baseWidth, bounds.getHeight() / baseHeight);
         }
+        gridCanvas.setWidth(baseWidth * fullScale);
+        gridCanvas.setHeight(baseHeight * fullScale);
 
         gameOverLabel.setFont(new Font("Arial", 25 * fullScale));
         gameWonLabel.setFont(new Font("Arial", 25 * fullScale));
@@ -160,7 +146,7 @@ public class GameView {
     /**
      * Draws the background, pickup, snake, and obstacles at the current scale.
      * Reuses one body-list copy and clears the tail cell's recorded corner.
-     * Requires the canvas and drawing context created by {@code makeScene}.
+     * Requires the canvas and drawing context created by {@code initialize}.
      *
      * @param pickup the pickup to draw, or {@code null} to omit it
      * @param snake the snake in its current pose
@@ -306,7 +292,7 @@ public class GameView {
 
     /**
      * Shows or hides the game-over message using the model's death state.
-     * Requires labels to have been created by {@code makeScene}.
+     * Requires labels to have been created by {@code initialize}.
      *
      * @param snake the snake whose death state determines visibility
      */
@@ -316,7 +302,7 @@ public class GameView {
 
     /**
      * Shows or hides the win message using the game's recorded completion state.
-     * Requires labels to have been created by {@code makeScene}.
+     * Requires labels to have been created by {@code initialize}.
      */
     public void gameWon() {
         gameWonLabel.setVisible(game.gameWon());

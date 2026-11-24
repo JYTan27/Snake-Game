@@ -1,8 +1,8 @@
 package com.comp2042.controller;
 
 import com.comp2042.Main;
-import com.comp2042.model.Pickup;
-import com.comp2042.model.DiamondPickup;
+import com.comp2042.model.pickup.Pickup;
+import com.comp2042.model.pickup.DiamondPickup;
 import com.comp2042.model.Game;
 import com.comp2042.model.GameMode;
 import com.comp2042.model.Obstacle;
@@ -15,13 +15,11 @@ import javafx.fxml.FXML;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.layout.StackPane;
-import javafx.stage.Stage;
 
 /**
- * Handles the FXML main menu, session mode selection, and game-scene construction.
+ * Handles the FXML main menu, session mode selection, and game-screen construction.
  * Uses the application's shared view manager and sound service. FXML initialisation
  * and button callbacks run on the JavaFX application thread.
  */
@@ -35,10 +33,7 @@ public class MainMenuController {
     @FXML
     private ComboBox<GameMode> modeSelector;
 
-    /** Most recently constructed game scene, ready to be shown by the view manager. */
-    private Scene gameScene;
-
-    /** Application-wide navigation, session selection, stage, and audio access. */
+    /** Application-wide navigation, session selection, and audio access. */
     private ViewManager viewManager = Main.getViewManager();
 
     /** Creates a menu controller for FXML loading; controls are configured after injection. */
@@ -55,20 +50,12 @@ public class MainMenuController {
         GameModeSelector.configure(modeSelector, viewManager.getSelectedMode(), viewManager.getSoundService());
     }
 
-    /**
-     * Remembers the chosen mode, constructs and shows a fresh game, and applies
-     * fullscreen board scaling if the menu was already fullscreen.
-     */
+    /** Remembers the chosen mode and opens a fresh game. */
     public void handleStart() {
         viewManager.getSoundService().play(SoundEffect.BUTTON);
-        boolean fullScreen = viewManager.getPrimaryStage().isFullScreen();
         GameMode mode = modeSelector.getValue();
         viewManager.setSelectedMode(mode);
-        GameController controller = buildGameScene(viewManager.getPrimaryStage(), mode);
-        viewManager.showGameScene(gameScene, controller::close);
-        if (fullScreen) {
-            controller.setFullScreen(true);
-        }
+        showNewGame(mode);
     }
 
     /** Plays button audio, remembers the current mode, and opens the help screen. */
@@ -92,14 +79,11 @@ public class MainMenuController {
     }
 
     /**
-     * Creates the model entities, view, controller, layout, and keyboard handler
-     * for a fresh game. Stores the resulting scene without displaying it.
+     * Builds and displays the gameplay layout for the selected mode.
      *
-     * @param stage the application stage used by the game controller
      * @param mode the rule configuration for the new game
-     * @return the controller used to apply fullscreen settings after scene navigation
      */
-    private GameController buildGameScene(Stage stage, GameMode mode) {
+    private void showNewGame(GameMode mode) {
         Game game = new Game(X_VALUE, Y_VALUE, mode);
         Obstacle obstacle = new Obstacle(game.getWidth(), game.getHeight());
         Snake snake = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
@@ -107,21 +91,22 @@ public class MainMenuController {
         Pickup pickup = new DiamondPickup(game.getWidth(), game.getHeight(), snake, obstacle);
 
         GameView gameView = new GameView(game);
-        GameController controller = new GameController(snake, pickup, game, gameView, obstacle, stage,
+        GameController controller = new GameController(snake, pickup, game, gameView, obstacle,
                 viewManager.getSoundService(), viewManager.getLeaderboardService(), viewManager::showMainMenu);
 
         StackPane gamePane = new StackPane();
-        gameScene = new Scene(gamePane, game.getWidth() * game.getMultiplier(), game.getHeight() * game.getMultiplier());
-
-        gameScene.setOnKeyPressed(controller::handle);
-
-        gameView.makeScene(gameScene, snake, pickup);
+        gameView.initialize(snake, pickup);
+        gamePane.setPrefSize(gameView.gridCanvas.getWidth(), gameView.gridCanvas.getHeight());
+        // Keep windowed sizing tied to the board even when the canvas scales up.
+        gamePane.setMinSize(StackPane.USE_PREF_SIZE, StackPane.USE_PREF_SIZE);
+        gamePane.setFocusTraversable(true);
+        gamePane.setOnKeyPressed(controller::handle);
         gamePane.getChildren().addAll(gameView.gridCanvas, gameView.gameOverLabel, gameView.gameWonLabel, gameView.scoreLabel);
         gamePane.setPadding(new Insets(20));
         StackPane.setAlignment(gameView.gameOverLabel, Pos.TOP_CENTER);
         StackPane.setAlignment(gameView.gameWonLabel, Pos.TOP_CENTER);
         StackPane.setAlignment(gameView.scoreLabel, Pos.BOTTOM_CENTER);
-        return controller;
+        viewManager.showGameScreen(gamePane, controller::close, controller::updateFullscreenLayout);
     }
 
     /**

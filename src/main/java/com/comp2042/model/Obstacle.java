@@ -1,5 +1,6 @@
 package com.comp2042.model;
 
+import com.comp2042.model.pickup.Pickup;
 import javafx.scene.paint.Color;
 
 import java.util.ArrayList;

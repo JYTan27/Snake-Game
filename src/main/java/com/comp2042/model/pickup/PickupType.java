@@ -1,4 +1,4 @@
-package com.comp2042.model;
+package com.comp2042.model.pickup;
 
 /**
  * Pickup identities shared by mode weights, factory construction, and sound mapping.

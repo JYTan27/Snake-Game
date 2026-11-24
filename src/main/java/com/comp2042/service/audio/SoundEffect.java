@@ -1,6 +1,6 @@
 package com.comp2042.service.audio;
 
-import com.comp2042.model.PickupType;
+import com.comp2042.model.pickup.PickupType;
 
 /**
  * Maps gameplay and menu sound identities to classpath audio resources.
