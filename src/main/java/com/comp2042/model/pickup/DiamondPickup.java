@@ -4,13 +4,16 @@ import com.comp2042.model.Obstacle;
 import com.comp2042.model.Snake;
 import javafx.scene.image.Image;
 
+import java.util.Objects;
+
 /**
  * Standard pickup available in every game mode and used for initial/reset spawning.
  * Inherits the default five-point reward, zero speed bonus, and empty special effect.
  */
 public class DiamondPickup extends Pickup {
+
     /** Shared diamond sprite loaded once for all instances. */
-    private static final Image DIAMOND_IMAGE = new Image(DiamondPickup.class.getResourceAsStream("/com/comp2042/images/pickups/diamond.png"));
+    private static final Image DIAMOND_IMAGE = new Image(Objects.requireNonNull(DiamondPickup.class.getResourceAsStream("/com/comp2042/images/pickups/diamond.png")));
 
     /**
      * Creates a diamond in a free grid cell.

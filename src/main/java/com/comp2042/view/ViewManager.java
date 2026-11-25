@@ -31,11 +31,13 @@ import java.util.function.Consumer;
 
 /**
  * Navigates between menu, reference, and gameplay screens in a shared scene.
- * Retains the selected mode, exposes application-owned services, and finalises
- * active gameplay when leaving its screen. Scene operations run on the JavaFX thread.
+ * Retains the selected mode and board palette, manages music during navigation,
+ * and finalises active gameplay when leaving its screen. Scene operations run
+ * on the JavaFX application thread.
  */
 public class ViewManager implements AutoCloseable {
 
+    /** Splash messages shown in order as the main menu is loaded. */
     private static final List<String> MENU_TIPS = List.of(
             "A diamond a day!",
             "Plan your turns!",
@@ -49,30 +51,38 @@ public class ViewManager implements AutoCloseable {
 
     /** Single stage reused for every screen. */
     private final Stage primaryStage;
+    /** Shared scene created on first navigation and reused by later screens. */
     private Scene scene;
-    /** Shared audio service owned and closed by the application. */
+    /** Shared sound-effect service owned and closed by the application. */
     private final SoundService soundService;
+    /** Application-owned soundtrack paused while the gameplay screen is active. */
     private final BackgroundMusic backgroundMusic;
+    /** Application-wide run history used by the leaderboard. */
     private final LeaderboardService leaderboardService;
+    /** Reads and saves the user's board palette. */
     private final BoardThemePreferences boardThemePreferences = new BoardThemePreferences();
+    /** Palette used for new game screens and the initial preview selection. */
     private BoardTheme boardTheme;
+    /** Clean-up action for the active game screen, if present. */
     private Runnable onLeaveGame;
+    /** Callback that resizes the active game when fullscreen changes. */
     private Consumer<Boolean> updateGameFullscreen;
     /** Session selection restored whenever the main menu is loaded. */
     private GameMode selectedMode = GameMode.CLASSIC;
+    /** Position of the next message in the splash rotation. */
     private int nextMenuSplashIndex;
 
     /** Application icon loaded from the packaged image resources. */
     private final Image snakeLogo = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/comp2042/images/ui/SnakeLogoWhite.png")));
 
     /**
-     * Connects navigation to the application stage and shared audio service.
+     * Connects navigation to the shared stage and services and loads the saved board palette.
      * Disables JavaFX's default fullscreen hint and exit key so screens can
      * assign their own fullscreen and navigation shortcuts.
      *
      * @param primaryStage the single stage used to display all screens
-     * @param soundService the application-owned audio service
-     * @param backgroundMusic the soundtrack played on menu screens
+     * @param soundService the application-owned sound-effect service
+     * @param backgroundMusic the application-owned soundtrack played on menu screens
      * @param leaderboardService application-owned result history
      * @throws NullPointerException if a service argument is null
      */
@@ -102,10 +112,11 @@ public class ViewManager implements AutoCloseable {
 
     /**
      * Loads a fresh main-menu layout, applies the window title and icon, and shows it.
-     * Retains the session's selected mode. Logs FXML I/O failures, displays an error
-     * alert, and returns without showing a new menu when loading fails.
+     * Retains the session's selected mode and starts or resumes the soundtrack
+     * after the menu opens. Displays an error if FXML loading fails.
      */
     public void initializeMainMenu() {
+        // Keep the loaded root available for mounting after FXML processing succeeds.
         AnchorPane root;
         try {
             FXMLLoader loader = new FXMLLoader();
@@ -131,33 +142,35 @@ public class ViewManager implements AutoCloseable {
     }
 
     /**
-     * Returns the shared application stage.
+     * Provides access to sound effects during navigation and gameplay.
      *
-     * @return the shared application stage
-     */
-    public Stage getPrimaryStage() {
-        return primaryStage;
-    }
-
-    /**
-     * Returns the shared audio service; screens must not close it.
-     *
-     * @return the shared audio service; screens must not close it
+     * @return the application-owned sound-effect service
      */
     public SoundService getSoundService() { return soundService; }
 
-    /** Returns shared result history; the application alone owns its lifecycle. */
+    /**
+     * Provides access to run recording and leaderboard rankings.
+     *
+     * @return the shared leaderboard service
+     */
     public LeaderboardService getLeaderboardService() { return leaderboardService; }
 
-    /** Returns the applied board palette for new games and the colour editor. */
+    /** {@return the applied palette used by new games and the colour editor} */
     public BoardTheme getBoardTheme() { return boardTheme; }
 
-    /** Applies the palette for this session and saves it for future launches. */
+    /**
+     * Applies a palette to new games and attempts to save it for future launches.
+     * Displays a warning if saving fails while retaining the choice for the session.
+     *
+     * @param theme the selected board palette
+     * @throws NullPointerException if {@code theme} is null
+     */
     public void applyBoardTheme(BoardTheme theme) {
         boardTheme = Objects.requireNonNull(theme);
         try {
             boardThemePreferences.save(theme);
         } catch (BackingStoreException | SecurityException exception) {
+            // Report the save failure after keeping the new palette for this session.
             Alert alert = new Alert(Alert.AlertType.WARNING,
                     "Could not save board colours. Your choice will be used for this session.");
             alert.initOwner(primaryStage);
@@ -184,15 +197,21 @@ public class ViewManager implements AutoCloseable {
         selectedMode = java.util.Objects.requireNonNull(mode);
     }
 
-    /** Returns the tip for a new menu visit and advances the session's rotation. */
+    /**
+     * Advances the rotation for the next visit, wrapping back to the first message.
+     *
+     * @return the splash message for the current menu visit
+     */
     public String nextMenuSplash() {
+        // Read the current tip before moving the pointer forward.
         String tip = MENU_TIPS.get(nextMenuSplashIndex);
         nextMenuSplashIndex = (nextMenuSplashIndex + 1) % MENU_TIPS.size();
         return tip;
     }
 
     /**
-     * Displays a prepared game screen and focuses it for keyboard input.
+     * Shows the prepared game screen, pauses the soundtrack, and focuses the layout
+     * for keyboard input. Initialises the fullscreen layout if the stage is already fullscreen.
      *
      * @param gamePane the prepared gameplay layout
      * @param onLeave clean-up that finalises the active run when navigation or shutdown occurs
@@ -239,7 +258,7 @@ public class ViewManager implements AutoCloseable {
         }
     }
 
-    /** Reloads and shows the main menu while retaining the session's selected mode. */
+    /** Returns to the main menu and resumes the soundtrack if it was paused for gameplay. */
     public void showMainMenu() {
         initializeMainMenu();
     }
@@ -253,6 +272,7 @@ public class ViewManager implements AutoCloseable {
     private StackPane createMenuContent(Region content) {
         content.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         content.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        // Wrap the fixed-size content in a group that scales inside the window-sized container.
         Group scaledContent = new Group(content);
         StackPane container = new StackPane(scaledContent);
         container.setPrefSize(550, 400);
@@ -260,11 +280,18 @@ public class ViewManager implements AutoCloseable {
         var scale = Bindings.min(container.widthProperty().divide(550), container.heightProperty().divide(400));
         content.scaleXProperty().bind(scale);
         content.scaleYProperty().bind(scale);
-        container.getStylesheets().add(getClass().getResource("/com/comp2042/view/styling.css").toExternalForm());
+        container.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/com/comp2042/view/styling.css")).toExternalForm());
         return container;
     }
 
+    /**
+     * Shows a secondary menu screen, keeps the soundtrack playing, and binds Escape to the main menu.
+     *
+     * @param content the loaded screen layout
+     * @param focusSelector the CSS selector for the control to focus when the screen opens
+     */
     private void showMenuScreen(Region content, String focusSelector) {
+        // Use the scaled menu wrapper for focus handling and Escape navigation.
         StackPane screen = createMenuContent(content);
         screen.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ESCAPE) {
@@ -284,6 +311,7 @@ public class ViewManager implements AutoCloseable {
      */
     public void showHowToPlay() {
         try {
+            // Load the help layout together with its FXML controller.
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/comp2042/view/HowToPlay.fxml"));
             showMenuScreen(loader.load(), "#helpScroll");
         } catch (IOException exception) {
@@ -299,6 +327,7 @@ public class ViewManager implements AutoCloseable {
     /** Opens the mode-filtered leaderboard at the menu's selected mode. */
     public void showLeaderboards() {
         try {
+            // Inject the shared services and selected mode into the leaderboard controller.
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/comp2042/view/Leaderboards.fxml"));
             loader.setControllerFactory(type -> new LeaderboardController(leaderboardService, soundService, selectedMode, this::showMainMenu));
             showMenuScreen(loader.load(), "#leaderboardScroll");
@@ -311,6 +340,7 @@ public class ViewManager implements AutoCloseable {
     /** Opens an editor with a draft of the currently applied board colours. */
     public void showBoardColours() {
         try {
+            // Supply the editor controller with access to the applied palette and navigation.
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/comp2042/view/BoardColours.fxml"));
             loader.setControllerFactory(type -> new BoardColoursController(this));
             showMenuScreen(loader.load(), ".radio-button");
@@ -319,9 +349,10 @@ public class ViewManager implements AutoCloseable {
         }
     }
 
-    /** Detaches before invoking clean-up so reentrant or repeated navigation is safe. */
+    /** Finalises active gameplay once by clearing its callbacks before invoking clean-up. */
     @Override
     public void close() {
+        // Keep a copy of the clean-up callback before detaching it from the active screen.
         Runnable cleanup = onLeaveGame;
         onLeaveGame = null;
         updateGameFullscreen = null;

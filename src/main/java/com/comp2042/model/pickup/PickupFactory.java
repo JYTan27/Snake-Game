@@ -13,6 +13,7 @@ import java.util.Random;
  * as an empty result. Initial and reset diamonds are created directly by callers.
  */
 public class PickupFactory {
+
     /** Weighted type selector; pickup positions use a separate random generator. */
     private final WeightedPickupSelector selector;
 
@@ -61,6 +62,7 @@ public class PickupFactory {
      * @throws Pickup.NoFreeCellException if construction finds no free cell
      */
     private Pickup selectPickup(Game game, Snake snake, Obstacle obstacle) {
+        // Use the current board dimensions and sample a type from the mode's pickup weights.
         int width = game.getWidth();
         int height = game.getHeight();
         PickupType type = selector.select(game.getMode().getPickupWeights());

@@ -30,6 +30,7 @@ import javafx.util.Duration;
  * or menu return. Event handling and animation callbacks run on the JavaFX application thread.
  */
 public class GameController implements AutoCloseable {
+
     /** Maximum number of pending turns accepted between movement ticks. */
     private static final int MAX_BUFFERED_INPUTS = 2;
 
@@ -43,7 +44,9 @@ public class GameController implements AutoCloseable {
     private Game game;
     /** Application-owned audio service; this controller stops but does not close it. */
     private final SoundService sounds;
+    /** Shared service that records finished runs. */
     private final LeaderboardService leaderboards;
+    /** Timer and result state for the current attempt, replaced on restart. */
     private RunSession runSession;
     /** Length at the last settled board state, excluding a fatal move's temporary segment. */
     private int settledSnakeLength;
@@ -64,19 +67,6 @@ public class GameController implements AutoCloseable {
 
     /** Factory for mode-weighted replacement pickups. */
     private final PickupFactory pickupFactory = new PickupFactory();
-
-    /**
-     * Returns the current movement direction expressed as an arrow key.
-     *
-     * @return the current movement direction expressed as an arrow key
-     */
-    public KeyCode getCurrentKey() { return key; }
-    /**
-     * Returns the direction saved before the most recently consumed turn.
-     *
-     * @return the direction saved before the most recently consumed turn
-     */
-    public KeyCode getLastKey() { return lastKey; }
 
     /**
      * Connects the game entities, view, and shared services.
@@ -171,6 +161,7 @@ public class GameController implements AutoCloseable {
      * @param event the key-pressed event from the game screen
      */
     public void handle(KeyEvent event) {
+        // Keep the original key for shortcuts and translate WASD into a movement direction.
         KeyCode code = event.getCode();
         KeyCode direction = switch (code) {
             case W -> KeyCode.UP;
@@ -223,6 +214,7 @@ public class GameController implements AutoCloseable {
      */
     public void updateFullscreenLayout(boolean fullScreen) {
         gameView.scaleToFullscreen(fullScreen, obstacle, snake, pickup);
+        // Use the same size for both end-of-run messages at the current display scale.
         String endLabelStyle = fullScreen ? "-fx-font-size: 50;" : "-fx-font-size: 15;";
         gameView.gameOverLabel.setStyle(endLabelStyle);
         gameView.gameWonLabel.setStyle(endLabelStyle);
@@ -243,16 +235,13 @@ public class GameController implements AutoCloseable {
         if (newKey.equals(KeyCode.LEFT)  && referenceKey.equals(KeyCode.RIGHT)) return false;
         if (newKey.equals(KeyCode.RIGHT) && referenceKey.equals(KeyCode.LEFT))  return false;
         if (newKey.equals(KeyCode.DOWN)  && referenceKey.equals(KeyCode.UP))    return false;
-        if (newKey.equals(KeyCode.UP)    && referenceKey.equals(KeyCode.DOWN))  return false;
-        return true;
+        return !newKey.equals(KeyCode.UP) || !referenceKey.equals(KeyCode.DOWN);
     }
 
     /**
-     * Stops audio and animation and restores a fresh, paused game in the same mode.
-     * Clears input, obstacles, points, completion, and sprite turn history; recreates
-     * the snake and initial diamond; then restores base speed, leftward direction,
-     * and the displayed labels and board. Plays restart audio after reset completes;
-     * beginning movement afterward is not treated as resuming a player pause.
+     * Finalises a started run as abandoned and restores a fresh board in the same mode.
+     * Recreates the snake and initial diamond, clears the score and turn history,
+     * and plays the restart sound. Movement begins again on the next movement input.
      */
     private void reset() {
         recordRun(RunOutcome.ABANDONED);
@@ -330,12 +319,16 @@ public class GameController implements AutoCloseable {
         sounds.play(SoundEffect.DEATH);
     }
 
-    /** Finalises only started, unfinished runs; repeat lifecycle callbacks are safe. */
+    /**
+     * Records a started run once using the last valid snake length.
+     *
+     * @param outcome the reason the run ended
+     */
     private void recordRun(RunOutcome outcome) {
         runSession.finish(outcome, game.getDisplayScore(), settledSnakeLength).ifPresent(leaderboards::recordResult);
     }
 
-    /** Records an abandoned run and stops gameplay during navigation or shutdown. */
+    /** Stops gameplay and records a started, unfinished run as abandoned. */
     @Override
     public void close() {
         recordRun(RunOutcome.ABANDONED);

@@ -1,10 +1,6 @@
 package com.comp2042.model;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import com.comp2042.model.pickup.Pickup;
 import javafx.scene.image.Image;
@@ -16,14 +12,15 @@ import javafx.scene.image.Image;
  * Also supplies cached sprites and orientation calculations used by the view.
  */
 public class Snake {
+
     /** Shared head sprite loaded once for all snakes. */
-    private static final Image IMG_HEAD = new Image(Snake.class.getResourceAsStream("/com/comp2042/images/snake/snakehead.png"));
+    private static final Image IMG_HEAD = new Image(Objects.requireNonNull(Snake.class.getResourceAsStream("/com/comp2042/images/snake/snakehead.png")));
     /** Shared straight body sprite. */
-    private static final Image IMG_BODY = new Image(Snake.class.getResourceAsStream("/com/comp2042/images/snake/snakebody.png"));
+    private static final Image IMG_BODY = new Image(Objects.requireNonNull(Snake.class.getResourceAsStream("/com/comp2042/images/snake/snakebody.png")));
     /** Shared corner sprite, rotated by the view to match each turn. */
-    private static final Image IMG_TURN = new Image(Snake.class.getResourceAsStream("/com/comp2042/images/snake/snaketurnleft.png"));
+    private static final Image IMG_TURN = new Image(Objects.requireNonNull(Snake.class.getResourceAsStream("/com/comp2042/images/snake/snaketurnleft.png")));
     /** Shared tail sprite. */
-    private static final Image IMG_TAIL = new Image(Snake.class.getResourceAsStream("/com/comp2042/images/snake/snaketail.png"));
+    private static final Image IMG_TAIL = new Image(Objects.requireNonNull(Snake.class.getResourceAsStream("/com/comp2042/images/snake/snaketail.png")));
 
     /** Whether a fatal collision has occurred. */
     private boolean dead = false;
@@ -88,6 +85,7 @@ public class Snake {
             return;
         }
 
+        // Save the previous head position so a successful move can extend the body behind it.
         GridPoint previousHead = new GridPoint(head);
         boolean moved = switch (dir) {
             case 'U' -> attemptMove(DIR_UP,    0, -1);
@@ -104,8 +102,11 @@ public class Snake {
         body.addLast(previousHead);
 
         // The current tail cell is allowed because a non-growing move vacates it.
-        if (body.size() > 4 && hitSelf() && !body.peekFirst().equals(head)) {
-            dead = true;
+        if (body.size() > 4 && hitSelf()) {
+            assert body.peekFirst() != null;
+            if (!body.peekFirst().equals(head)) {
+                dead = true;
+            }
         }
     }
 
@@ -119,6 +120,7 @@ public class Snake {
      * @return {@code true} if the head moved; {@code false} after a fatal blocked move
      */
     private boolean attemptMove(int dirAngle, int dx, int dy) {
+        // Resolve the proposed destination before changing the snake's position.
         GridPoint target = new GridPoint(head.getX() + dx, head.getY() + dy);
 
         if (isOutOfBounds(target)) {
@@ -146,6 +148,7 @@ public class Snake {
      * @return a new point inside the board's bounds
      */
     private GridPoint wrapCoordinate(GridPoint p) {
+        // Bring each coordinate into its valid range, including negative offsets.
         int wx = ((p.getX() % gameWidth)  + gameWidth)  % gameWidth;
         int wy = ((p.getY() % gameHeight) + gameHeight) % gameHeight;
         return new GridPoint(wx, wy);
@@ -160,6 +163,7 @@ public class Snake {
      * @return {@code true} if the head occupies the pickup's cell
      */
     public boolean atePickup(Pickup pickup) {
+        // Test for contact before growing the body.
         boolean ate = head.equals(pickup.getPos());
         if (!ate) {
             body.pollFirst();
@@ -214,10 +218,12 @@ public class Snake {
             return snakeDir;
         }
 
+        // Read the tail and its neighbour, using the head when the body has only one segment.
         Iterator<GridPoint> segments = body.iterator();
         GridPoint tail = segments.next();
         GridPoint next = segments.hasNext() ? segments.next() : head;
 
+        // Measure the tail-to-neighbour displacement before correcting for a wrapped edge.
         int dx = next.getX() - tail.getX();
         int dy = next.getY() - tail.getY();
 

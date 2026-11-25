@@ -18,14 +18,13 @@ import javax.sound.sampled.LineUnavailableException;
  * Closing releases that line, stops playback, and makes later play requests no-ops.
  */
 public final class JavaFxSoundService implements SoundService {
+
     /** Logger for missing resources and failed audio operations. */
     private static final System.Logger LOGGER = System.getLogger(JavaFxSoundService.class.getName());
     /** Successfully loaded clips, excluding any subsequently disabled effects. */
     private final Map<SoundEffect, AudioClip> clips = new EnumMap<>(SoundEffect.class);
     /** Unplayed Windows output line retained until shutdown to avoid short-effect latency. */
     private Clip outputLine;
-    /** Volume supplied to future playback requests. */
-    private double volume = SoundEffect.DEFAULT_VOLUME;
     /** Whether the service has been permanently closed. */
     private boolean closed;
 
@@ -34,6 +33,7 @@ public final class JavaFxSoundService implements SoundService {
      * Logs unavailable resources individually so remaining sounds can still be used.
      */
     public JavaFxSoundService() {
+        // Resolve and cache each catalogued clip independently so a missing clip leaves the others available.
         for (SoundEffect effect : SoundEffect.values()) {
             try {
                 URL resource = Objects.requireNonNull(getClass().getResource(effect.getResourcePath()),
@@ -53,6 +53,7 @@ public final class JavaFxSoundService implements SoundService {
      */
     private void initialiseWindowsOutput() {
         if (!System.getProperty("os.name", "").startsWith("Windows")) return;
+        // Keep the candidate line available for clean-up if opening it fails.
         Clip line = null;
         try {
             line = AudioSystem.getClip();
@@ -82,9 +83,11 @@ public final class JavaFxSoundService implements SoundService {
      */
     @Override
     public void play(SoundEffect effect) {
+        // Use the cached clip for this effect if it loaded successfully.
         AudioClip clip = clips.get(effect);
         if (closed || clip == null) return;
         try {
+            double volume = SoundEffect.DEFAULT_VOLUME;
             clip.play(volume);
         } catch (RuntimeException exception) {
             clips.remove(effect);
@@ -95,6 +98,7 @@ public final class JavaFxSoundService implements SoundService {
     /** Stops effects while retaining the output line; logs and removes failing clips. */
     @Override
     public void stopAll() {
+        // Iterate over cache entries so a failing clip can be removed while stopping playback.
         var iterator = clips.entrySet().iterator();
         while (iterator.hasNext()) {
             var entry = iterator.next();
@@ -106,28 +110,6 @@ public final class JavaFxSoundService implements SoundService {
             }
         }
     }
-
-    /**
-     * Sets the volume for subsequent plays without adjusting clips already playing.
-     *
-     * @param volume a finite value from zero to one, inclusive
-     * @throws IllegalArgumentException if the value is non-finite or outside that range
-     */
-    @Override
-    public void setVolume(double volume) {
-        if (!Double.isFinite(volume) || volume < 0 || volume > 1) {
-            throw new IllegalArgumentException("Volume must be between 0 and 1");
-        }
-        this.volume = volume;
-    }
-
-    /**
-     * Returns the configured volume for subsequent plays.
-     *
-     * @return the configured volume for subsequent plays
-     */
-    @Override
-    public double getVolume() { return volume; }
 
     /** Stops all clips, releases the Windows output line, and disables subsequent playback. */
     @Override

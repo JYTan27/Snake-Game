@@ -4,10 +4,13 @@ import com.comp2042.model.Obstacle;
 import com.comp2042.model.Snake;
 import javafx.scene.image.Image;
 
+import java.util.Objects;
+
 /** Pickup that adds five moves per second until the next pickup is collected. */
 public class BoltPickup extends Pickup {
+
     /** Shared bolt sprite loaded once for all instances. */
-    private static final Image BOLT_IMAGE = new Image(BoltPickup.class.getResourceAsStream("/com/comp2042/images/pickups/bolt.png"));
+    private static final Image BOLT_IMAGE = new Image(Objects.requireNonNull(BoltPickup.class.getResourceAsStream("/com/comp2042/images/pickups/bolt.png")));
     /** Movement-rate bonus in grid cells per second. */
     private static final double SPEED_BONUS = 5.0;
 

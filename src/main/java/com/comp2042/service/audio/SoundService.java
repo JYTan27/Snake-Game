@@ -12,21 +12,9 @@ public interface SoundService extends AutoCloseable {
      * @param effect the sound to play
      */
     void play(SoundEffect effect);
+
     /** Stops all currently playing effects managed by this service. */
     void stopAll();
-    /**
-     * Sets the volume used for subsequent playback requests.
-     *
-     * @param volume a finite value from zero (silent) to one (full volume)
-     * @throws IllegalArgumentException if the value is non-finite or outside that range
-     */
-    void setVolume(double volume);
-    /**
-     * Returns the configured volume for subsequent playback.
-     *
-     * @return the configured volume for subsequent playback
-     */
-    double getVolume();
 
     /**
      * Stops playback when the owner releases the service. Implementations may

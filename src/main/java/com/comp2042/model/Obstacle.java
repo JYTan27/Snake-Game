@@ -14,17 +14,17 @@ import java.util.Random;
  * board area, rounded down. Obstacles persist until {@link #reset()} is called.
  */
 public class Obstacle {
+
     /** Shared random source for choosing obstacle positions. */
     private static final Random RANDOM = new Random();
-
     /** Colour used by the view when drawing obstacle cells. */
-    private Color color = Color.BLACK;
+    private final Color color = Color.BLACK;
     /** Positions of all current obstacles. */
-    private ArrayList<GridPoint> obstacles = new ArrayList<>();
+    private final ArrayList<GridPoint> obstacles = new ArrayList<>();
     /** Board width in grid cells. */
-    private int boardWidth;
+    private final int boardWidth;
     /** Board height in grid cells. */
-    private int boardHeight;
+    private final int boardHeight;
 
     /**
      * Creates an empty obstacle collection for the supplied board dimensions.
@@ -48,17 +48,20 @@ public class Obstacle {
      * @param amount the requested number of additional obstacles
      */
     public void newObstacles(Snake snake, Pickup pickup, int amount) {
+        // Limit new obstacles to the unfilled portion of the obstacle allowance.
         int remainingCapacity = boardWidth * boardHeight / 20 - obstacles.size();
         if (remainingCapacity <= 0 || amount <= 0) {
             return;
         }
 
+        // Collect every occupied cell before searching for viable positions.
         List<GridPoint> occupied = new ArrayList<>();
         occupied.add(snake.getHead());
         occupied.addAll(snake.getBody());
         occupied.add(pickup.getPos());
         occupied.addAll(obstacles);
 
+        // Enumerate the unoccupied coordinates by column and row.
         List<GridPoint> freeCells = new ArrayList<>();
         for (int cx = 0; cx < boardWidth; cx++) {
             for (int cy = 0; cy < boardHeight; cy++) {
@@ -69,6 +72,7 @@ public class Obstacle {
             }
         }
 
+        // Draw at most the allowed number of distinct cells, removing each sampled position.
         int additions = Math.min(amount, remainingCapacity);
         for (int i = 0; i < additions && !freeCells.isEmpty(); i++) {
             int idx = RANDOM.nextInt(freeCells.size());

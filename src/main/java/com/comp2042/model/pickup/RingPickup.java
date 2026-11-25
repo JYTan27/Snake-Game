@@ -5,13 +5,16 @@ import com.comp2042.model.Obstacle;
 import com.comp2042.model.Snake;
 import javafx.scene.image.Image;
 
+import java.util.Objects;
+
 /**
  * Pickup that enables border wrapping until the next collection restores mode defaults.
  * Inherits the default five-point reward and zero speed bonus.
  */
 public class RingPickup extends Pickup {
+
     /** Shared ring sprite loaded once for all instances. */
-    private static final Image RING_IMAGE = new Image(RingPickup.class.getResourceAsStream("/com/comp2042/images/pickups/ring.png"));
+    private static final Image RING_IMAGE = new Image(Objects.requireNonNull(RingPickup.class.getResourceAsStream("/com/comp2042/images/pickups/ring.png")));
 
     /**
      * Creates a ring pickup in a free grid cell.

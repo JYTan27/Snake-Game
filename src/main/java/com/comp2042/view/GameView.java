@@ -100,6 +100,7 @@ public class GameView {
         gc = gridCanvas.getGraphicsContext2D();
         drawGrid(pickup, snake, null, gc);
 
+        // Resolve the packaged stylesheet for the labels drawn over the board.
         String css = Objects.requireNonNull(getClass().getResource("/com/comp2042/view/styling.css")).toExternalForm();
 
         gameOverLabel = new Label("GAME OVER");
@@ -131,6 +132,7 @@ public class GameView {
     public void scaleToFullscreen(boolean fullScreen, Obstacle obstacle, Snake snake, Pickup pickup) {
         fullScale = 1;
         if (fullScreen) {
+            // Use the primary screen's usable area to calculate the fullscreen scale.
             Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
             // Use the smaller ratio to fit both dimensions without stretching cells.
             fullScale = Math.min(bounds.getWidth() / baseWidth, bounds.getHeight() / baseHeight);
@@ -173,13 +175,14 @@ public class GameView {
             gc.restore();
         }
 
-        // Reuse one body snapshot for the entire redraw.
+        // Use one snapshot of the body for both turn history and sprite rendering.
         List<GridPoint> body = snake.getBody();
         if (!body.isEmpty()) {
             GridPoint tail = body.getFirst();
             // The tail uses its own orientation, so its former corner can be forgotten.
             turnArray[tail.getX()][tail.getY()] = 0;
         }
+        // Render each body segment by its position in the tail-to-head list.
         for (int bodyIndex = 0; bodyIndex < body.size(); bodyIndex++) {
             drawBody(snake, body, bodyIndex, cellSize);
         }
@@ -187,9 +190,9 @@ public class GameView {
         // Draw head
         drawHead(snake, cellSize);
 
-        // Draw obstacles
         if (obstacle != null) {
             gc.setFill(obstacle.getColor());
+            // Draw each obstacle in its own grid cell at the current scale.
             for (GridPoint point : obstacle.getObstacles()) {
                 gc.fillRect(point.getX() * cellSize, point.getY() * cellSize, cellSize, cellSize);
             }
@@ -203,6 +206,7 @@ public class GameView {
      * @param cellSize the scaled width and height of a grid cell in pixels
      */
     private void drawHead(Snake snake, double cellSize) {
+        // Use the head sprite's cell origin and centre to rotate it in place.
         Image img = snake.getImageHead();
         double x   = snake.getHead().getX() * cellSize;
         double y   = snake.getHead().getY() * cellSize;
@@ -226,8 +230,10 @@ public class GameView {
      * @param cellSize the scaled width and height of a grid cell in pixels
      */
     private void drawBody(Snake snake, List<GridPoint> body, int index, double cellSize) {
+        // Look up the current segment and any remembered corner at its cell.
         GridPoint point = body.get(index);
         int turn = turnArray[point.getX()][point.getY()];
+        // Choose a sprite and angle together according to this segment's role.
         Image img;
         double rotateDeg;
 
@@ -245,6 +251,7 @@ public class GameView {
             rotateDeg = snake.getBodyDir(point, body.get(index - 1));
         }
 
+        // Use the cell origin for drawing and its centre as the rotation pivot.
         double x  = point.getX() * cellSize;
         double y  = point.getY() * cellSize;
         double cx = x + cellSize / 2;
@@ -285,6 +292,7 @@ public class GameView {
 
     /** Clears all recorded corners when starting a fresh game. */
     public void resetTurnArray() {
+        // Reset the recorded turn values one column at a time.
         for (int[] row : turnArray) {
             java.util.Arrays.fill(row, 0);
         }

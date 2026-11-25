@@ -11,15 +11,15 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 /**
- * JavaFX entry point. Owns shared audio, leaderboard, and navigation services;
- * opens the menu and finalises gameplay and storage during orderly shutdown.
+ * Starts the JavaFX application and provides its shared services to the view manager.
+ * Owns the soundtrack and sound effects for the life of the application.
  */
 public class Main extends Application {
-
     /** Application-wide view manager made available to FXML controllers after startup. */
     private static ViewManager viewManager;
     /** Sound service owned by this application instance and closed at shutdown. */
     private SoundService sounds;
+    /** Soundtrack shared by the main menu and related screens. */
     private final BackgroundMusic backgroundMusic = new BackgroundMusic();
 
     /** Creates the application instance; shared services are initialised by JavaFX startup. */
@@ -37,6 +37,7 @@ public class Main extends Application {
         Font.loadFont(getClass().getResourceAsStream("/com/comp2042/fonts/SFPixelateShaded-Bold.ttf"), 14);
 
         sounds = new JavaFxSoundService();
+        // Load the saved run history once and share it with every screen.
         LeaderboardService leaderboards = new LeaderboardService(new XmlLeaderboardRepository(XmlLeaderboardRepository.defaultPath()));
         viewManager = new ViewManager(primaryStage, sounds, backgroundMusic, leaderboards);
         viewManager.initializeMainMenu();
@@ -51,7 +52,7 @@ public class Main extends Application {
         launch(args);
     }
 
-    /** Finalises any started game and releases application audio. */
+    /** Stops the soundtrack, finalises any active run, and releases sound-effect resources. */
     @Override
     public void stop() {
         backgroundMusic.close();

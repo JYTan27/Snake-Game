@@ -11,6 +11,7 @@ import java.util.Objects;
  * reports that no free board cell remains.
  */
 public class Game {
+
     /** Base cell size in pixels for boards up to the height threshold. */
     private static final double SMALL_BOARD_MULTIPLIER = 20.0;
     /** Base cell size in pixels for boards above the height threshold. */
@@ -19,11 +20,11 @@ public class Game {
     private static final int LARGE_BOARD_THRESHOLD = 50;
 
     /** Board width in grid cells. */
-    private int width;
+    private final int width;
     /** Board height in grid cells. */
-    private int height;
+    private final int height;
     /** Base cell size in pixels before fullscreen scaling. */
-    private double multiplier;
+    private final double multiplier;
     /** Points awarded by pickups, independent of the win condition. */
     private int displayScore;
     /** Whether full-board completion has been recorded. */

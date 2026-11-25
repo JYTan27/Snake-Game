@@ -5,10 +5,13 @@ import com.comp2042.model.Obstacle;
 import com.comp2042.model.Snake;
 import javafx.scene.image.Image;
 
+import java.util.Objects;
+
 /** Pickup that requests additional obstacles and inherits the default point reward. */
 public class BlocksPickup extends Pickup {
+
     /** Shared blocks sprite loaded once for all instances. */
-    private static final Image BLOCKS_IMAGE = new Image(BlocksPickup.class.getResourceAsStream("/com/comp2042/images/pickups/blocks.png"));
+    private static final Image BLOCKS_IMAGE = new Image(Objects.requireNonNull(BlocksPickup.class.getResourceAsStream("/com/comp2042/images/pickups/blocks.png")));
 
     /**
      * Creates a blocks pickup in a free grid cell.
@@ -34,6 +37,7 @@ public class BlocksPickup extends Pickup {
     @Override
     public void applyEffect(Game game, Snake snake, Obstacle obstacle) {
         // A positive random bound also permits requests on boards smaller than 20 cells.
+        // Scale the random obstacle count with board area before applying the obstacle cap.
         int obstacleCount = RANDOM.nextInt(Math.max(1, game.getWidth() * game.getHeight() / 20)) + 3;
         obstacle.newObstacles(snake, this, obstacleCount);
     }

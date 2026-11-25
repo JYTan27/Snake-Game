@@ -34,11 +34,12 @@ public class MainMenuController {
     /** Mode selector injected from the main-menu FXML. */
     @FXML
     private ComboBox<GameMode> modeSelector;
+    /** Label for the message selected from the session's splash rotation. */
     @FXML
     private Label menuSplash;
 
     /** Application-wide navigation, session selection, and audio access. */
-    private ViewManager viewManager = Main.getViewManager();
+    private final ViewManager viewManager = Main.getViewManager();
 
     /** Creates a menu controller for FXML loading; controls are configured after injection. */
     public MainMenuController() {
@@ -58,6 +59,7 @@ public class MainMenuController {
     /** Remembers the chosen mode and opens a fresh game. */
     public void handleStart() {
         viewManager.getSoundService().play(SoundEffect.BUTTON);
+        // Capture the selected mode before replacing the main menu.
         GameMode mode = modeSelector.getValue();
         viewManager.setSelectedMode(mode);
         showNewGame(mode);
@@ -96,16 +98,19 @@ public class MainMenuController {
      * @param mode the rule configuration for the new game
      */
     private void showNewGame(GameMode mode) {
+        // Build fresh board state from the configured dimensions and the chosen mode.
         Game game = new Game(X_VALUE, Y_VALUE, mode);
         Obstacle obstacle = new Obstacle(game.getWidth(), game.getHeight());
         Snake snake = new Snake(game.getWidth(), game.getHeight(), game.isNoBorder(), obstacle);
         // Initial games always begin with a diamond; later pickups use mode weights.
         Pickup pickup = new DiamondPickup(game.getWidth(), game.getHeight(), snake, obstacle);
 
+        // Connect the game's state to its renderer, input controller, and shared services.
         GameView gameView = new GameView(game, new CheckerboardBoardRenderer(), viewManager.getBoardTheme());
         GameController controller = new GameController(snake, pickup, game, gameView, obstacle,
                 viewManager.getSoundService(), viewManager.getLeaderboardService(), viewManager::showMainMenu);
 
+        // Stack the board canvas with the score and end-of-run messages.
         StackPane gamePane = new StackPane();
         gameView.initialize(snake, pickup);
         gamePane.setPrefSize(gameView.gridCanvas.getWidth(), gameView.gridCanvas.getHeight());
@@ -119,15 +124,6 @@ public class MainMenuController {
         StackPane.setAlignment(gameView.gameWonLabel, Pos.TOP_CENTER);
         StackPane.setAlignment(gameView.scoreLabel, Pos.BOTTOM_CENTER);
         viewManager.showGameScreen(gamePane, controller::close, controller::updateFullscreenLayout);
-    }
-
-    /**
-     * Returns the shared application view manager.
-     *
-     * @return the shared application view manager
-     */
-    public ViewManager getViewManager() {
-        return viewManager;
     }
 
     /**

@@ -11,6 +11,7 @@ import java.util.Random;
  * any fixed interval between particular pickup types.
  */
 public final class WeightedPickupSelector {
+
     /** Generator supplied by the factory or another caller. */
     private final Random random;
 
@@ -37,6 +38,7 @@ public final class WeightedPickupSelector {
      * @throws IllegalStateException if changed weights leave the roll unmatched
      */
     public PickupType select(Map<PickupType, Integer> weights) {
+        // Sum the available weights in enum order and validate the supplied values.
         int total = 0;
         for (PickupType type : PickupType.values()) {
             Integer weight = weights.get(type);
@@ -47,6 +49,7 @@ public final class WeightedPickupSelector {
         if (total == 0) throw new IllegalArgumentException("At least one pickup weight is required");
 
         // Each type owns a consecutive interval whose length equals its weight.
+        // Draw one offset into the combined range, then walk the same ordered weights to find its type.
         int roll = random.nextInt(total);
         // Enum order makes boundaries stable regardless of map iteration order.
         for (PickupType type : PickupType.values()) {

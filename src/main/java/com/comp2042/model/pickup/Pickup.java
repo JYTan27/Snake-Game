@@ -57,6 +57,7 @@ public abstract class Pickup {
      * @throws NoFreeCellException if no unoccupied cell exists
      */
     private void generatePosition(int gridWidth, int gridHeight, Snake snake, Obstacle obstacle) {
+        // Mark the cells occupied by the snake and obstacles.
         List<GridPoint> occupied = new ArrayList<>();
         occupied.add(snake.getHead());
         occupied.addAll(snake.getBody());
@@ -64,6 +65,7 @@ public abstract class Pickup {
             occupied.addAll(obstacle.getObstacles());
         }
 
+        // Enumerate the remaining cells so placement can sample uniformly without retries.
         List<GridPoint> freeCells = new ArrayList<>();
         for (int cx = 0; cx < gridWidth; cx++) {
             for (int cy = 0; cy < gridHeight; cy++) {

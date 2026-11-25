@@ -12,6 +12,7 @@ import javafx.scene.layout.VBox;
  * Descriptions come from {@link GameMode} so help text shares gameplay configuration.
  */
 public class HowToPlayController {
+
     /** Container injected from FXML for the generated mode descriptions. */
     @FXML
     private VBox modeDescriptions;
@@ -21,11 +22,11 @@ public class HowToPlayController {
     }
 
     /**
-     * Adds a heading and wrapping description for every mode after FXML injection.
-     * Each heading includes the mode's base movement speed, displayed as an integer.
+     * Adds each mode's display name and wrapping description after FXML injection.
      */
     @FXML
     private void initialize() {
+        // Build one section per mode using the display name and description from the preset.
         for (GameMode mode : GameMode.values()) {
             Label heading = new Label(mode.getDisplayName());
             heading.getStyleClass().add("helpModeTitle");

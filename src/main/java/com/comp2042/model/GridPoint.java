@@ -9,6 +9,7 @@ import java.util.Objects;
  * avoid changing a point while it is used as a hash-based collection key.
  */
 public class GridPoint {
+
     /** Horizontal grid coordinate in cells. */
     private int x;
     /** Vertical grid coordinate in cells. */
@@ -77,17 +78,6 @@ public class GridPoint {
     }
 
     /**
-     * Adds the supplied offsets to this point in place, without wrapping or bounds checks.
-     *
-     * @param dx the horizontal displacement in cells
-     * @param dy the vertical displacement in cells
-     */
-    public void translate(int dx, int dy) {
-        this.x += dx;
-        this.y += dy;
-    }
-
-    /**
      * Compares grid coordinate values with another point.
      *
      * @param o the object to compare, which may be {@code null}
@@ -96,6 +86,7 @@ public class GridPoint {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
+        // Bind the other point only after confirming its type for coordinate comparison.
         if (!(o instanceof GridPoint that)) return false;
         return x == that.x && y == that.y;
     }
