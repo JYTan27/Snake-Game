@@ -14,7 +14,7 @@ public enum GameMode {
     CLASSIC("Classic", "Collect diamonds at a steady pace.",
             9.0, false, Map.of(PickupType.DIAMOND, 1)),
     /** Standard-speed play where blocks add obstacles up to the board's cap. */
-    OBSTACLES("Obstacles", "Collect diamonds and blocks. Blocks add barriers until part of the board is occupied.",
+    OBSTACLES("Obstacles", "Collect diamonds and blocks. Blocks will spawn and add barriers until part of the board is occupied.",
             9.0, false, Map.of(PickupType.DIAMOND, 2, PickupType.BLOCKS, 1)),
     /** Diamond-only play at a higher fixed base speed with solid borders. */
     HYPERSPEED("Hyperspeed", "Collect diamonds at a fast pace. Plan your turns early.",

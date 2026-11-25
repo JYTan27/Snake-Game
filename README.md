@@ -87,19 +87,44 @@
 
 ## 4. Implemented but Not Working Properly
 
-- No partially working features are currently recorded.
+- All features working as intended.
 
 ---
 
 ## 5. Remaining Unfixed Bugs / Open Issues
 
-- No unresolved bugs are currently recorded in the [bug log](BUGS_AND_IMPROVEMENTS.md).
+- No unresolved bugs.
 
 ---
 
 ## 6. Features Not Implemented
 
-- **In-app volume controls.** Playback uses default levels because the coursework prioritised gameplay extensions and refactoring over an audio settings screen.
+- **Game AI:** Add an AI player that can fill the board and win in any game mode.
+  - **Reason:** The game was designed around player input. An AI that can win would need a separate path planner that handles each mode's rules and avoids trapping the snake as it grows.
+- **Modifiers.** Define reusable speed, obstacle, border-wrapping rules etc for Sandbox Mode and Daily Challenge Mode.
+  - **Reason.** Each mode currently defines its rules as a preset. Reusable modifiers would require separating those rules from the presets and defining how they interact when combined.
+- **Sandbox Mode:** Let players build a custom game by combining compatible modifiers.
+  - **Reason.** The menu currently starts games from fixed presets. A sandbox would need a setup screen and rules for rejecting incompatible combinations before play.
+- **Daily Challenge Mode.** Randomly select a compatible combination of modifiers for each day's challenge.
+  - **Reason.** This depends on the shared modifier system. It also needs a way to generate a compatible challenge and keep it consistent throughout the day.
+- **Multiplayer.** Add two-player games in which either snake can die by hitting the other snake's body.
+  - **Reason.** The game loop manages one snake. Supporting two players would require separate input handling and resolving both snakes' movements and collisions together.
+- **Settings.** Add remappable controls, in-app audio volume controls, and adjustable interface scaling in fullscreen.
+  - **Reason.** The game currently uses fixed key bindings, default audio levels, and automatic fullscreen scaling. A shared settings screen would need to save and apply player preferences and prevent conflicting key bindings.
+- **Snake Skin Customisation.** Offer skin presets with a preview like Board Colours, plus a custom colour picker for the snake.
+  - **Reason.** The existing customisation work covers the board. Snake skins would need a separate way to preview and recolour the head, body, turns, and tail consistently.
+- **Background Music Controls.** Add controls at the top left of every menu screen to pause, resume, skip, or select a track.
+  - **Reason.** The current soundtrack is managed automatically when screens change. Manual playback would require shared controls across the menus and rules for preserving the player's choice when navigating.
+- **Snake Death Animation.** Animate the snake when it dies.
+  - **Reason.** The collision fix leaves the final board visible in the snake's last valid pose. A death animation would need a separate visual sequence that can be interrupted cleanly by restart or menu navigation.
+- **Pause Popup.** Show a pause screen with a Resume button and a countdown before movement restarts.
+  - **Reason.** The current pause resumes directly from keyboard input. A popup would add a countdown state that must hold movement until it finishes and cancel cleanly on restart or exit.
+- **Snake Turning Sounds.** Play one of four short sounds based on the direction of each turn.
+  - **Reason.** The audio work focused on pickups and major game events. Turn sounds would play much more frequently and would need to be coordinated with buffered turns and other effects.
+- **Achievements.** Add achievements for different milestones across all game modes.
+  - **Reason.** The leaderboard stores run results and summaries. Achievements would also need unlock criteria, progress tracking, and saved unlocks across modes.
+- **Custom Board Colour Picker.** Let players choose their own combination of checkerboard colours.
+  - **Reason.** Board Colours currently previews and saves predefined palettes. A custom picker would require previewing and saving individual colours in addition to preset choices.
 
 ---
 
@@ -157,15 +182,74 @@
 
 ## 9. Unexpected Problems
 
-1. **Resource paths broke in the packaged JAR.** Moved assets into Maven resources and loaded them from the classpath so the application can find them from any working directory.
-2. **Custom fonts did not load consistently through CSS.** Registered the bundled fonts at application startup.
-3. **FXML referenced a moved controller.** Updated the binding to the controller's new package and added a visible error for screen-loading failures.
-4. **The Maven Wrapper pointed to an invalid download.** Updated the distribution URL to Maven 3.9.6.
-5. **Switching screens caused focus and fullscreen glitches.** Reused the primary window and changed the content inside the same scene to preserve fullscreen across navigation.
-6. **Pickup collection disabled default wrapping.** Restored the mode's border rule before applying the pickup effect, so permanent wrapping and temporary wrap effects each behave as intended.
-7. **Wrapping bypassed obstacle collisions.** Checked the destination after wrapping before allowing the snake to move.
-8. **The plus shortcut failed on some keyboards.** Replaced the plus/minus controls with **F** as a fullscreen toggle.
-9. **A fatal wall or obstacle collision overlapped the head and neck.** Advanced the body only when the head successfully moved.
-10. **A full board could spawn a pickup on an occupied cell or miss the win display.** Made the absence of a free cell the completion condition and used one path for handling victory.
-11. **The mode dropdown grew after a fullscreen selection.** Kept the control height stable while allowing popup entries to scale.
-12. **Short sound effects played late on Windows.** Kept the audio output initialised between clips, with standard playback available if initialisation fails.
+1. **Resources failed to load from the packaged JAR.**
+   - **Cause** Working-directory paths expected assets to be loose files, so they could not locate resources bundled inside the JAR.
+   - **Fix** Moved assets into Maven resources and loaded them from the classpath.
+
+2. **Custom fonts did not load consistently.**
+   - **Cause** The CSS paths used to register the bundled fonts did not resolve reliably.
+   - **Fix** Registered the fonts directly from the bundled resources at application startup.
+
+3. **The main menu could fail to load after the controller moved.**
+   - **Cause** The FXML still referred to the controller's old package. A failed load could also leave the application trying to open a screen without content.
+   - **Fix** Updated the controller binding and made failed screen loads stop with an error message.
+
+4. **The Maven Wrapper could not download Maven.**
+   - **Cause** Its configuration pointed to a distribution archive that did not exist.
+   - **Fix** Updated the URL to the Maven 3.9.6 archive.
+
+5. **Switching screens could lose focus or interrupt fullscreen.**
+   - **Cause** The original game opened a separate window for gameplay. Later, replacing the scene on the same window still disrupted fullscreen.
+   - **Fix** Reused one window and one scene, switching only the displayed content.
+
+6. **A pickup could disable permanent border wrapping.**
+   - **Cause** The collection logic cleared wrapping before applying the pickup effect, even in a mode with wrapping enabled by default.
+   - **Fix** Restored the current mode's border rule before applying the pickup effect.
+
+7. **The snake could pass through an obstacle when wrapping.**
+   - **Cause** The movement logic checked for obstacles only on moves that stayed inside the board.
+   - **Fix** Resolved the wrapped destination first and checked it for obstacles before moving.
+
+8. **The plus shortcut failed to enter fullscreen on some keyboards.**
+   - **Cause** The handler expected a `PLUS` key event, but Shift+= could be reported as `EQUALS` with Shift held.
+   - **Fix** Replaced the plus and minus shortcuts with **F** to toggle fullscreen.
+
+9. **The snake's head and neck overlapped after a fatal wall or obstacle collision.**
+   - **Cause** The body advanced even when the head was blocked.
+   - **Fix** Advanced the body only after a valid move, preserving the last valid pose.
+
+10. **Crowded boards could stall, and full boards could show an invalid pickup or miss the win message.**
+   - **Cause** Placement kept trying random cells even when none were available. A later fallback could use an occupied cell, and a win branch could return before updating the display.
+   - **Fix** Placed pickups and obstacles in available cells. When no pickup cell remains, one victory path stops the game and shows the final score and win message.
+
+11. **The mode dropdown grew after a fullscreen selection.**
+   - **Cause** Scaled popup rows affected the height of the main dropdown control.
+   - **Fix** Kept the main dropdown height fixed and scaled its popup rows separately.
+
+12. **Short sound effects played late on Windows.**
+   - **Cause** On the affected setup, the delay returned when the audio output line was closed between effects.
+   - **Fix** Kept the output line initialised on Windows and retained standard playback if it could not be opened.
+
+13. **The original `RainbowCoin` never spawned.**
+   - **Cause** Both branches checked the same random value, so the gold coin branch always handled that roll.
+   - **Fix** Gave the branches separate values. The current weighted selector gives the equivalent bolt pickup its own chance in Power-ups.
+
+14. **Snake sprites were drawn at the wrong size in fullscreen.**
+   - **Cause** Sprite dimensions applied the fullscreen scaling factor twice.
+   - **Fix** Used one shared cell size for drawing positions and dimensions.
+
+15. **Obstacles could appear off the board or overlap.**
+   - **Cause** The column calculation started at one and could select a column beyond the board. Placement also ignored existing obstacles.
+   - **Fix** Selected in-bounds cells and excluded cells already occupied by obstacles.
+
+16. **The player could reverse from up to down.**
+   - **Cause** The down-input check looked for the wrong current direction, so it failed to reject down while the snake was moving up.
+   - **Fix** Applied the opposite-direction rule consistently to all four directions.
+
+17. **The tail sprite could flip at a wrapped edge.**
+   - **Cause** Tail orientation treated cells on opposite edges as far apart even when they were adjacent through wrapping.
+   - **Fix** Calculated the tail's direction using the wrapped distance between its segments.
+
+18. **Blocks could still spawn after the obstacle placement cap was reached.**
+   - **Cause** Placement stopped at 5% of the board, but the pickup factory still checked against a 25% limit.
+   - **Fix** Used the same 5% cap for placement and eligibility. At the cap, a block roll produces a diamond.
