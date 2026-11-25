@@ -55,6 +55,7 @@ The numbered entries follow the project's maintenance history. Earlier entries u
 49. **Fullscreen dropdown grew after selection** — Keep the control height fixed while scaling the popup items. ✅ Fixed.
 50. **Fullscreen was disrupted when switching screens** — Keep the same scene and replace its contents so fullscreen survives navigation. ✅ Fixed.
 51. **Short clips could be delayed on Windows** — Keep audio output initialised between effects and use ordinary playback if initialisation fails. ✅ Fixed.
+52. **Blocks could spawn after obstacle placement reached its limit** — Placement and spawning now use the same 5% obstacle cap. Once it is reached, selected blocks become diamonds. ✅ Fixed.
 
 # Improvements Made
 
@@ -270,3 +271,6 @@ The numbered entries follow the project's maintenance history. Earlier entries u
 
 71. **Updated the restart clip**
    - Replaced the audio played on **Tab** and removed the unused alternate file.
+
+72. **Shared the obstacle cap (Addresses #52)**
+   - Calculate the placement limit once in `Obstacle` and use it for both adding barriers and checking block eligibility.

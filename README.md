@@ -71,7 +71,7 @@
   | Mode | Rules |
   | --- | --- |
   | Classic | Steady speed, solid borders, and diamonds. |
-  | Obstacles | Solid borders, diamonds, and blocks that add barriers. |
+  | Obstacles | Solid borders, diamonds, and blocks that add barriers. Once barriers fill 5% of the board, diamonds replace blocks. |
   | Hyperspeed | Faster movement, solid borders, and diamonds. |
   | Power-ups | Diamonds, bonus-point stars, rings that enable wrapping, and bolts that increase speed. Ring and bolt effects last until the next pickup. |
   | Wraparound | Diamonds and permanent edge wrapping. |
@@ -87,13 +87,13 @@
 
 ## 4. Implemented but Not Working Properly
 
-- **Obstacles mode.** The placement limit is lower than the limit used to decide whether blocks can spawn. Blocks can still appear after the board has stopped adding barriers. [Obstacle](src/main/java/com/comp2042/model/Obstacle.java), [PickupFactory](src/main/java/com/comp2042/model/pickup/PickupFactory.java)
+- No partially working features are currently recorded.
 
 ---
 
 ## 5. Remaining Unfixed Bugs / Open Issues
 
-- The obstacle-limit mismatch described above remains open. Resolved issues are listed in the [bug log](BUGS_AND_IMPROVEMENTS.md).
+- No unresolved bugs are currently recorded in the [bug log](BUGS_AND_IMPROVEMENTS.md).
 
 ---
 

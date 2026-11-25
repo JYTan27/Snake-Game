@@ -10,11 +10,13 @@ import java.util.Random;
 
 /**
  * Manages obstacle positions and their rendering colour for one board.
- * Random additions avoid occupied cells and are capped at one quarter of the
+ * Random additions avoid occupied cells and are capped at 5% of the
  * board area, rounded down. Obstacles persist until {@link #reset()} is called.
  */
 public class Obstacle {
 
+    /** Board area divided by this value gives the maximum obstacle count. */
+    private static final int OBSTACLE_CAP_DIVISOR = 20;
     /** Shared random source for choosing obstacle positions. */
     private static final Random RANDOM = new Random();
     /** Colour used by the view when drawing obstacle cells. */
@@ -25,6 +27,8 @@ public class Obstacle {
     private final int boardWidth;
     /** Board height in grid cells. */
     private final int boardHeight;
+    /** Maximum obstacle count for both placement and pickup eligibility. */
+    private final int obstacleCap;
 
     /**
      * Creates an empty obstacle collection for the supplied board dimensions.
@@ -35,6 +39,7 @@ public class Obstacle {
     public Obstacle(int boardWidth, int boardHeight) {
         this.boardWidth = boardWidth;
         this.boardHeight = boardHeight;
+        this.obstacleCap = boardWidth * boardHeight / OBSTACLE_CAP_DIVISOR;
     }
 
     /**
@@ -49,7 +54,7 @@ public class Obstacle {
      */
     public void newObstacles(Snake snake, Pickup pickup, int amount) {
         // Limit new obstacles to the unfilled portion of the obstacle allowance.
-        int remainingCapacity = boardWidth * boardHeight / 20 - obstacles.size();
+        int remainingCapacity = obstacleCap - obstacles.size();
         if (remainingCapacity <= 0 || amount <= 0) {
             return;
         }
@@ -96,7 +101,7 @@ public class Obstacle {
      * @return {@code true} if the obstacle count is below the proportional cap
      */
     public boolean canAddObstacles() {
-        return obstacles.size() < boardWidth * boardHeight / 4;
+        return obstacles.size() < obstacleCap;
     }
 
     /**
