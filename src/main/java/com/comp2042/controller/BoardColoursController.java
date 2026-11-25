@@ -24,7 +24,7 @@ public final class BoardColoursController {
     private final Image snakeHead = loadSprite("snake/snakehead.png");
     private final Image snakeBody = loadSprite("snake/snakebody.png");
     private final Image snakeTail = loadSprite("snake/snaketail.png");
-    private final Image diamond = loadSprite("coins/diamond.png");
+    private final Image diamond = loadSprite("pickups/diamond.png");
 
     @FXML private VBox paletteOptions;
     @FXML private Canvas boardPreview;

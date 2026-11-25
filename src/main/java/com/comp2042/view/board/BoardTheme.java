@@ -7,7 +7,10 @@ public enum BoardTheme {
     /** Subtle cream palette used by the default checkerboard. */
     SOFT_CREAM("soft-cream", "Soft Cream", Color.web("#FEFFE4"), Color.web("#F2F3DA")),
     MINT("mint", "Mint", Color.web("#E9F7E4"), Color.web("#DDEFD7")),
-    SKY("sky", "Sky", Color.web("#EAF5FF"), Color.web("#DAEAF7"));
+    SKY("sky", "Sky", Color.web("#EAF5FF"), Color.web("#DAEAF7")),
+    LAVENDER("lavender", "Lavender", Color.web("#F2E9FC"), Color.web("#E6D9F5")),
+    PEACH("peach", "Peach", Color.web("#FCE8D8"), Color.web("#F4D9C4")),
+    SLATE("slate", "Slate", Color.web("#E2E7ED"), Color.web("#CED6DF"));
 
     private final String id;
     /** Human-readable palette name. */

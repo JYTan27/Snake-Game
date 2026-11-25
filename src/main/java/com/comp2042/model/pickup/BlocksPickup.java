@@ -8,7 +8,7 @@ import javafx.scene.image.Image;
 /** Pickup that requests additional obstacles and inherits the default point reward. */
 public class BlocksPickup extends Pickup {
     /** Shared blocks sprite loaded once for all instances. */
-    private static final Image BLOCKS_IMAGE = new Image(BlocksPickup.class.getResourceAsStream("/com/comp2042/images/coins/blocks.png"));
+    private static final Image BLOCKS_IMAGE = new Image(BlocksPickup.class.getResourceAsStream("/com/comp2042/images/pickups/blocks.png"));
 
     /**
      * Creates a blocks pickup in a free grid cell.

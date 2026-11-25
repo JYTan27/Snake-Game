@@ -1,6 +1,7 @@
 package com.comp2042;
 
 import com.comp2042.view.ViewManager;
+import com.comp2042.service.audio.BackgroundMusic;
 import com.comp2042.service.audio.JavaFxSoundService;
 import com.comp2042.service.audio.SoundService;
 import com.comp2042.service.leaderboard.LeaderboardService;
@@ -19,6 +20,7 @@ public class Main extends Application {
     private static ViewManager viewManager;
     /** Sound service owned by this application instance and closed at shutdown. */
     private SoundService sounds;
+    private final BackgroundMusic backgroundMusic = new BackgroundMusic();
 
     /** Creates the application instance; shared services are initialised by JavaFX startup. */
     public Main() {}
@@ -36,7 +38,7 @@ public class Main extends Application {
 
         sounds = new JavaFxSoundService();
         LeaderboardService leaderboards = new LeaderboardService(new XmlLeaderboardRepository(XmlLeaderboardRepository.defaultPath()));
-        viewManager = new ViewManager(primaryStage, sounds, leaderboards);
+        viewManager = new ViewManager(primaryStage, sounds, backgroundMusic, leaderboards);
         viewManager.initializeMainMenu();
     }
 
@@ -49,11 +51,15 @@ public class Main extends Application {
         launch(args);
     }
 
-    /** Finalises a started game before releasing audio. */
+    /** Finalises any started game and releases application audio. */
     @Override
     public void stop() {
-        if (viewManager != null) viewManager.close();
-        if (sounds != null) sounds.close();
+        backgroundMusic.close();
+        try {
+            if (viewManager != null) viewManager.close();
+        } finally {
+            if (sounds != null) sounds.close();
+        }
     }
 
     /**

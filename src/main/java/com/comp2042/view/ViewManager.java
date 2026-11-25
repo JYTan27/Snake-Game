@@ -3,6 +3,7 @@ package com.comp2042.view;
 import com.comp2042.controller.BoardColoursController;
 import com.comp2042.controller.LeaderboardController;
 import com.comp2042.model.GameMode;
+import com.comp2042.service.audio.BackgroundMusic;
 import com.comp2042.service.audio.SoundService;
 import com.comp2042.service.leaderboard.LeaderboardService;
 import com.comp2042.view.board.BoardTheme;
@@ -40,7 +41,9 @@ public class ViewManager implements AutoCloseable {
             "Plan your turns!",
             "Impossible to win?",
             "No snakes were harmed!",
+            "Leave yourself an exit!",
             "Certified noodle",
+            "One more run?",
             "Fill every square!"
     );
 
@@ -49,6 +52,7 @@ public class ViewManager implements AutoCloseable {
     private Scene scene;
     /** Shared audio service owned and closed by the application. */
     private final SoundService soundService;
+    private final BackgroundMusic backgroundMusic;
     private final LeaderboardService leaderboardService;
     private final BoardThemePreferences boardThemePreferences = new BoardThemePreferences();
     private BoardTheme boardTheme;
@@ -68,12 +72,15 @@ public class ViewManager implements AutoCloseable {
      *
      * @param primaryStage the single stage used to display all screens
      * @param soundService the application-owned audio service
+     * @param backgroundMusic the soundtrack played on menu screens
      * @param leaderboardService application-owned result history
      * @throws NullPointerException if a service argument is null
      */
-    public ViewManager(Stage primaryStage, SoundService soundService, LeaderboardService leaderboardService) {
+    public ViewManager(Stage primaryStage, SoundService soundService, BackgroundMusic backgroundMusic,
+                       LeaderboardService leaderboardService) {
         this.primaryStage = primaryStage;
         this.soundService = java.util.Objects.requireNonNull(soundService);
+        this.backgroundMusic = Objects.requireNonNull(backgroundMusic);
         this.leaderboardService = java.util.Objects.requireNonNull(leaderboardService);
         this.boardTheme = boardThemePreferences.load();
         primaryStage.setFullScreenExitHint("");
@@ -120,6 +127,7 @@ public class ViewManager implements AutoCloseable {
         }
         primaryStage.setTitle("Snake Game");
         showScreen(createMenuContent(root));
+        backgroundMusic.play();
     }
 
     /**
@@ -197,6 +205,7 @@ public class ViewManager implements AutoCloseable {
             updateFullscreen.accept(true);
         }
         showScreen(gamePane);
+        backgroundMusic.pause();
         onLeaveGame = onLeave;
         updateGameFullscreen = updateFullscreen;
         gamePane.requestFocus();
@@ -264,6 +273,7 @@ public class ViewManager implements AutoCloseable {
             }
         });
         showScreen(screen);
+        backgroundMusic.play();
         screen.lookup(focusSelector).requestFocus();
     }
 

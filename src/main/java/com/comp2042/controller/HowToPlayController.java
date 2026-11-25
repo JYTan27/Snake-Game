@@ -27,7 +27,7 @@ public class HowToPlayController {
     @FXML
     private void initialize() {
         for (GameMode mode : GameMode.values()) {
-            Label heading = new Label(mode.getDisplayName() + " - " + (int) mode.getSpeed() + " moves/sec");
+            Label heading = new Label(mode.getDisplayName());
             heading.getStyleClass().add("helpModeTitle");
             heading.setWrapText(true);
             heading.setMinWidth(0);

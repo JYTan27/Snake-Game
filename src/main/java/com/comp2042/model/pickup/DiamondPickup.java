@@ -10,7 +10,7 @@ import javafx.scene.image.Image;
  */
 public class DiamondPickup extends Pickup {
     /** Shared diamond sprite loaded once for all instances. */
-    private static final Image DIAMOND_IMAGE = new Image(DiamondPickup.class.getResourceAsStream("/com/comp2042/images/coins/diamond.png"));
+    private static final Image DIAMOND_IMAGE = new Image(DiamondPickup.class.getResourceAsStream("/com/comp2042/images/pickups/diamond.png"));
 
     /**
      * Creates a diamond in a free grid cell.

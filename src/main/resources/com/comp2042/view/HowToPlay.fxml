@@ -30,15 +30,15 @@
                     <children>
                         <VBox spacing="12.0">
                             <children>
-                                <Label styleClass="helpSection" text="Game Modes" />
-                                <VBox fx:id="modeDescriptions" spacing="16.0" />
                                 <Label text="In every mode, hitting your own body ends the game. Fill the available board to win." wrapText="true" minWidth="0.0" maxWidth="Infinity" />
+                                <Label styleClass="helpSection" text="Game Modes:" />
+                                <VBox fx:id="modeDescriptions" spacing="16.0" />
                             </children>
                         </VBox>
                         <Region prefHeight="1.0" minHeight="1.0" maxHeight="1.0" styleClass="helpDivider" />
                         <VBox spacing="8.0">
                             <children>
-                                <Label styleClass="helpSection" text="Controls" />
+                                <Label styleClass="helpSection" text="Controls:" />
                                 <GridPane vgap="8.0">
                                     <columnConstraints>
                                         <ColumnConstraints percentWidth="26.0" />

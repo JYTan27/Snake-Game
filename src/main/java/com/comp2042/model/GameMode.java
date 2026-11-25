@@ -11,19 +11,19 @@ import java.util.Map;
  */
 public enum GameMode {
     /** Diamond-only play at standard speed with solid borders. */
-    CLASSIC("Classic", "Collect diamonds at a steady pace. Borders are solid, so hitting an edge ends the game.",
+    CLASSIC("Classic", "Collect diamonds at a steady pace.",
             9.0, false, Map.of(PickupType.DIAMOND, 1)),
     /** Standard-speed play where blocks add obstacles up to the board's cap. */
-    OBSTACLES("Obstacles", "Collect diamonds and blocks. Blocks add barriers until a quarter of the board is occupied. Borders and barriers are lethal.",
-            9.0, false, Map.of(PickupType.DIAMOND, 4, PickupType.BLOCKS, 1)),
+    OBSTACLES("Obstacles", "Collect diamonds and blocks. Blocks add barriers until part of the board is occupied.",
+            9.0, false, Map.of(PickupType.DIAMOND, 2, PickupType.BLOCKS, 1)),
     /** Diamond-only play at a higher fixed base speed with solid borders. */
-    HYPERSPEED("Hyperspeed", "Collect diamonds at a fixed fast pace. Borders are solid; plan your turns early.",
+    HYPERSPEED("Hyperspeed", "Collect diamonds at a fast pace. Plan your turns early.",
             16.0, false, Map.of(PickupType.DIAMOND, 1)),
     /** Standard-speed play with stars, temporary wrapping, and speed bonuses. */
-    POWER_UPS("Power-ups", "Collect diamonds, stars, rings, and bolts. Rings let you cross borders until the next pickup; bolts temporarily boost speed. No blocks appear.",
-            9.0, false, Map.of(PickupType.DIAMOND, 9, PickupType.STAR, 1, PickupType.RING, 1, PickupType.BOLT, 1)),
+    POWER_UPS("Power-ups", "Collect diamonds, stars, rings, and bolts. Rings let you cross borders until the next pickup, bolts temporarily boost speed, stars provide bonus scores.",
+            9.0, false, Map.of(PickupType.DIAMOND, 5, PickupType.STAR, 1, PickupType.RING, 1, PickupType.BOLT, 1)),
     /** Diamond-only play with permanent border wrapping at standard speed. */
-    WRAPAROUND("Wraparound", "Collect diamonds and cross an edge to emerge on the opposite side. Your own body is still lethal.",
+    WRAPAROUND("Wraparound", "Collect diamonds and cross an edge to emerge on the opposite side.",
             9.0, true, Map.of(PickupType.DIAMOND, 1));
 
     /** Mode name displayed in the menu and help screen. */

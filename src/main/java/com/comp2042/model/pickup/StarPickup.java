@@ -7,7 +7,7 @@ import javafx.scene.image.Image;
 /** Pickup worth fifteen display points, with no speed bonus or special effect. */
 public class StarPickup extends Pickup {
     /** Shared star sprite loaded once for all instances. */
-    private static final Image STAR_IMAGE = new Image(StarPickup.class.getResourceAsStream("/com/comp2042/images/coins/star.png"));
+    private static final Image STAR_IMAGE = new Image(StarPickup.class.getResourceAsStream("/com/comp2042/images/pickups/star.png"));
     /** Display-point reward for collecting a star. */
     private static final int STAR_POINTS = 15;
 

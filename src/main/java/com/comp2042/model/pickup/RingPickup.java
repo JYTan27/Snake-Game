@@ -11,7 +11,7 @@ import javafx.scene.image.Image;
  */
 public class RingPickup extends Pickup {
     /** Shared ring sprite loaded once for all instances. */
-    private static final Image RING_IMAGE = new Image(RingPickup.class.getResourceAsStream("/com/comp2042/images/coins/ring.png"));
+    private static final Image RING_IMAGE = new Image(RingPickup.class.getResourceAsStream("/com/comp2042/images/pickups/ring.png"));
 
     /**
      * Creates a ring pickup in a free grid cell.
