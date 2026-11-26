@@ -92,9 +92,9 @@ public final class LeaderboardController {
                 label("Wins: " + stats.wins(), "leaderboardCell"),
                 label("Losses: " + stats.losses(), "leaderboardCell"),
                 label("Abandoned: " + stats.abandoned(), "leaderboardCell"),
-                label("Best: " + stats.bestScore(), "leaderboardCell"),
-                label(String.format(Locale.ROOT, "Average: %.1f", stats.averageScore()), "leaderboardCell"),
-                label("Active time: " + formatTime(stats.totalActiveTimeMillis()), "leaderboardCell"));
+                label("Best score: " + stats.bestScore(), "leaderboardCell"),
+                label(String.format(Locale.ROOT, "Average score: %.1f", stats.averageScore()), "leaderboardCell"),
+                label("Total active time: " + formatTime(stats.totalActiveTimeMillis()), "leaderboardCell"));
         // Place the ranked subset below the mode's summary in the same section.
         VBox section = new VBox(9, title, summary);
         section.getStyleClass().add("leaderboardSection");

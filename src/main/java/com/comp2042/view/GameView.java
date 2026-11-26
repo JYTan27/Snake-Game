@@ -30,6 +30,11 @@ import javafx.stage.Screen;
  */
 public class GameView {
 
+    /** Shared head sprite drawn after a fatal collision. */
+    private static final Image DEAD_HEAD_IMAGE = new Image(Objects.requireNonNull(
+            GameView.class.getResourceAsStream("/com/comp2042/images/snake/snakedeadhead.png"),
+            "Missing dead snake head sprite"));
+
     /** Canvas containing the board and gameplay sprites, created by {@code initialize}. */
     public Canvas gridCanvas;
     /** Drawing context for {@link #gridCanvas}, initialised by {@code initialize}. */
@@ -200,14 +205,15 @@ public class GameView {
     }
 
     /**
-     * Draws the head rotated to the snake's current direction.
+     * Draws the head rotated to the snake's last successful direction, using
+     * the dead-head sprite after a fatal collision.
      *
      * @param snake the snake supplying the head position, image, and rotation
      * @param cellSize the scaled width and height of a grid cell in pixels
      */
     private void drawHead(Snake snake, double cellSize) {
+        Image img = snake.getDead() ? DEAD_HEAD_IMAGE : snake.getImageHead();
         // Use the head sprite's cell origin and centre to rotate it in place.
-        Image img = snake.getImageHead();
         double x   = snake.getHead().getX() * cellSize;
         double y   = snake.getHead().getY() * cellSize;
         double cx  = x + cellSize / 2;
