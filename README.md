@@ -182,74 +182,70 @@
 
 ## 9. Unexpected Problems
 
-1. **Resources failed to load from the packaged JAR.**
-   - **Cause** Working-directory paths expected assets to be loose files, so they could not locate resources bundled inside the JAR.
-   - **Fix** Moved assets into Maven resources and loaded them from the classpath.
+1. **Custom fonts did not load consistently.**
+   - **Cause:** The CSS paths used to register the bundled fonts did not resolve reliably.
+   - **Fix:** Registered the fonts directly from the bundled resources at application startup.
 
-2. **Custom fonts did not load consistently.**
-   - **Cause** The CSS paths used to register the bundled fonts did not resolve reliably.
-   - **Fix** Registered the fonts directly from the bundled resources at application startup.
+2. **The main menu could fail to load after the controller moved.**
+   - **Cause:** The FXML still referred to the controller's old package. A failed load could also leave the application trying to open a screen without content.
+   - **Fix:** Updated the controller binding and made failed screen loads stop with an error message.
 
-3. **The main menu could fail to load after the controller moved.**
-   - **Cause** The FXML still referred to the controller's old package. A failed load could also leave the application trying to open a screen without content.
-   - **Fix** Updated the controller binding and made failed screen loads stop with an error message.
+3. **The Maven Wrapper could not download Maven.**
+   - **Cause:** Its configuration pointed to a distribution archive that did not exist.
+   - **Fix:** Updated the URL to the Maven 3.9.6 archive.
 
-4. **The Maven Wrapper could not download Maven.**
-   - **Cause** Its configuration pointed to a distribution archive that did not exist.
-   - **Fix** Updated the URL to the Maven 3.9.6 archive.
+4. **Switching screens could lose focus or interrupt fullscreen.**
+   - **Cause:** The original game opened a separate window for gameplay. Later, replacing the scene on the same window still disrupted fullscreen.
+   - **Fix:** Reused one window and one scene, switching only the displayed content.
 
-5. **Switching screens could lose focus or interrupt fullscreen.**
-   - **Cause** The original game opened a separate window for gameplay. Later, replacing the scene on the same window still disrupted fullscreen.
-   - **Fix** Reused one window and one scene, switching only the displayed content.
+5. **A pickup could disable permanent border wrapping.**
+   - **Cause:** The collection logic cleared wrapping before applying the pickup effect, even in a mode with wrapping enabled by default.
+   - **Fix:** Restored the current mode's border rule before applying the pickup effect.
 
-6. **A pickup could disable permanent border wrapping.**
-   - **Cause** The collection logic cleared wrapping before applying the pickup effect, even in a mode with wrapping enabled by default.
-   - **Fix** Restored the current mode's border rule before applying the pickup effect.
+6. **The snake could pass through an obstacle when wrapping.**
+   - **Cause:** The movement logic checked for obstacles only on moves that stayed inside the board.
+   - **Fix:** Resolved the wrapped destination first and checked it for obstacles before moving.
 
-7. **The snake could pass through an obstacle when wrapping.**
-   - **Cause** The movement logic checked for obstacles only on moves that stayed inside the board.
-   - **Fix** Resolved the wrapped destination first and checked it for obstacles before moving.
+7. **The plus shortcut failed to enter fullscreen on some keyboards.**
+   - **Cause:** The handler expected a `PLUS` key event, but Shift+= could be reported as `EQUALS` with Shift held.
+   - **Fix:** Replaced the plus and minus shortcuts with **F** to toggle fullscreen.
 
-8. **The plus shortcut failed to enter fullscreen on some keyboards.**
-   - **Cause** The handler expected a `PLUS` key event, but Shift+= could be reported as `EQUALS` with Shift held.
-   - **Fix** Replaced the plus and minus shortcuts with **F** to toggle fullscreen.
+8. **The snake's head and neck overlapped after a fatal wall or obstacle collision.**
+   - **Cause:** The body advanced even when the head was blocked.
+   - **Fix:** Advanced the body only after a valid move, preserving the last valid pose.
 
-9. **The snake's head and neck overlapped after a fatal wall or obstacle collision.**
-   - **Cause** The body advanced even when the head was blocked.
-   - **Fix** Advanced the body only after a valid move, preserving the last valid pose.
+9. **Crowded boards could stall, and full boards could show an invalid pickup or miss the win message.**
+   - **Cause:** Placement kept trying random cells even when none were available. A later fallback could use an occupied cell, and a win branch could return before updating the display.
+   - **Fix:** Placed pickups and obstacles in available cells. When no pickup cell remains, one victory path stops the game and shows the final score and win message.
 
-10. **Crowded boards could stall, and full boards could show an invalid pickup or miss the win message.**
-   - **Cause** Placement kept trying random cells even when none were available. A later fallback could use an occupied cell, and a win branch could return before updating the display.
-   - **Fix** Placed pickups and obstacles in available cells. When no pickup cell remains, one victory path stops the game and shows the final score and win message.
+10. **The mode dropdown grew after a fullscreen selection.**
+    - **Cause:** Scaled popup rows affected the height of the main dropdown control.
+    - **Fix:** Kept the main dropdown height fixed and scaled its popup rows separately.
 
-11. **The mode dropdown grew after a fullscreen selection.**
-   - **Cause** Scaled popup rows affected the height of the main dropdown control.
-   - **Fix** Kept the main dropdown height fixed and scaled its popup rows separately.
+11. **Short sound effects played late on Windows.**
+    - **Cause:** On the affected setup, the delay returned when the audio output line was closed between effects.
+    - **Fix:** Kept the output line initialised on Windows and retained standard playback if it could not be opened.
 
-12. **Short sound effects played late on Windows.**
-   - **Cause** On the affected setup, the delay returned when the audio output line was closed between effects.
-   - **Fix** Kept the output line initialised on Windows and retained standard playback if it could not be opened.
+12. **The original `RainbowCoin` never spawned.**
+    - **Cause:** Both branches checked the same random value, so the gold coin branch always handled that roll.
+    - **Fix:** Gave the branches separate values. The current weighted selector gives the equivalent bolt pickup its own chance in Power-ups.
 
-13. **The original `RainbowCoin` never spawned.**
-   - **Cause** Both branches checked the same random value, so the gold coin branch always handled that roll.
-   - **Fix** Gave the branches separate values. The current weighted selector gives the equivalent bolt pickup its own chance in Power-ups.
+13. **Snake sprites were drawn at the wrong size in fullscreen.**
+    - **Cause:** Sprite dimensions applied the fullscreen scaling factor twice.
+    - **Fix:** Used one shared cell size for drawing positions and dimensions.
 
-14. **Snake sprites were drawn at the wrong size in fullscreen.**
-   - **Cause** Sprite dimensions applied the fullscreen scaling factor twice.
-   - **Fix** Used one shared cell size for drawing positions and dimensions.
+14. **Obstacles could appear off the board or overlap.**
+    - **Cause:** The column calculation started at one and could select a column beyond the board. Placement also ignored existing obstacles.
+    - **Fix:** Selected in-bounds cells and excluded cells already occupied by obstacles.
 
-15. **Obstacles could appear off the board or overlap.**
-   - **Cause** The column calculation started at one and could select a column beyond the board. Placement also ignored existing obstacles.
-   - **Fix** Selected in-bounds cells and excluded cells already occupied by obstacles.
+15. **The player could reverse from up to down.**
+    - **Cause:** The down-input check looked for the wrong current direction, so it failed to reject down while the snake was moving up.
+    - **Fix:** Applied the opposite-direction rule consistently to all four directions.
 
-16. **The player could reverse from up to down.**
-   - **Cause** The down-input check looked for the wrong current direction, so it failed to reject down while the snake was moving up.
-   - **Fix** Applied the opposite-direction rule consistently to all four directions.
+16. **The tail sprite could flip at a wrapped edge.**
+    - **Cause:** Tail orientation treated cells on opposite edges as far apart even when they were adjacent through wrapping.
+    - **Fix:** Calculated the tail's direction using the wrapped distance between its segments.
 
-17. **The tail sprite could flip at a wrapped edge.**
-   - **Cause** Tail orientation treated cells on opposite edges as far apart even when they were adjacent through wrapping.
-   - **Fix** Calculated the tail's direction using the wrapped distance between its segments.
-
-18. **Blocks could still spawn after the obstacle placement cap was reached.**
-   - **Cause** Placement stopped at 5% of the board, but the pickup factory still checked against a 25% limit.
-   - **Fix** Used the same 5% cap for placement and eligibility. At the cap, a block roll produces a diamond.
+17. **Blocks could still spawn after the obstacle placement cap was reached.**
+    - **Cause:** Placement stopped at 5% of the board, but the pickup factory still checked against a 25% limit.
+    - **Fix:** Used the same 5% cap for placement and eligibility. At the cap, a block roll produces a diamond.
