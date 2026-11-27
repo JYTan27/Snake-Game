@@ -37,6 +37,9 @@ public final class BackgroundMusic implements AutoCloseable {
     /** Desired playback state, which can change before the media player is ready. */
     private boolean playbackRequested;
 
+    /** Prepares the playlist. The first track opens when {@link #play()} is called. */
+    public BackgroundMusic() {}
+
     /**
      * Requests playback from the current position or starts the next available track.
      * Repeated requests leave playback at its current position.

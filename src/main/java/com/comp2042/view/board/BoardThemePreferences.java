@@ -9,6 +9,9 @@ public final class BoardThemePreferences {
     /** Preference key containing the selected preset's stable ID. */
     private static final String KEY = "board-colours";
 
+    /** Creates a preference store for the current user's board palette. */
+    public BoardThemePreferences() {}
+
     /**
      * Reads the current user's saved palette.
      *
